@@ -1,73 +1,105 @@
-# React + TypeScript + Vite
+# Enterprise Management System (EMS)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A production-ready, fully responsive React + TypeScript + Vite application with Bootstrap 5.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Persistent Layout**: Fixed Navbar (top) and Sidebar (left) with routed content area
+- **Fully Responsive**: Desktop sidebar becomes offcanvas on mobile
+- **Bootstrap 5**: Complete styling with Bootstrap CSS and components
+- **React Router v6**: Nested routing with clean URL structure
+- **TypeScript**: Strict type safety throughout
+- **Production Ready**: Optimized build with Vite
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 18
+- TypeScript
+- Vite
+- React Router DOM v6+
+- Bootstrap 5
+- Bootstrap Icons
 
-## Expanding the ESLint configuration
+## Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Development
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+The app will be available at `http://localhost:5173`
+
+## Build
+
+```bash
+npm run build
+```
+
+## Project Structure
+
+```
+src/
+├── app/
+│   └── router.tsx          # React Router configuration
+├── layout/
+│   ├── AppLayout.tsx       # Main layout wrapper
+│   ├── Navbar.tsx          # Top navigation bar
+│   └── Sidebar.tsx         # Left sidebar (desktop) / Offcanvas (mobile)
+├── pages/
+│   ├── Dashboard.tsx       # Dashboard page
+│   ├── Notifications.tsx   # Notifications page
+│   ├── HumanResources.tsx  # HR management page
+│   ├── Projects.tsx        # Projects page
+│   ├── Meetings.tsx        # Meetings page
+│   ├── VotingPolls.tsx     # Voting & Polls page
+│   ├── AuditLog.tsx        # Audit log page
+│   ├── Workflows.tsx       # Workflows page
+│   └── Settings.tsx        # Settings page
+├── main.tsx                # Application entry point
+└── index.css               # Global styles
+```
+
+## Routes
+
+- `/` - Dashboard
+- `/notifications` - Notifications
+- `/hr` - Human Resources
+- `/projects` - Projects
+- `/meetings` - Meetings
+- `/voting-polls` - Voting & Polls
+- `/audit-log` - Audit Log
+- `/workflows` - Workflows
+- `/settings` - Settings
+
+## Responsive Behavior
+
+### Desktop (>= lg breakpoint)
+- Sidebar is visible as a fixed left column (280px width)
+- Navbar is sticky at the top
+- Content area scrolls independently
+
+### Mobile/Tablet (< lg breakpoint)
+- Sidebar becomes Bootstrap Offcanvas (slides in from left)
+- Hamburger button in navbar toggles the offcanvas
+- Clicking a nav item automatically closes the offcanvas
+
+## Key Features
+
+- **Keyboard Navigation**: Full keyboard accessibility support
+- **ARIA Labels**: Proper accessibility attributes throughout
+- **No Inline Styles**: Uses Bootstrap utility classes
+- **TypeScript Strict**: No `any` types, full type safety
+- **Bootstrap Components**: Offcanvas, Navbar, Cards, Tables, Forms, Badges, etc.
+
+## Customization
+
+All Bootstrap variables can be customized by importing Bootstrap SCSS instead of CSS and overriding variables before the import.
+
+## License
+
+MIT
