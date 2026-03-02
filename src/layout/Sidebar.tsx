@@ -25,6 +25,12 @@ const systemNavItems: NavItem[] = [
   { to: '/settings', icon: 'bi-gear', label: 'Settings' },
 ];
 
+const administrationNavItems: NavItem[] = [
+  { to: '/permissions', icon: 'bi-shield-check', label: 'Permissions' },
+  { to: '/roles', icon: 'bi-lock', label: 'Roles' },
+  { to: '/users', icon: 'bi-people-fill', label: 'Users' },
+];
+
 function NavItems({ items }: { items: NavItem[] }) {
   const handleClick = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 992) {
@@ -102,6 +108,14 @@ function SidebarContent() {
           <h6 className="text-uppercase text-white-50 small mb-3 px-2 fw-bold">System</h6>
           <ul className="nav flex-column gap-1">
             <NavItems items={systemNavItems} />
+          </ul>
+        </div>
+
+        {/* ADMINISTRATION Section */}
+        <div className="mb-4">
+          <h6 className="text-uppercase text-white-50 small mb-3 px-2 fw-bold">Administration</h6>
+          <ul className="nav flex-column gap-1">
+            <NavItems items={administrationNavItems} />
           </ul>
         </div>
       </nav>

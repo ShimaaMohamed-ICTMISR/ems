@@ -1,6 +1,33 @@
-// src/layout/Navbar.tsx
+import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import type { RootState } from '../store/store';
+import { logout } from '../store/authSlice';
+import { authService } from '../services/authService';
 import finovatelogo from '../assets/images/finovate-logo.webp';
+
 export function Navbar() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.auth.user);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await authService.logout();
+      dispatch(logout());
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Still dispatch logout to clear local state even if API fails
+      dispatch(logout());
+      navigate('/login');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   return (
     <nav className="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm" style={{ backgroundColor: '#0f172a' }}>
       <div className="container-fluid px-4">
@@ -53,14 +80,14 @@ export function Navbar() {
                   transition: 'all 0.3s ease'
                 }}
                 onFocus={(e) => {
-                  e.target.style.width = '380px';
-                  e.target.style.backgroundColor = '#ffffff';
-                  e.target.style.boxShadow = '0 4px 12px rgba(6, 182, 212, 0.15)';
+                  e.currentTarget.style.width = '380px';
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(6, 182, 212, 0.15)';
                 }}
                 onBlur={(e) => {
-                  e.target.style.width = '320px';
-                  e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                  e.target.style.boxShadow = '';
+                  e.currentTarget.style.width = '320px';
+                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+                  e.currentTarget.style.boxShadow = '';
                 }}
               />
             </div>
@@ -81,10 +108,44 @@ export function Navbar() {
               <i className="bi bi-person-circle fs-4"></i>
             </button>
             <ul className="dropdown-menu dropdown-menu-end shadow border-0">
-              <li><a className="dropdown-item" href="#"><i className="bi bi-person me-2" style={{ color: '#06b6d4' }}></i>Profile</a></li>
+              <li className="px-3 py-2 text-muted small">
+                <div>{user?.username || user?.email || 'User'}</div>
+              </li>
+              <li><hr className="dropdown-divider m-0 my-2" /></li>
+              <li>
+                <button
+                  className="dropdown-item"
+                  onClick={() => navigate('/profile')}
+                  style={{ border: 'none', background: 'none', cursor: 'pointer' }}
+                >
+                  <i className="bi bi-person me-2" style={{ color: '#06b6d4' }}></i>Profile
+                </button>
+              </li>
               <li><a className="dropdown-item" href="#"><i className="bi bi-gear me-2 text-secondary"></i>Settings</a></li>
               <li><hr className="dropdown-divider" /></li>
-              <li><a className="dropdown-item text-danger" href="#"><i className="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+              <li>
+                <button
+                  className="dropdown-item text-danger border-0 bg-transparent w-100 text-start"
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  style={{ cursor: isLoggingOut ? 'not-allowed' : 'pointer', opacity: isLoggingOut ? 0.7 : 1 }}
+                >
+                  {isLoggingOut ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                        aria-hidden="true"
+                      ></span>
+                      Logging out...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-box-arrow-right me-2"></i>Logout
+                    </>
+                  )}
+                </button>
+              </li>
             </ul>
           </div>
         </div>

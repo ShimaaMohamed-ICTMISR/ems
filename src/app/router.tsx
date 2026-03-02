@@ -1,6 +1,8 @@
 // src/app/router.tsx
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AppLayout } from '../layout/AppLayout';
+import Login from '../pages/Login';
+import { ProtectedRoute } from './ProtectedRoute';
 import {
   Dashboard,
   Notifications,
@@ -11,12 +13,23 @@ import {
   AuditLog,
   Workflows,
   Settings,
+  Profile,
+  Permissions,
+  Roles,
 } from '../pages';
 
 const router = createBrowserRouter([
   {
+    path: '/login',
+    element: <Login />,
+  },
+  {
     path: '/',
-    element: <AppLayout />,
+    element: (
+      <ProtectedRoute>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, element: <Dashboard /> },
       { path: 'notifications', element: <Notifications /> },
@@ -27,6 +40,9 @@ const router = createBrowserRouter([
       { path: 'audit-log', element: <AuditLog /> },
       { path: 'workflows', element: <Workflows /> },
       { path: 'settings', element: <Settings /> },
+      { path: 'profile', element: <Profile /> },
+      { path: 'permissions', element: <Permissions /> },
+      { path: 'roles', element: <Roles /> },
     ],
   },
 ]);

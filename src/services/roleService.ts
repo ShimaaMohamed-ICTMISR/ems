@@ -1,0 +1,96 @@
+import apiClient from './apiClient';
+
+export interface Permission {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  category?: string;
+  isActive?: boolean;
+}
+
+export interface Role {
+  id: string;
+  code: string;
+  name: string;
+  description?: string;
+  parentRoleId?: string | null;
+  isActive: boolean;
+  permissions?: Permission[];
+  permissionCount?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateRoleDto {
+  code: string;
+  name: string;
+  description?: string;
+  parentRoleId?: string | null;
+  isActive: boolean;
+  permissionIds?: string[];
+}
+
+export interface UpdateRoleDto {
+  name?: string;
+  description?: string;
+  parentRoleId?: string | null;
+  isActive?: boolean;
+}
+
+export interface AssignPermissionsDto {
+  permissionIds: string[];
+  replaceExisting: boolean;
+}
+
+// Get all roles
+export const getAllRoles = async (): Promise<Role[]> => {
+  const response = await apiClient.get('/Role');
+  return response.data;
+};
+
+// Get role by ID
+export const getRoleById = async (id: string): Promise<Role> => {
+  const response = await apiClient.get(`/Role/${id}`);
+  return response.data;
+};
+
+// Create a new role
+export const createRole = async (data: CreateRoleDto): Promise<Role> => {
+  const response = await apiClient.post('/Role', data);
+  return response.data;
+};
+
+// Update a role
+export const updateRole = async (id: string, data: UpdateRoleDto): Promise<Role> => {
+  const response = await apiClient.put(`/Role/${id}`, data);
+  return response.data;
+};
+
+// Delete a role
+export const deleteRole = async (id: string): Promise<void> => {
+  await apiClient.delete(`/Role/${id}`);
+};
+
+// Assign permissions to a role
+export const assignPermissionsToRole = async (
+  roleId: string,
+  data: AssignPermissionsDto
+): Promise<Role> => {
+  const response = await apiClient.post(`/Role/${roleId}/permissions`, data);
+  return response.data;
+};
+
+// Remove a permission from a role
+export const removePermissionFromRole = async (
+  roleId: string,
+  permissionId: string
+): Promise<void> => {
+  await apiClient.delete(`/Role/${roleId}/permissions/${permissionId}`);
+};
+
+// Get role hierarchy
+export const getRoleHierarchy = async (id: string): Promise<Role> => {
+  const response = await apiClient.get(`/Role/${id}/hierarchy`);
+  return response.data;
+};
