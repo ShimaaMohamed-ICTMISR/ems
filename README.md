@@ -59,7 +59,17 @@ src/
 │   ├── VotingPolls.tsx     # Voting & Polls page
 │   ├── AuditLog.tsx        # Audit log page
 │   ├── Workflows.tsx       # Workflows page
-│   └── Settings.tsx        # Settings page
+│   ├── Settings.tsx        # Settings page
+│   ├── Profile.tsx         # User profile page
+│   ├── Permissions.tsx     # Permissions management
+│   ├── Roles.tsx           # Roles management
+│   └── Users.tsx           # User management page
+├── services/
+│   ├── apiClient.ts        # Axios API client configuration
+│   ├── authService.ts      # Authentication service
+│   ├── permissionService.ts # Permissions API service
+│   ├── roleService.ts      # Roles API service
+│   └── userService.ts      # Users API service
 ├── main.tsx                # Application entry point
 └── index.css               # Global styles
 ```
@@ -75,6 +85,41 @@ src/
 - `/audit-log` - Audit Log
 - `/workflows` - Workflows
 - `/settings` - Settings
+- `/profile` - User Profile
+- `/permissions` - Permissions Management
+- `/roles` - Roles Management
+- `/users` - User Management
+
+## API Integration
+
+The application integrates with the IAM Auth API at `http://iamauth.runasp.net/api`
+
+### User Management Features
+
+The Users page (`/users`) provides comprehensive user management:
+
+- **List Users**: Paginated user list with search and filtering
+- **Create User**: Add new users with username, email, name, password, and phone
+- **Update User**: Edit user details (first name, last name, phone)
+- **Delete User**: Remove users from the system
+- **Reactivate User**: Restore inactive users
+- **Toggle MFA**: Enable/disable multi-factor authentication
+- **Role Management**: Assign and remove roles with optional expiration dates
+- **Session Management**: View and revoke active user sessions
+
+### API Endpoints Used
+
+- `GET /api/User` - List users with pagination and filters
+- `POST /api/User` - Create new user
+- `GET /api/User/{id}` - Get user details
+- `PUT /api/User/{id}` - Update user
+- `DELETE /api/User/{id}` - Delete user
+- `POST /api/User/{id}/reactivate` - Reactivate user
+- `POST /api/User/{id}/toggle-mfa` - Toggle MFA
+- `POST /api/User/{id}/roles` - Assign role to user
+- `DELETE /api/User/{id}/roles/{roleId}` - Remove role from user
+- `GET /api/User/{id}/sessions` - Get user sessions
+- `POST /api/User/sessions/{sessionId}/revoke` - Revoke session
 
 ## Responsive Behavior
 

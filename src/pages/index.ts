@@ -10,3 +10,4 @@ export { Settings } from './Settings';
 export { Profile } from './Profile';
 export { Permissions } from './Permissions';
 export { default as Roles } from './Roles';
+export { default as Users } from './Users';

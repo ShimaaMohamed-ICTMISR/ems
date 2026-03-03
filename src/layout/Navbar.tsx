@@ -29,7 +29,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark sticky-top shadow-sm" style={{ backgroundColor: '#0f172a' }}>
+    <nav className="navbar navbar-expand-lg navbar-dark  shadow-sm" style={{ backgroundColor: '#0f172a' }}>
       <div className="container-fluid px-4">
         {/* Hamburger for mobile */}
         <button

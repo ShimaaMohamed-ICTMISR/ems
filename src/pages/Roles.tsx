@@ -11,6 +11,12 @@ const Roles = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  
+  // Pagination state
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
 
   // Modal states
   const [showViewModal, setShowViewModal] = useState(false);
@@ -27,7 +33,6 @@ const Roles = () => {
     name: '',
     description: '',
     isActive: true,
-    permissionIds: [] as string[],
   });
 
   // Edit form state
@@ -40,17 +45,35 @@ const Roles = () => {
   // Fetch all roles and permissions
   useEffect(() => {
     fetchRoles();
+  }, [pageNumber, pageSize, searchTerm, filter]);
+
+  useEffect(() => {
     fetchPermissions();
   }, []);
+
+  useEffect(() => {
+    // Reset to page 1 when filters change
+    setPageNumber(1);
+  }, [searchTerm, filter, pageSize]);
 
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const data = await roleService.getAllRoles();
-      setRoles(data);
+      const activeOnly = filter === 'active' ? true : filter === 'inactive' ? false : undefined;
+      const response = await roleService.getRolesPaginated({
+        searchTerm: searchTerm || undefined,
+        activeOnly,
+        pageNumber,
+        pageSize,
+      });
+      setRoles(response.items || []);
+      setTotalPages(response.totalPages);
+      setHasMore(response.hasNextPage);
       setError(null);
     } catch (err) {
+      console.error('Error fetching roles:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch roles');
+      setRoles([]);
     } finally {
       setLoading(false);
     }
@@ -148,20 +171,10 @@ const Roles = () => {
         name: '',
         description: '',
         isActive: true,
-        permissionIds: [],
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create role');
     }
-  };
-
-  const handleCreatePermissionToggle = (permissionId: string) => {
-    setCreateFormData((prev) => ({
-      ...prev,
-      permissionIds: prev.permissionIds.includes(permissionId)
-        ? prev.permissionIds.filter((id: string) => id !== permissionId)
-        : [...prev.permissionIds, permissionId],
-    }));
   };
 
   const handlePermissionToggle = (permissionId: string) => {
@@ -171,20 +184,6 @@ const Roles = () => {
         : [...prev, permissionId]
     );
   };
-
-  // Filter and search roles
-  const filteredRoles = roles.filter((role) => {
-    const matchesSearch =
-      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      role.code.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesFilter =
-      filter === 'all' ||
-      (filter === 'active' && role.isActive) ||
-      (filter === 'inactive' && !role.isActive);
-
-    return matchesSearch && matchesFilter;
-  });
 
   if (loading)
     return <div className="roles-container"><p>Loading roles...</p></div>;
@@ -219,12 +218,22 @@ const Roles = () => {
           <option value="active">Active Only</option>
           <option value="inactive">Inactive Only</option>
         </select>
+        <select
+          className="page-size-select"
+          value={pageSize}
+          onChange={(e) => setPageSize(Number(e.target.value))}
+        >
+          <option value={5}>5 per page</option>
+          <option value={10}>10 per page</option>
+          <option value={25}>25 per page</option>
+          <option value={50}>50 per page</option>
+        </select>
       </div>
 
       {error && <div className="alert alert-danger">{error}</div>}
 
       <div className="roles-grid">
-        {filteredRoles.map((role) => (
+        {roles.map((role) => (
           <div key={role.id} className="role-card">
             <div className="role-header">
               <h3>{role.name}</h3>
@@ -279,11 +288,40 @@ const Roles = () => {
         ))}
       </div>
 
-      {filteredRoles.length === 0 && (
+      {roles.length === 0 && !loading && (
         <div className="no-results">
           <p>No roles found matching your criteria.</p>
         </div>
       )}
+
+      {/* Pagination Controls */}
+      <div className="pagination">
+        <button
+          className="btn btn-secondary"
+          onClick={() => setPageNumber(1)}
+          disabled={pageNumber === 1 || loading}
+        >
+          First
+        </button>
+        <button
+          className="btn btn-secondary"
+          onClick={() => setPageNumber(Math.max(1, pageNumber - 1))}
+          disabled={pageNumber === 1 || loading}
+        >
+          Previous
+        </button>
+        <span className="page-info">
+          Page {pageNumber} of {totalPages}
+          <span className="text-muted"> ({roles.length} roles)</span>
+        </span>
+        <button
+          className="btn btn-secondary"
+          onClick={() => setPageNumber(pageNumber + 1)}
+          disabled={!hasMore || loading}
+        >
+          Next
+        </button>
+      </div>
 
       {/* View Modal */}
       {showViewModal && selectedRole && (
@@ -542,24 +580,6 @@ const Roles = () => {
                   />
                   Active
                 </label>
-              </div>
-
-              <div className="form-group">
-                <label>Permissions (Optional)</label>
-                <p className="text-muted mb-2">Select permissions to assign to this role:</p>
-                <div className="permissions-grid">
-                  {allPermissions.map((permission) => (
-                    <label key={permission.id} className="permission-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={createFormData.permissionIds.includes(permission.id)}
-                        onChange={() => handleCreatePermissionToggle(permission.id)}
-                      />
-                      <span className="permission-name">{permission.name}</span>
-                      <span className="permission-code">({permission.code})</span>
-                    </label>
-                  ))}
-                </div>
               </div>
             </div>
             <div className="modal-footer">

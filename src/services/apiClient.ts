@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api';
+// Use relative path for proxy in development, or full URL for production
+const API_BASE_URL = import.meta.env.DEV 
+  ? '/api' 
+  : 'http://iamauth.runasp.net/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -10,12 +13,38 @@ export const apiClient = axios.create({
 });
 
 // Add token to requests if available
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('authToken');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('Request to:', config.url, 'with token:', token.substring(0, 20) + '...');
+    } else {
+      console.warn('No auth token found in localStorage for request:', config.url);
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
+
+// Add response interceptor to handle 401 errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      console.error('Unauthorized! Token may be invalid or expired.');
+      // Clear invalid token
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      // Only redirect if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default apiClient;

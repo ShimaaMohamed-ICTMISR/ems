@@ -16,6 +16,7 @@ import {
   Profile,
   Permissions,
   Roles,
+  Users,
 } from '../pages';
 
 const router = createBrowserRouter([
@@ -43,6 +44,7 @@ const router = createBrowserRouter([
       { path: 'profile', element: <Profile /> },
       { path: 'permissions', element: <Permissions /> },
       { path: 'roles', element: <Roles /> },
+      { path: 'users', element: <Users /> },
     ],
   },
 ]);

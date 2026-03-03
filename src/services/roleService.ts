@@ -43,10 +43,51 @@ export interface AssignPermissionsDto {
   replaceExisting: boolean;
 }
 
-// Get all roles
-export const getAllRoles = async (): Promise<Role[]> => {
-  const response = await apiClient.get('/Role');
-  return response.data;
+export interface GetRolesParams {
+  activeOnly?: boolean;
+  searchTerm?: string;
+  pageNumber?: number;
+  pageSize?: number;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalPages: number;
+  totalCount: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+// Get all roles with pagination
+export const getAllRoles = async (params?: GetRolesParams): Promise<Role[]> => {
+  try {
+    // If no params, fetch all with large page size
+    const queryParams = params || { pageNumber: 1, pageSize: 1000 };
+    const response = await apiClient.get<PaginatedResponse<Role>>('/Role', { 
+      params: queryParams 
+    });
+    
+    // Return items array from paginated response
+    return response.data.items || [];
+  } catch (error) {
+    console.error('Error fetching roles:', error);
+    throw error;
+  }
+};
+
+// Get roles with pagination metadata
+export const getRolesPaginated = async (params?: GetRolesParams): Promise<PaginatedResponse<Role>> => {
+  try {
+    const response = await apiClient.get<PaginatedResponse<Role>>('/Role', { 
+      params 
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching roles:', error);
+    throw error;
+  }
 };
 
 // Get role by ID
