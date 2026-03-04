@@ -18,6 +18,7 @@ import {
   Roles,
   Users,
 } from '../pages';
+import { Departments, CreateDepartment, EditDepartment } from '../pages/hr';
 
 const router = createBrowserRouter([
   {
@@ -35,6 +36,9 @@ const router = createBrowserRouter([
       { index: true, element: <Dashboard /> },
       { path: 'notifications', element: <Notifications /> },
       { path: 'hr', element: <HumanResources /> },
+      { path: 'hr/departments', element: <Departments /> },
+      { path: 'hr/departments/create', element: <CreateDepartment /> },
+      { path: 'hr/departments/:id/edit', element: <EditDepartment /> },
       { path: 'projects', element: <Projects /> },
       { path: 'meetings', element: <Meetings /> },
       { path: 'voting-polls', element: <VotingPolls /> },
