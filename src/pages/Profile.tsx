@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store/store';
 import { profileService, type UserProfile } from '../services/profileService';
 import './Profile.css';
 
@@ -16,7 +14,6 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export function Profile() {
-  const user = useSelector((state: RootState) => state.auth.user);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string>('');
