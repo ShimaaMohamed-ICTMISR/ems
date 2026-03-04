@@ -1,16 +1,59 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import type { RootState } from '../store/store';
 import { logout } from '../store/authSlice';
 import { authService } from '../services/authService';
+import { notificationService } from '../services/notificationService';
 import finovatelogo from '../assets/images/finovate-logo.webp';
 
 export function Navbar() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
+  const unreadCount = useSelector((state: RootState) => state.notification.unreadCount);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // Initialize notifications on mount
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const initializeNotifications = async () => {
+      try {
+        // Fetch initial notifications and unread count
+        await notificationService.getNotifications(undefined, 20, 0);
+        await notificationService.getUnreadCount(user.id);
+      } catch (error) {
+        console.error('Error initializing notifications:', error);
+      }
+    };
+
+    initializeNotifications();
+
+    // Set up streaming
+    const cleanup = notificationService.streamNotifications(
+      user.id,
+      (notification) => {
+        console.log('New notification received:', notification);
+      },
+      (error) => {
+        console.error('Notification stream error:', error);
+      },
+      () => {
+        console.log('Notification stream connected');
+      },
+      () => {
+        console.log('Notification stream closed');
+      }
+    );
+
+
+
+    // Cleanup on unmount
+    return () => {
+      cleanup();
+    };
+  }, [user?.id]);
 
   const handleLogout = async () => {
     try {
@@ -96,12 +139,15 @@ export function Navbar() {
             className="btn btn-link text-white position-relative p-0 icon-bounce"
             type="button"
             aria-label="Notifications"
+            onClick={() => navigate('/notifications')}
           >
             <i className="bi bi-bell fs-5"></i>
-            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill" style={{ backgroundColor: '#cd0606' }}>
-              3
-              <span className="visually-hidden">unread notifications</span>
-            </span>
+            {unreadCount > 0 && (
+              <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill" style={{ backgroundColor: '#cd0606' }}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+                <span className="visually-hidden">unread notifications</span>
+              </span>
+            )}
           </button>
           <div className="dropdown">
             <button className="btn btn-link text-white p-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
