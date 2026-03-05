@@ -1,9 +1,30 @@
+import { useNavigate } from 'react-router-dom';
+
 export function HumanResources() {
+  const navigate = useNavigate();
+
   return (
     <div>
       <h2 className="mb-4">Human Resources</h2>
       <p className="lead">Manage employee records, attendance, payroll, and HR workflows.</p>
       <div className="row g-3 mt-3">
+        <div className="col-md-4">
+          <div className="card">
+            <div className="card-body">
+              <h5 className="card-title">
+                <i className="bi bi-building me-2"></i>
+                Departments
+              </h5>
+              <p className="card-text">Manage organization departments and structure.</p>
+              <button 
+                className="btn btn-primary btn-sm"
+                onClick={() => navigate('/hr/departments')}
+              >
+                Open
+              </button>
+            </div>
+          </div>
+        </div>
         <div className="col-md-4">
           <div className="card">
             <div className="card-body">
