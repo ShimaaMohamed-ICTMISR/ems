@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import type { RootState } from '../store/store';
 import { logout } from '../store/authSlice';
 import { authService } from '../services/authService';
-import { notificationService } from '../services/notificationService';
 import finovatelogo from '../assets/images/finovate-logo.webp';
+import notificationService from '../services/notificationService';
 
 export function Navbar() {
   const dispatch = useDispatch();
@@ -21,7 +21,7 @@ export function Navbar() {
     const initializeNotifications = async () => {
       try {
         // Fetch initial notifications and unread count
-        await notificationService.getNotifications(undefined, 20, 0);
+        await notificationService.getNotifications(undefined, 5, 1);
         await notificationService.getUnreadCount(user.id);
       } catch (error) {
         console.error('Error initializing notifications:', error);
@@ -34,7 +34,8 @@ export function Navbar() {
     const cleanup = notificationService.streamNotifications(
       user.id,
       (notification) => {
-        console.log('New notification received:', notification);
+        console.log('Real-time notification received in Navbar:', notification);
+        // Toast is already handled in service if we wanted, but we relies on Redux update
       },
       (error) => {
         console.error('Notification stream error:', error);
@@ -51,7 +52,7 @@ export function Navbar() {
 
     // Cleanup on unmount
     return () => {
-      cleanup();
+      // cleanup();
     };
   }, [user?.id]);
 

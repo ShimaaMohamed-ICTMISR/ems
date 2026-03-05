@@ -1,5 +1,9 @@
 // src/layout/Sidebar.tsx
+import { useSelector } from 'react-redux';
 import { NavLink } from 'react-router-dom';
+import type { RootState } from '../store/store';
+
+
 
 interface NavItem {
   to: string;
@@ -73,6 +77,9 @@ function NavItems({ items }: { items: NavItem[] }) {
 }
 
 function SidebarContent() {
+
+  const user = useSelector((state: RootState) => state.auth.user);
+
   return (
     <div className="d-flex flex-column" style={{ backgroundColor: '#0f172a', minHeight: '100vh', height: '100%' }}>
       {/* Logo/Brand */}
@@ -127,8 +134,8 @@ function SidebarContent() {
             <i className="bi bi-person-fill text-white fs-5"></i>
           </div>
           <div>
-            <div className="fw-semibold">Shimaa Mohamed</div>
-            <small className="text-white-50">admin@Finovate.com</small>
+            <div className="fw-semibold">{user?.fullName}</div>
+            <small className="text-white-50">{user?.email}</small>
           </div>
         </div>
       </div>

@@ -6,6 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      '/api/notifications': {
+        target: 'https://ems-notification-service.onrender.com',
+        changeOrigin: true,
+      },
       '/api': {
         target: 'http://iamauth.runasp.net',
         changeOrigin: true,

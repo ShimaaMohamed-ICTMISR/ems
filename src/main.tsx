@@ -1,5 +1,5 @@
 // src/main.tsx
-import { StrictMode } from 'react';
+import React, { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -15,12 +15,15 @@ import * as bootstrap from 'bootstrap';
 // Make Bootstrap available globally
 (window as any).bootstrap = bootstrap;
 
+// Top-level component to initialize SSE
+
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      <AuthInitializer>
-        <AppRouter />
-      </AuthInitializer>
+        <AuthInitializer>
+          <AppRouter />
+        </AuthInitializer>
     </Provider>
   </StrictMode>
 );

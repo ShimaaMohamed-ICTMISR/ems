@@ -11,6 +11,7 @@ export interface Notification {
   content?: string;
   type?: string;
   category?: string;
+  channel?: string;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
   channels?: string[];
   isRead?: boolean;
@@ -20,6 +21,9 @@ export interface Notification {
   createdAt?: string;
   updatedAt?: string;
   timestamp?: string;
+  bodyText?: string;
+  status?: string;
+  readAt?: string | null;
   metadata?: Record<string, any>;
   sender?: {
     id?: string;
@@ -29,6 +33,11 @@ export interface Notification {
   actionUrl?: string;
   relatedEntityId?: string;
   relatedEntityType?: string;
+}
+
+export interface StreamNotification {
+  id: string
+  notification: Notification
 }
 
 interface NotificationState {
@@ -148,13 +157,20 @@ const notificationSlice = createSlice({
     },
 
     // Add new notification (from stream)
-    addNotification: (state, action: PayloadAction<Notification>) => {
-      const newNotif = action.payload;
-      // Check if notification already exists
-      const exists = state.notifications.find((n) => n._id === newNotif._id || n.id === newNotif.id);
+    addNotification: (state, action: PayloadAction<StreamNotification>) => {
+      const { notification } = action.payload;
+
+      const idToCheck = notification.id
+      if (!idToCheck) return;
+
+      const exists = state.notifications.find(
+        (n) => (n.id === idToCheck || n._id === idToCheck)
+      );
       if (!exists) {
-        state.notifications.unshift(newNotif);
-        if (!newNotif.isRead && !newNotif.read) {
+        state.notifications.unshift(notification);
+        // Ensure unread count only increments for actual unread items
+        const isRead = notification.isRead === true || notification.read === true || notification.readAt;
+        if (!isRead) {
           state.unreadCount += 1;
         }
       }
