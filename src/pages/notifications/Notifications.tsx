@@ -19,7 +19,7 @@ function Notifications() {
   const user = useSelector((state: RootState) => state.auth.user);
   const [isMarking, setIsMarking] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedNotif, setSelectedNotif] = useState<Notification | null>(null);
+  const [selectedNotifId, setSelectedNotifId] = useState<string | undefined>();
   const [priorityFilter, setPriorityFilter] = useState<string>("");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -95,7 +95,7 @@ function Notifications() {
 
 
   const handleNotificationClick = (notification: Notification) => {
-    setSelectedNotif(notification);
+    setSelectedNotifId(notification.id)
     setShowDetailModal(true);
     dispatch(setCurrentNotification(notification));
   };
@@ -207,13 +207,13 @@ function Notifications() {
         </div>
       </div>
 
-      {showDetailModal && selectedNotif && (
+      {showDetailModal && selectedNotifId && (
         <NotificationDetails
           setShowDetailModal={setShowDetailModal}
           isMarking={isMarking}
-          selectedNotif={selectedNotif}
           setIsMarking={setIsMarking}
           userId={user?.id}
+          notificationId={selectedNotifId}
         />
       )}
     </div>
