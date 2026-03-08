@@ -104,8 +104,10 @@ const notificationSlice = createSlice({
       state.loading = false;
       const notification = state.notifications.find((n) => n._id === action.payload || n.id === action.payload);
       if (notification) {
+        console.log("🚀 ~ notification:", notification)
         notification.isRead = true;
         notification.read = true;
+        
       }
       if (state.unreadCount > 0) {
         state.unreadCount -= 1;

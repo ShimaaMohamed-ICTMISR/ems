@@ -291,23 +291,6 @@ export const notificationService = {
           }
         });
 
-        // eventSource.addEventListener('error', (event) => {
-        //   console.error('SSE Error:', event);
-        //   store.dispatch(setStreamConnected(false));
-
-        //   if (eventSource?.readyState === EventSource.CLOSED) {
-        //     onClose?.();
-        //     // Try to reconnect after 5 seconds, “If the stream connection closes, wait 5 seconds, then try to reconnect.”
-        //     setTimeout(() => {
-        //       console.log('Attempting to reconnect to notification stream...');
-        //       connect();
-        //     }, 5000);
-        //   } else {
-        //     const error = new Error('Stream connection error');
-        //     onError?.(error);
-        //   }
-        // });
-
         eventSource.onerror = () => {
           store.dispatch(setStreamConnected(false));
           if (eventSource?.readyState === EventSource.CLOSED) {
@@ -337,6 +320,79 @@ export const notificationService = {
       }
     };
   },
+
+
+
+  //   /**
+  //  * Subscribe to real-time notifications via Server-Sent Events
+  //  * @param onMessage - Callback function when new notification arrives
+  //  * @param onError - Callback function on error
+  //  * @param onOpen - Callback function when connection opens
+  //  * @param onClose - Callback function when connection closes
+  //  */
+  // streamAllNotificationsForAdmin: (
+  //   onMessage?: (notification: Notification) => void,
+  //   onError?: (error: Error) => void,
+  //   onOpen?: () => void,
+  //   onClose?: () => void
+  // ): (() => void) => {
+  //   let eventSource: EventSource | null = null;
+
+  //   const connect = () => {
+  //     try {
+  //       const url = new URL(`${NOTIFICATION_API_BASE}/notifications/stream/all`);
+  //       url.searchParams.append('ticket', SERVICE_TICKET);
+
+  //       eventSource = new EventSource(url.toString());
+
+  //       eventSource.addEventListener('open', () => {
+  //         store.dispatch(setStreamConnected(true));
+  //         onOpen?.();
+  //       });
+
+  //       eventSource.addEventListener('notification.created', (event) => {
+  //         try {
+  //           const rawData = JSON.parse(event.data);
+  //           // Handle both flat notification and nested data structure
+  //           const notification = rawData?.data || rawData;
+
+  //           console.log('Processed all stream notification:', notification);
+  //           store.dispatch(addNotification(notification));
+  //           onMessage?.(notification);
+  //         } catch (error) {
+  //           console.error('Error parsing notification:', error);
+  //         }
+  //       });
+
+  //       eventSource.onerror = () => {
+  //         store.dispatch(setStreamConnected(false));
+  //         if (eventSource?.readyState === EventSource.CLOSED) {
+  //           onClose?.();
+  //           // Try to reconnect after 5 seconds
+  //           setTimeout(() => {
+  //             console.log('Attempting to reconnect to notification stream...');
+  //             connect();
+  //           }, 5000);
+  //         }
+  //       };
+  //     } catch (error) {
+  //       const err = error instanceof Error ? error : new Error('Failed to connect to stream');
+  //       store.dispatch(setStreamConnected(false));
+  //       onError?.(err);
+  //     }
+  //   };
+
+  //   connect();
+
+  //   // Return cleanup function
+  //   return () => {
+  //     if (eventSource) {
+  //       eventSource.close();
+  //       store.dispatch(setStreamConnected(false));
+  //       onClose?.();
+  //     }
+  //   };
+  // },
 
   /**
    * Delete a notification

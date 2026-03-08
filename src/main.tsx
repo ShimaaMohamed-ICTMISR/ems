@@ -1,29 +1,30 @@
 // src/main.tsx
-import React, { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { Provider } from 'react-redux';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import 'bootstrap-icons/font/bootstrap-icons.css';
-import './index.css';
-import { AppRouter } from './app/router';
-import { AuthInitializer } from './Components/AuthInitializer';
-import { store } from './store/store';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { Provider } from "react-redux";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap-icons/font/bootstrap-icons.css";
+import "./index.css";
+import { AppRouter } from "./app/router";
+import { AuthInitializer } from "./Components/AuthInitializer";
+import { store } from "./store/store";
 
 // Import Bootstrap JS
-import * as bootstrap from 'bootstrap';
+import * as bootstrap from "bootstrap";
+import { Toaster } from "react-hot-toast";
 
 // Make Bootstrap available globally
 (window as any).bootstrap = bootstrap;
 
 // Top-level component to initialize SSE
 
-
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Provider store={store}>
-        <AuthInitializer>
-          <AppRouter />
-        </AuthInitializer>
-    </Provider>
-  </StrictMode>
+createRoot(document.getElementById("root")!).render(
+  // <StrictMode>
+  <Provider store={store}>
+    <AuthInitializer>
+      <AppRouter />
+    </AuthInitializer>
+    <Toaster position="top-right" />
+  </Provider>,
+  // </StrictMode>
 );
