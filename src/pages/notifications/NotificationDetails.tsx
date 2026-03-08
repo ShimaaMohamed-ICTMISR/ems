@@ -1,23 +1,26 @@
+import { useSelector } from "react-redux";
 import notificationService from "../../services/notificationService";
-import type { Notification } from "../../store/notificationSlice";
 import { formatTimeAgo } from "../../utils";
+import type { RootState } from "../../store/store";
 
 interface Props {
-  selectedNotif: Notification;
   setShowDetailModal: (value: boolean) => void;
   setIsMarking: (val: boolean) => void;
   isMarking: boolean;
   userId?: string;
+  notificationId?: string;
 }
 
 export default function NotificationDetails({
-  selectedNotif,
   setShowDetailModal,
   setIsMarking,
   isMarking,
   userId,
+  notificationId,
 }: Props) {
-  console.log("🚀 ~ NotificationDetails ~ selectedNotif:", selectedNotif);
+  const selectedNotif = useSelector(
+    (state: RootState) => state.notification.notifications,
+  ).find((n) => n.id === notificationId);
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
@@ -54,6 +57,8 @@ export default function NotificationDetails({
       setIsMarking(false);
     }
   };
+
+  if (!selectedNotif) return null;
 
   return (
     <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
