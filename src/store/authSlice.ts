@@ -21,6 +21,7 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   isAuthenticated: boolean;
+  isInitialized: boolean;
 }
 
 const initialState: AuthState = {
@@ -29,6 +30,7 @@ const initialState: AuthState = {
   isLoading: false,
   error: null,
   isAuthenticated: false,
+  isInitialized: false
 };
 
 const authSlice = createSlice({
@@ -70,6 +72,7 @@ const authSlice = createSlice({
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = !!action.payload.token;
+      state.isInitialized = true;
     },
   },
 });

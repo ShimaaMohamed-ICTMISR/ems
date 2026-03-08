@@ -10,8 +10,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import './Login.css';
 
 const loginSchema = z.object({
-  identifier: z.string().optional(),
-  password: z.string().optional(),
+  identifier: z.string().nonempty('Email/Username is required'),
+  password: z.string().nonempty('Password is required'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
