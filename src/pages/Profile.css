@@ -1,0 +1,119 @@
+.profile-container {
+  padding: 20px 0;
+}
+
+.profile-card {
+  border: none;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.profile-avatar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.profile-avatar i {
+  font-size: 80px;
+  color: #06b6d4;
+}
+
+.profile-meta {
+  text-align: left;
+}
+
+.profile-meta div {
+  margin-bottom: 15px;
+}
+
+.profile-meta span {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 5px;
+}
+
+.profile-meta p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.card {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+}
+
+.card-header {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.form-control {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 0.2rem rgba(6, 182, 212, 0.25);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+}
+
+.badge {
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+.profile-display {
+  padding: 10px 0;
+}
+
+.profile-display label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #999;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.profile-display p {
+  margin: 0;
+  font-size: 15px;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 10px 0;
+  }
+
+  .profile-avatar i {
+    font-size: 60px;
+  }
+}
