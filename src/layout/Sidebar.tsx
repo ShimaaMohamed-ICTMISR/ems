@@ -20,7 +20,7 @@ const moduleNavItems: NavItem[] = [
   { to: '/hr', icon: 'bi-people', label: 'Human Resources' },
   { to: '/projects', icon: 'bi-kanban', label: 'Projects' },
   { to: '/meetings', icon: 'bi-calendar-event', label: 'Meetings' },
-  { to: '/voting-polls', icon: 'bi-bar-chart', label: 'Voting & Polls' },
+  { to: '/voting', icon: 'bi-bar-chart', label: 'Voting' },
 ];
 
 const systemNavItems: NavItem[] = [
@@ -56,8 +56,7 @@ function NavItems({ items }: { items: NavItem[] }) {
             to={item.to}
             end={item.to === '/'}
             className={({ isActive }) =>
-              `nav-link text-white d-flex align-items-center gap-3 px-3 py-2 rounded ${
-                isActive ? 'fw-semibold shadow-sm' : 'hover-bg-white-10'
+              `nav-link text-white d-flex align-items-center gap-3 px-3 py-2 rounded ${isActive ? 'fw-semibold shadow-sm' : 'hover-bg-white-10'
               }`
             }
             onClick={handleClick}
