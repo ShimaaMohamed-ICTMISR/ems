@@ -20,10 +20,6 @@ export function PollEligibilityComponent({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Legacy manual input states
-  const [newType, setNewType] = useState('');
-  const [newValue, setNewValue] = useState('');
-  
   // Employee dropdown states
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -119,25 +115,6 @@ export function PollEligibilityComponent({
       setSelectedEmployee(null);
       setEmployeeSearch('');
       setShowEmployeeDropdown(false);
-      onEligibilityChange();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to add eligibility');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddManual = async () => {
-    if (!newType.trim() || !newValue.trim()) return;
-    setError(null);
-    setLoading(true);
-    try {
-      await createEligibility(pollId, {
-        type: newType.trim(),
-        value: newValue.trim(),
-      });
-      setNewType('');
-      setNewValue('');
       onEligibilityChange();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to add eligibility');
@@ -383,52 +360,6 @@ export function PollEligibilityComponent({
               </div>
             </div>
           )}
-
-          {/* Manual Input Fallback */}
-          <div className="card">
-            <div className="card-header bg-light">
-              <h6 className="mb-0">
-                <i className="bi bi-pencil me-2"></i>
-                Manual Entry
-              </h6>
-            </div>
-            <div className="card-body">
-              <div className="row g-2">
-                <div className="col-md-4">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Type (e.g. role, department)"
-                    value={newType}
-                    onChange={(ev) => setNewType(ev.target.value)}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Value"
-                    value={newValue}
-                    onChange={(ev) => setNewValue(ev.target.value)}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <button
-                    type="button"
-                    className="btn btn-outline-primary"
-                    onClick={handleAddManual}
-                    disabled={loading || !newType.trim() || !newValue.trim()}
-                  >
-                    <i className="bi bi-plus me-1"></i>
-                    Add Manual
-                  </button>
-                </div>
-              </div>
-              <small className="text-muted mt-2 d-block">
-                Use this if the employee dropdown doesn't work or for custom rules
-              </small>
-            </div>
-          </div>
         </div>
       )}
     </div>
