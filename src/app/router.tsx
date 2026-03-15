@@ -1,5 +1,9 @@
+<<<<<<< Updated upstream
 // src/app/router.tsx
 import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+=======
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+>>>>>>> Stashed changes
 import { AppLayout } from '../layout/AppLayout';
 import Login from '../pages/Login';
 import { ProtectedRoute } from './ProtectedRoute';
@@ -8,7 +12,11 @@ import {
   Notifications,
   HumanResources,
   Projects,
+<<<<<<< Updated upstream
   Meetings,
+=======
+  VotingPolls,
+>>>>>>> Stashed changes
   AuditLog,
   Workflows,
   Settings,
@@ -18,11 +26,15 @@ import {
   Users,
 } from '../pages';
 import { Departments, CreateDepartment, EditDepartment } from '../pages/hr';
+<<<<<<< Updated upstream
 import { PollsDashboard } from '../modules/voting/pages/PollsDashboard';
 import { PollDetailsPage } from '../modules/voting/pages/PollDetailsPage';
 import { CreatePollPage } from '../modules/voting/pages/CreatePollPage';
 import { VotePage } from '../modules/voting/pages/VotePage';
 import { ResultsPage } from '../modules/voting/pages/ResultsPage';
+=======
+import { MeetingsList, CreateMeeting, MeetingDetails } from '../pages/meetings';
+>>>>>>> Stashed changes
 
 const router = createBrowserRouter([
   {
@@ -44,6 +56,7 @@ const router = createBrowserRouter([
       { path: 'hr/departments/create', element: <CreateDepartment /> },
       { path: 'hr/departments/:id/edit', element: <EditDepartment /> },
       { path: 'projects', element: <Projects /> },
+<<<<<<< Updated upstream
       { path: 'meetings', element: <Meetings /> },
       {
         path: 'voting',
@@ -56,6 +69,12 @@ const router = createBrowserRouter([
           { path: ':pollId/results', element: <ResultsPage /> },
         ],
       },
+=======
+      { path: 'meetings', element: <MeetingsList /> },
+      { path: 'meetings/create', element: <CreateMeeting /> },
+      { path: 'meetings/:id', element: <MeetingDetails /> },
+      { path: 'voting-polls', element: <VotingPolls /> },
+>>>>>>> Stashed changes
       { path: 'audit-log', element: <AuditLog /> },
       { path: 'workflows', element: <Workflows /> },
       { path: 'settings', element: <Settings /> },

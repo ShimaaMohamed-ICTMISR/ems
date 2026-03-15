@@ -6,6 +6,16 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      '/api/meeting': {
+        target: 'https://ems-meeting-service.onrender.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/meeting/, ''),
+      },
+      '/api/voting': {
+        target: 'https://ems-voting-service.onrender.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/voting/, ''),
+      },
       '/api/notifications': {
         target: 'https://ems-notification-service.onrender.com',
         changeOrigin: true,
