@@ -95,7 +95,7 @@ export function Dashboard() {
         <div className="col-lg-8">
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-white border-0 py-3">
-              <h5 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>Recent Activity</h5>
+              <h5 className="mb-0 fw-bold" style={{ color: '#fffff' }}>Recent Activity</h5>
             </div>
             <div className="card-body">
               <div className="d-flex align-items-start mb-3 pb-3 border-bottom">
@@ -134,7 +134,7 @@ export function Dashboard() {
         <div className="col-lg-4">
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-white border-0 py-3">
-              <h5 className="mb-0 fw-bold" style={{ color: '#0f172a' }}>Quick Actions</h5>
+              <h5 className="mb-0 fw-bold" style={{ color: '#fffff' }}>Quick Actions</h5>
             </div>
             <div className="card-body">
               <div className="d-grid gap-2">

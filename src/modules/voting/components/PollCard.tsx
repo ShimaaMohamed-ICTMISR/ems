@@ -49,7 +49,7 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const statusStr = asText((poll as Record<string, unknown>).status);
+  const statusStr = asText((poll as unknown as Record<string, unknown>).status);
   const statusClass = statusBadge[statusStr as PollStatus] ?? 'bg-secondary';
   const statusText = statusLabel[statusStr as PollStatus] ?? statusStr;
 

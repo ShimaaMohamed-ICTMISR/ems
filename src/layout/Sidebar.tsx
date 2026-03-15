@@ -20,7 +20,8 @@ const moduleNavItems: NavItem[] = [
   { to: '/hr', icon: 'bi-people', label: 'Human Resources' },
   { to: '/projects', icon: 'bi-kanban', label: 'Projects' },
   { to: '/meetings', icon: 'bi-calendar-event', label: 'Meetings' },
-  { to: '/voting', icon: 'bi-bar-chart', label: 'Voting' },
+  { to: '/voting', icon: 'bi-bar-chart', label: 'Voting & Polls' },
+  { to: '/opportunities', icon: 'bi-graph-up-arrow', label: 'Opportunities' },
 ];
 
 const systemNavItems: NavItem[] = [

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
 import type { Meeting, MeetingStatus } from '../../services/meetingService';
+import './meetings.css';
 
 export function MeetingsList() {
   const navigate = useNavigate();
@@ -9,23 +10,67 @@ export function MeetingsList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<MeetingStatus | 'ALL'>('ALL');
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   useEffect(() => {
     loadMeetings();
   }, []);
 
-  const loadMeetings = async () => {
+  const loadMeetings = async (isRetry = false) => {
     try {
-      setLoading(true);
+      if (isRetry) {
+        setIsRetrying(true);
+      } else {
+        setLoading(true);
+      }
+      
       const data = await meetingService.getMeetings();
       console.log('Meetings loaded:', data);
       setMeetings(Array.isArray(data) ? data : []);
       setError(null);
-    } catch (err) {
-      setError('Failed to load meetings');
+      setRetryCount(0); // Reset retry count on success
+    } catch (err: any) {
       console.error('Error loading meetings:', err);
+      
+      // More detailed error handling
+      if (err?.response?.status === 401) {
+        setError('Authentication failed: Service ticket is missing or invalid. Please contact support.');
+      } else if (err?.response?.status === 500) {
+        setError('Meeting service is experiencing technical difficulties. The backend team has been notified. Please try again in a few minutes.');
+      } else if (err?.response?.status === 503) {
+        setError('Meeting service is temporarily unavailable for maintenance. Please try again later.');
+      } else if (err?.response?.status === 404) {
+        setError('Meeting service endpoint not found. Please contact support.');
+      } else if (err?.code === 'NETWORK_ERROR' || err?.message?.includes('Network Error')) {
+        setError('Unable to connect to meeting service. Please check your internet connection and try again.');
+      } else if (err?.code === 'ECONNREFUSED') {
+        setError('Meeting service is not responding. Please try again later.');
+      } else {
+        setError(`Failed to load meetings: ${err?.message || 'Unknown error'}. Please try again or contact support if the issue persists.`);
+      }
+      
+      // Set empty array so the UI can still render
+      setMeetings([]);
     } finally {
       setLoading(false);
+      setIsRetrying(false);
+    }
+  };
+
+  const handleRetry = async () => {
+    const newRetryCount = retryCount + 1;
+    setRetryCount(newRetryCount);
+    
+    // Exponential backoff: wait longer between retries
+    const delay = Math.min(1000 * Math.pow(2, newRetryCount - 1), 10000);
+    
+    if (newRetryCount <= 3) {
+      setTimeout(() => {
+        loadMeetings(true);
+      }, delay);
+    } else {
+      loadMeetings(true);
     }
   };
 
@@ -91,19 +136,38 @@ export function MeetingsList() {
     ? meetings 
     : meetings.filter(m => m.status === statusFilter);
 
+  // Debug logging for filters
+  console.log('Filter Debug:', {
+    statusFilter,
+    totalMeetings: meetings.length,
+    filteredMeetings: filteredMeetings.length,
+    meetingStatuses: meetings.map(m => ({ title: m.title, status: m.status }))
+  });
+
   return (
-    <div>
+    <div className="meetings-page">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="mb-2 fw-bold text-dark">
             <i className="bi bi-calendar-event me-3 text-dark"></i>
             Meetings
+            {error && (
+              <span className="badge bg-warning text-dark ms-3">
+                <i className="bi bi-wifi-off me-1"></i>
+                Offline Mode
+              </span>
+            )}
           </h2>
-          <p className="text-muted mb-0">Schedule and manage team meetings</p>
+          <p className="text-muted mb-0">
+            {error 
+              ? "Service unavailable - working in offline mode" 
+              : "Schedule and manage team meetings"
+            }
+          </p>
         </div>
         <button 
-          className="btn btn-dark btn-lg shadow-sm"
+          className="btn btn-meetings-primary btn-lg shadow-sm"
           onClick={() => navigate('/meetings/create')}
         >
           <i className="bi bi-plus-circle me-2"></i>
@@ -148,9 +212,49 @@ export function MeetingsList() {
       </div>
 
       {error && (
-        <div className="alert alert-danger border-0 shadow-sm" role="alert">
-          <i className="bi bi-exclamation-triangle me-2"></i>
-          {error}
+        <div className="alert alert-warning border-0 shadow-sm" role="alert">
+          <div className="d-flex align-items-start justify-content-between">
+            <div className="flex-grow-1">
+              <div className="d-flex align-items-center mb-2">
+                <i className="bi bi-exclamation-triangle me-2"></i>
+                <strong>Service Unavailable</strong>
+                {retryCount > 0 && (
+                  <span className="badge bg-secondary ms-2">
+                    Attempt {retryCount}/3
+                  </span>
+                )}
+              </div>
+              <p className="mb-2 small">{error}</p>
+              {retryCount >= 3 && (
+                <div className="alert alert-info border-0 mt-2 mb-0 py-2">
+                  <small>
+                    <i className="bi bi-info-circle me-1"></i>
+                    If the issue persists, the backend service may be down. 
+                    You can still create meetings offline - they will sync when the service is restored.
+                  </small>
+                </div>
+              )}
+            </div>
+            <div className="d-flex gap-2">
+              <button 
+                className="btn btn-outline-warning btn-sm"
+                onClick={handleRetry}
+                disabled={isRetrying}
+              >
+                {isRetrying ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                    Retrying...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-arrow-clockwise me-1"></i>
+                    Retry {retryCount >= 3 ? 'Now' : `(${retryCount + 1}/3)`}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -243,22 +347,51 @@ export function MeetingsList() {
       {filteredMeetings.length === 0 && !loading && (
         <div className="text-center py-5">
           <div className="mb-4">
-            <i className="bi bi-calendar-x display-1 text-muted"></i>
+            {error ? (
+              <i className="bi bi-wifi-off display-1 text-warning"></i>
+            ) : (
+              <i className="bi bi-calendar-x display-1 text-muted"></i>
+            )}
           </div>
-          <h4 className="text-muted mb-3">No meetings found</h4>
+          <h4 className="text-muted mb-3">
+            {error ? 'Service Unavailable' : 'No meetings found'}
+          </h4>
           <p className="text-muted mb-4">
-            {statusFilter === 'ALL' 
-              ? "You haven't created any meetings yet" 
-              : `No ${statusFilter.toLowerCase()} meetings found`
+            {error 
+              ? "The meeting service is currently unavailable, but you can still create meetings offline"
+              : statusFilter === 'ALL' 
+                ? "You haven't created any meetings yet" 
+                : `No ${statusFilter.toLowerCase()} meetings found`
             }
           </p>
-          <button 
-            className="btn btn-primary btn-lg"
-            onClick={() => navigate('/meetings/create')}
-          >
-            <i className="bi bi-plus-circle me-2"></i>
-            Create Your First Meeting
-          </button>
+          <div className="d-flex gap-3 justify-content-center">
+            <button 
+              className="btn btn-primary btn-lg"
+              onClick={() => navigate('/meetings/create')}
+            >
+              <i className="bi bi-plus-circle me-2"></i>
+              {error ? 'Create Meeting Offline' : 'Create Your First Meeting'}
+            </button>
+            {error && (
+              <button 
+                className="btn btn-outline-primary btn-lg"
+                onClick={handleRetry}
+                disabled={isRetrying}
+              >
+                {isRetrying ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Checking Service...
+                  </>
+                ) : (
+                  <>
+                    <i className="bi bi-arrow-clockwise me-2"></i>
+                    Check Service Status
+                  </>
+                )}
+              </button>
+            )}
+          </div>
         </div>
       )}
 

@@ -2,7 +2,6 @@ export { Dashboard } from './Dashboard';
 export { default as Notifications } from './notifications';
 export { HumanResources } from './HumanResources';
 export { Projects } from './Projects';
-export { VotingPolls } from './VotingPolls';
 export { AuditLog } from './AuditLog';
 export { Workflows } from './Workflows';
 export { Settings } from './Settings';

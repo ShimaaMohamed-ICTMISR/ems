@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
 import type { Meeting, ParticipantResponse } from '../../services/meetingService';
+import './meetings.css';
 
 export function MeetingDetails() {
   const { id } = useParams<{ id: string }>();
@@ -95,7 +96,7 @@ export function MeetingDetails() {
   }
 
   return (
-    <div>
+    <div className="meetings-page">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -126,9 +127,9 @@ export function MeetingDetails() {
         <div className="col-lg-8">
           {/* Meeting Overview */}
           <div className="card border-0 shadow-sm mb-4">
-            <div className="card-header bg-white border-0 py-4">
-              <h5 className="mb-0 fw-bold text-dark">
-                <i className="bi bi-info-circle me-2 text-dark"></i>
+            <div className="card-header section-header py-4">
+              <h5 className="mb-0">
+                <i className="bi bi-info-circle me-2"></i>
                 Meeting Overview
               </h5>
             </div>
@@ -143,11 +144,8 @@ export function MeetingDetails() {
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <div className="d-flex align-items-center">
-                    <div 
-                      className="rounded-circle d-flex align-items-center justify-content-center me-3 bg-secondary bg-opacity-25"
-                      style={{ width: '40px', height: '40px' }}
-                    >
-                      <i className="bi bi-calendar-event text-dark"></i>
+                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 time-circle" style={{ width: '40px', height: '40px' }}>
+                      <i className="bi bi-calendar-event"></i>
                     </div>
                     <div>
                       <h6 className="mb-1 fw-semibold text-dark">Start Time</h6>
@@ -157,11 +155,8 @@ export function MeetingDetails() {
                 </div>
                 <div className="col-md-6 mb-3">
                   <div className="d-flex align-items-center">
-                    <div 
-                      className="rounded-circle d-flex align-items-center justify-content-center me-3 bg-secondary bg-opacity-25"
-                      style={{ width: '40px', height: '40px' }}
-                    >
-                      <i className="bi bi-calendar-x text-dark"></i>
+                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 time-circle" style={{ width: '40px', height: '40px' }}>
+                      <i className="bi bi-calendar-x"></i>
                     </div>
                     <div>
                       <h6 className="mb-1 fw-semibold text-dark">End Time</h6>
@@ -208,9 +203,9 @@ export function MeetingDetails() {
           {/* Participants */}
           {meeting.participants && meeting.participants.length > 0 && (
             <div className="card border-0 shadow-sm mb-4">
-              <div className="card-header bg-white border-0 py-4">
-                <h5 className="mb-0 fw-bold text-dark">
-                  <i className="bi bi-people me-2 text-dark"></i>
+              <div className="card-header section-header py-4">
+                <h5 className="mb-0">
+                  <i className="bi bi-people me-2"></i>
                   Participants ({meeting.participants.length})
                 </h5>
               </div>
@@ -219,10 +214,7 @@ export function MeetingDetails() {
                   {meeting.participants.map((participant) => (
                     <div key={participant.id} className="col-md-6">
                       <div className="d-flex align-items-center p-3 bg-light rounded-3">
-                        <div 
-                          className="rounded-circle d-flex align-items-center justify-content-center me-3 bg-dark"
-                          style={{ width: '40px', height: '40px' }}
-                        >
+                        <div className="rounded-circle d-flex align-items-center justify-content-center me-3 participant-circle" style={{ width: '40px', height: '40px' }}>
                           <i className="bi bi-person-fill text-white"></i>
                         </div>
                         <div className="flex-grow-1">
@@ -247,9 +239,9 @@ export function MeetingDetails() {
           {/* Organizers */}
           {meeting.organizers && meeting.organizers.length > 0 && (
             <div className="card border-0 shadow-sm mb-4">
-              <div className="card-header bg-white border-0 py-4">
-                <h5 className="mb-0 fw-bold text-dark">
-                  <i className="bi bi-person-badge me-2 text-dark"></i>
+              <div className="card-header section-header py-4">
+                <h5 className="mb-0">
+                  <i className="bi bi-person-badge me-2"></i>
                   Organizers ({meeting.organizers.length})
                 </h5>
               </div>
@@ -281,19 +273,16 @@ export function MeetingDetails() {
           {/* Agenda Items */}
           {meeting.agendaItems && meeting.agendaItems.length > 0 && (
             <div className="card border-0 shadow-sm mb-4">
-              <div className="card-header bg-white border-0 py-4">
-                <h5 className="mb-0 fw-bold text-dark">
-                  <i className="bi bi-list-check me-2 text-dark"></i>
+              <div className="card-header section-header py-4">
+                <h5 className="mb-0">
+                  <i className="bi bi-list-check me-2"></i>
                   Agenda ({meeting.agendaItems.length} items)
                 </h5>
               </div>
               <div className="card-body p-4">
                 {meeting.agendaItems.map((item, index) => (
                   <div key={item.id} className="d-flex align-items-center p-3 mb-3 bg-light rounded-3">
-                    <div 
-                      className="rounded-circle d-flex align-items-center justify-content-center me-3 bg-dark text-white"
-                      style={{ width: '32px', height: '32px', fontSize: '14px' }}
-                    >
+                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 agenda-number text-white" style={{ width: '32px', height: '32px', fontSize: '14px' }}>
                       {index + 1}
                     </div>
                     <div className="flex-grow-1">
@@ -315,9 +304,9 @@ export function MeetingDetails() {
           {/* Meeting Minutes */}
           {meeting.minutes && (
             <div className="card border-0 shadow-sm mb-4">
-              <div className="card-header bg-white border-0 py-4">
-                <h5 className="mb-0 fw-bold text-dark">
-                  <i className="bi bi-journal-text me-2 text-dark"></i>
+              <div className="card-header section-header py-4">
+                <h5 className="mb-0">
+                  <i className="bi bi-journal-text me-2"></i>
                   Meeting Minutes
                 </h5>
               </div>
@@ -341,19 +330,16 @@ export function MeetingDetails() {
           {/* Action Items */}
           {meeting.actionItems && meeting.actionItems.length > 0 && (
             <div className="card border-0 shadow-sm mb-4">
-              <div className="card-header bg-white border-0 py-4">
-                <h5 className="mb-0 fw-bold text-dark">
-                  <i className="bi bi-check-square me-2 text-dark"></i>
+              <div className="card-header section-header py-4">
+                <h5 className="mb-0">
+                  <i className="bi bi-check-square me-2"></i>
                   Action Items ({meeting.actionItems.length})
                 </h5>
               </div>
               <div className="card-body p-4">
                 {meeting.actionItems.map((item) => (
                   <div key={item.id} className="d-flex align-items-start p-3 mb-3 bg-light rounded-3">
-                    <div 
-                      className="rounded-circle d-flex align-items-center justify-content-center me-3 mt-1 bg-dark"
-                      style={{ width: '32px', height: '32px' }}
-                    >
+                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 mt-1 action-circle" style={{ width: '32px', height: '32px' }}>
                       <i className="bi bi-check text-white"></i>
                     </div>
                     <div className="flex-grow-1">
@@ -386,9 +372,9 @@ export function MeetingDetails() {
         {/* Sidebar */}
         <div className="col-lg-4">
           <div className="card border-0 shadow-sm">
-            <div className="card-header bg-white border-0 py-4">
-              <h6 className="mb-0 fw-bold text-dark">
-                <i className="bi bi-info-circle me-2 text-dark"></i>
+            <div className="card-header meeting-info-header py-4">
+              <h6 className="mb-0">
+                <i className="bi bi-info-circle me-2"></i>
                 Meeting Information
               </h6>
             </div>

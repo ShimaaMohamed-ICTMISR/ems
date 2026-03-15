@@ -20,8 +20,11 @@ export interface PollOption {
 export interface PollEligibility {
   id: string;
   pollId: string;
-  type: string;
-  value: string;
+  type?: string;
+  value?: string;
+  userId?: string;
+  departmentId?: string;
+  role?: string;
   createdAt?: string;
 }
 
@@ -62,8 +65,11 @@ export interface UpdateOptionRequest {
 }
 
 export interface CreateEligibilityRequest {
-  type: string;
-  value: string;
+  type?: string;
+  value?: string;
+  userId?: string;
+  departmentId?: string;
+  role?: string;
 }
 
 export type VotingErrorCode = 'NOT_ELIGIBLE' | 'ALREADY_VOTED' | 'POLL_NOT_FOUND' | 'UNKNOWN';

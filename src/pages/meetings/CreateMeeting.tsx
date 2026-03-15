@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
 import type { CreateMeetingDto, MeetingStatus } from '../../services/meetingService';
+import './meetings.css';
 
 export function CreateMeeting() {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ export function CreateMeeting() {
   };
 
   return (
-    <div>
+    <div className="meetings-page">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -81,7 +82,7 @@ export function CreateMeeting() {
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-white border-0 py-3">
               <h5 className="mb-0 fw-bold text-dark">
-                <i className="bi bi-calendar-plus me-2 text-dark"></i>
+                <i className="bi bi-calendar-plus me-2 "></i>
                 Meeting Details
               </h5>
             </div>
@@ -175,7 +176,7 @@ export function CreateMeeting() {
                     />
                     <button
                       type="button"
-                      className="btn btn-dark"
+                      className="btn btn-meetings-primary"
                       onClick={addParticipant}
                     >
                       <i className="bi bi-plus-circle me-2"></i>Add
@@ -221,7 +222,7 @@ export function CreateMeeting() {
                 <div className="d-flex gap-3 pt-3">
                   <button 
                     type="submit" 
-                    className="btn btn-dark btn-lg px-4"
+                    className="btn btn-meetings-primary btn-lg px-4"
                     disabled={submitting}
                   >
                     {submitting ? (
@@ -250,7 +251,7 @@ export function CreateMeeting() {
           </div>
         </div>
 
-        <div className="col-lg-4">
+        {/* <div className="col-lg-4">
           <div className="card border-0 shadow-sm">
             <div className="card-header bg-white border-0 py-4">
               <h6 className="mb-0 fw-bold text-dark">
@@ -289,7 +290,7 @@ export function CreateMeeting() {
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   );
