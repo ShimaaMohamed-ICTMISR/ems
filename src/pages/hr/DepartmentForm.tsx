@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,8 +10,8 @@ const departmentSchema = z.object({
   name: z.string().min(1, 'Department name is required'),
   code: z.string().min(1, 'Department code is required'),
   description: z.string().optional(),
-  head: z.string().optional(),
-  parent: z.string().optional(),
+  headId: z.string().optional(),
+  parentId: z.string().optional(),
   costCenter: z.string().min(1, 'Cost center is required'),
 });
 
@@ -23,22 +23,6 @@ interface DepartmentFormProps {
   isLoading?: boolean;
 }
 
-// Mock data for dropdowns (fallback if API fails)
-const MOCK_HEADS = [
-  { id: '1', name: 'John Smith' },
-  { id: '2', name: 'Sarah Johnson' },
-  { id: '3', name: 'Mike Davis' },
-  { id: '4', name: 'Emily Brown' },
-  { id: '5', name: 'Robert Wilson' },
-];
-
-const MOCK_PARENT_DEPARTMENTS = [
-  { id: '1', name: 'Engineering' },
-  { id: '2', name: 'Human Resources' },
-  { id: '3', name: 'Sales' },
-  { id: '4', name: 'Operations' },
-  { id: '5', name: 'Finance' },
-];
 
 export function DepartmentForm({ initialData, onSubmit, isLoading = false }: DepartmentFormProps) {
   const navigate = useNavigate();
@@ -53,6 +37,13 @@ export function DepartmentForm({ initialData, onSubmit, isLoading = false }: Dep
     resolver: zodResolver(departmentSchema),
     defaultValues: initialData || {},
   });
+
+  // Update form when initialData changes (e.g., when editing an existing department)
+  useEffect(() => {
+    if (initialData) {
+      reset(initialData);
+    }
+  }, [initialData, reset]);
 
   const onSubmitForm = async (data: DepartmentFormData) => {
     try {
@@ -146,18 +137,13 @@ export function DepartmentForm({ initialData, onSubmit, isLoading = false }: Dep
                 Department Head
               </label>
               <select
-                className={`form-select ${errors.head ? 'is-invalid' : ''}`}
-                {...register('head')}
+                className={`form-select ${errors.headId ? 'is-invalid' : ''}`}
+                {...register('headId')}
               >
                 <option value="">Select a head</option>
-                {MOCK_HEADS.map((head) => (
-                  <option key={head.id} value={head.name}>
-                    {head.name}
-                  </option>
-                ))}
               </select>
-              {errors.head && (
-                <div className="invalid-feedback d-block">{errors.head.message}</div>
+              {errors.headId && (
+                <div className="invalid-feedback d-block">{errors.headId.message}</div>
               )}
             </div>
 
@@ -168,18 +154,13 @@ export function DepartmentForm({ initialData, onSubmit, isLoading = false }: Dep
                 Parent Department
               </label>
               <select
-                className={`form-select ${errors.parent ? 'is-invalid' : ''}`}
-                {...register('parent')}
+                className={`form-select ${errors.parentId ? 'is-invalid' : ''}`}
+                {...register('parentId')}
               >
                 <option value="">None (Root Department)</option>
-                {MOCK_PARENT_DEPARTMENTS.map((dept) => (
-                  <option key={dept.id} value={dept.name}>
-                    {dept.name}
-                  </option>
-                ))}
               </select>
-              {errors.parent && (
-                <div className="invalid-feedback d-block">{errors.parent.message}</div>
+              {errors.parentId && (
+                <div className="invalid-feedback d-block">{errors.parentId.message}</div>
               )}
             </div>
 

@@ -46,7 +46,7 @@ export default function Login() {
         })
       );
 
-      navigate('/');
+      navigate('/dashboard');
     } catch (error: any) {
       const errorMessage = error.message || 'Login failed. Please try again.';
       setApiError(errorMessage);

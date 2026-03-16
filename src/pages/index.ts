@@ -9,6 +9,7 @@ export { ProjectDocuments } from './ProjectDocuments';
 export { TaskDetails } from './TaskDetails';
 export { Meetings } from './Meetings';
 export { VotingPolls } from './VotingPolls';
+export { MeetingsList as Meetings } from './meetings/MeetingsList';
 export { AuditLog } from './AuditLog';
 export { Workflows } from './Workflows';
 export { Settings } from './Settings';

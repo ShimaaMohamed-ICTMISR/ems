@@ -10,32 +10,28 @@ interface NavItem {
 }
 
 const mainNavItems: NavItem[] = [
-  { to: "/", icon: "bi-speedometer2", label: "Dashboard" },
-  { to: "/notifications", icon: "bi-bell", label: "Notifications" },
+  { to: "/dashboard", icon: "bi-speedometer2", label: "Dashboard" },
+  { to: "/dashboard/notifications", icon: "bi-bell", label: "Notifications" },
 ];
 
 const moduleNavItems: NavItem[] = [
-  { to: "/hr", icon: "bi-people", label: "Human Resources" },
-  { to: "/project-management", icon: "bi-kanban", label: "Project Manager" },
-  { to: "/meetings", icon: "bi-calendar-event", label: "Meetings" },
-  { to: "/voting-polls", icon: "bi-bar-chart", label: "Voting & Polls" },
-  { to: '/hr', icon: 'bi-people', label: 'Human Resources' },
-  { to: '/projects', icon: 'bi-kanban', label: 'Projects' },
-  { to: '/meetings', icon: 'bi-calendar-event', label: 'Meetings' },
-  { to: '/voting', icon: 'bi-bar-chart', label: 'Voting & Polls' },
-  { to: '/opportunities', icon: 'bi-graph-up-arrow', label: 'Opportunities' },
+  { to: "/dashboard/hr", icon: "bi-people", label: "Human Resources" },
+  { to: "/dashboard/projects", icon: "bi-kanban", label: "Projects" },
+  { to: "/dashboard/meetings", icon: "bi-calendar-event", label: "Meetings" },
+  { to: "/dashboard/voting", icon: "bi-bar-chart", label: "Voting & Polls" },
+  { to: "/dashboard/opportunities", icon: "bi-graph-up-arrow", label: "Opportunities" },
 ];
 
 const systemNavItems: NavItem[] = [
-  { to: "/audit-log", icon: "bi-journal-text", label: "Audit Log" },
-  { to: "/workflows", icon: "bi-diagram-3", label: "Workflows" },
-  { to: "/settings", icon: "bi-gear", label: "Settings" },
+  { to: "/dashboard/audit-log", icon: "bi-journal-text", label: "Audit Log" },
+  { to: "/dashboard/workflows", icon: "bi-diagram-3", label: "Workflows" },
+  { to: "/dashboard/settings", icon: "bi-gear", label: "Settings" },
 ];
 
 const administrationNavItems: NavItem[] = [
-  { to: "/permissions", icon: "bi-shield-check", label: "Permissions" },
-  { to: "/roles", icon: "bi-lock", label: "Roles" },
-  { to: "/users", icon: "bi-people-fill", label: "Users" },
+  { to: "/dashboard/permissions", icon: "bi-shield-check", label: "Permissions" },
+  { to: "/dashboard/roles", icon: "bi-lock", label: "Roles" },
+  { to: "/dashboard/users", icon: "bi-people-fill", label: "Users" },
 ];
 
 function NavItems({ items }: { items: NavItem[] }) {
@@ -60,6 +56,7 @@ function NavItems({ items }: { items: NavItem[] }) {
           <NavLink
             to={item.to}
             end={item.to === "/"}
+            end={item.to === "/dashboard"}
             className={({ isActive }) =>
               `nav-link text-white d-flex align-items-center gap-3 px-3 py-2 rounded ${
                 isActive ? "fw-semibold shadow-sm" : "hover-bg-white-10"
