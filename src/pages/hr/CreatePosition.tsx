@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import type { Department } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Department } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/Departments.css';
 
 export default function CreatePosition() {

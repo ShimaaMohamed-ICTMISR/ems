@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { CreateLeaveTypeRequest } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { CreateLeaveTypeRequest } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/LeaveTypes.css';
 
 export default function CreateLeaveType() {

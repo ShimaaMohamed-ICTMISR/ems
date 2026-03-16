@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Department, Position, CreateEmployeeRequest } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Department, Position, CreateEmployeeRequest } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/Employees.css';
 
 export default function CreateEmployee() {
