@@ -1,5 +1,5 @@
 // Employee service for fetching HR data using existing HR service
-import hrService from '../../../services/hrService';
+import hrService from '../../../services/hrProjectManagementService';
 
 export interface Employee {
   id: string;

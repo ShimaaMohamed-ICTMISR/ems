@@ -1,5 +1,5 @@
 // src/app/router.tsx
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { AppLayout } from "../layout/AppLayout";
 import Login from "../pages/Login";
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -13,7 +13,6 @@ import {
   ProjectDocuments,
   TaskDetails,
   Meetings,
-  VotingPolls,
   Projects,
   AuditLog,
   Workflows,
@@ -26,8 +25,6 @@ import {
   Resources,
   ResourceRequests,
 } from "../pages";
-import { Departments, CreateDepartment, EditDepartment } from "../pages/hr";
-} from '../pages';
 import { Departments, CreateDepartment, EditDepartment } from '../pages/hr';
 import { MeetingsList, CreateMeeting, MeetingDetails } from '../pages/meetings';
 import { PollsDashboard } from '../modules/voting/pages/PollsDashboard';
@@ -78,7 +75,6 @@ const router = createBrowserRouter([
         element: <TaskDetails />,
       },
       { path: "meetings", element: <Meetings /> },
-      { path: "voting-polls", element: <VotingPolls /> },
       { path: "audit-log", element: <AuditLog /> },
       { path: "workflows", element: <Workflows /> },
       { path: "settings", element: <Settings /> },
