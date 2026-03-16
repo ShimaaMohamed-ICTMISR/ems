@@ -4,6 +4,7 @@ import DepartmentForm from './DepartmentForm';
 import type { Department } from '../../services/hrService';
 import hrService from '../../services/hrService';
 
+
 export function EditDepartment() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();

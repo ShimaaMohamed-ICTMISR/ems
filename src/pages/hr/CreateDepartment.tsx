@@ -7,10 +7,19 @@ export function CreateDepartment() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (data: any) => {
+const handleSubmit = async (data: any) => {
     try {
       setIsLoading(true);
-      await hrService.createDepartment(data);
+      const payload: any = {
+        name: data.name,
+        code: data.code,
+        costCenter: data.costCenter,
+      };
+      if (data.description) payload.description = data.description;
+      if (data.head) payload.headId = data.head;
+      if (data.parent) payload.parentId = data.parent;
+
+      await hrService.createDepartment(payload);
       alert('Department created successfully!');
       navigate('/hr/departments');
     } catch (error) {

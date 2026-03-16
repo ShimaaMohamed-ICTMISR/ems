@@ -1,0 +1,71 @@
+/* ─── Employees Page ─────────────────────────────────── */
+.employees-container { padding: 2rem; background: #f8f9fa; min-height: 100vh; }
+
+.employees-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 2.5rem; flex-wrap: wrap; gap: 2rem;
+}
+.employees-header .header-content { flex: 1; min-width: 300px; }
+
+.employees-controls { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+
+/* ─── Table ─────────────────────────────────────────── */
+.employees-table-wrapper {
+  background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  overflow: hidden;
+}
+.employees-table { width: 100%; border-collapse: collapse; }
+.employees-table thead { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.employees-table th {
+  color: white; padding: .85rem 1rem; text-align: left;
+  font-size: .82rem; text-transform: uppercase; letter-spacing: .5px; font-weight: 600;
+}
+.employees-table td { padding: .85rem 1rem; border-bottom: 1px solid #ecf0f1; font-size: .92rem; color: #2c3e50; vertical-align: middle; }
+.employees-table tr:hover td { background: #f0f3ff; }
+
+/* ─── Status Badge ──────────────────────────────────── */
+.status-badge {
+  display: inline-block; padding: .3rem .7rem; border-radius: 20px;
+  font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .3px;
+}
+.status-ACTIVE { background: #d4edda; color: #155724; }
+.status-INACTIVE { background: #e2e3e5; color: #383d41; }
+.status-ON_LEAVE { background: #fff3cd; color: #856404; }
+.status-SUSPENDED { background: #f8d7da; color: #721c24; }
+.status-TERMINATED { background: #e74c3c22; color: #c0392b; }
+
+/* ─── Action Buttons ────────────────────────────────── */
+.action-btns { display: flex; gap: .4rem; }
+.action-btns .btn { padding: .35rem .6rem; font-size: .8rem; border-radius: 6px; }
+
+/* ─── Pagination ────────────────────────────────────── */
+.employees-pagination {
+  display: flex; justify-content: center; align-items: center; gap: 1rem;
+  padding: 1.2rem; background: white; border-top: 1px solid #ecf0f1;
+}
+.employees-pagination button { border-radius: 8px; }
+.page-info { font-size: .88rem; color: #7f8c8d; font-weight: 500; }
+
+/* ─── Form ──────────────────────────────────────────── */
+.employee-form-container { padding: 2rem; background: #f8f9fa; min-height: 100vh; }
+.employee-form {
+  background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  padding: 2rem; max-width: 900px; margin: 0 auto;
+}
+.employee-form .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.employee-form .form-group { display: flex; flex-direction: column; }
+.employee-form .form-group.full-width { grid-column: 1 / -1; }
+.employee-form label { font-size: .82rem; font-weight: 600; color: #34495e; margin-bottom: .4rem; text-transform: uppercase; letter-spacing: .3px; }
+.employee-form .form-control {
+  border: 2px solid #e0e0e0; border-radius: 8px; padding: .6rem .8rem;
+  font-size: .92rem; transition: all .3s ease;
+}
+.employee-form .form-control:focus { border-color: #667eea; box-shadow: 0 0 0 .2rem rgba(102,126,234,.15); outline: none; }
+.employee-form .form-actions { display: flex; gap: 1rem; margin-top: 1.5rem; justify-content: flex-end; }
+
+@media (max-width: 768px) {
+  .employees-container, .employee-form-container { padding: 1rem; }
+  .employee-form .form-grid { grid-template-columns: 1fr; }
+  .employees-header { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .employees-controls { flex-direction: column; }
+}

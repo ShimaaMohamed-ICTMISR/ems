@@ -150,14 +150,14 @@ export function Departments() {
                     <div className="info-item">
                       <label>
                         <i className="bi bi-person"></i> Head
-                      </label>
-                      <p>{dept.head || 'N/A'}</p>
+                        </label>
+                        <p>{dept.headId || 'N/A'}</p>
                     </div>
                     <div className="info-item">
                       <label>
                         <i className="bi bi-diagram-3"></i> Parent
                       </label>
-                      <p>{dept.parent || 'N/A'}</p>
+                      <p>{dept.parentId || 'N/A'}</p>
                     </div>
                     <div className="info-item">
                       <label>

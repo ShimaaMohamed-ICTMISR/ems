@@ -1,3 +1,15 @@
 export { Departments } from './Departments';
 export { default as CreateDepartment } from './CreateDepartment';
 export { default as EditDepartment } from './EditDepartment';
+export { default as Positions } from './Positions';
+export { default as CreatePosition } from './CreatePosition';
+export { default as EditPosition } from './EditPosition';
+export { default as Employees } from './Employees';
+export { default as CreateEmployee } from './CreateEmployee';
+export { default as EditEmployee } from './EditEmployee';
+export { default as Attendance } from './Attendance';
+export { default as LeaveTypes } from './LeaveTypes';
+export { default as CreateLeaveType } from './CreateLeaveType';
+export { default as LeaveRequests } from './LeaveRequests';
+export { default as CreateLeaveRequest } from './CreateLeaveRequest';
+export { default as LeaveBalances } from './LeaveBalances';
