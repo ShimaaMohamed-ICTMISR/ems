@@ -97,7 +97,7 @@ export function VotePage() {
     return (
       <div className="container-fluid py-3">
         <div className="alert alert-danger" role="alert">{error}</div>
-        <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/voting')}>
+        <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/voting')}>
           Back to Voting
         </button>
       </div>
@@ -127,7 +127,7 @@ export function VotePage() {
                     {addingEligibility ? 'Adding…' : 'Add me as eligible'}
                   </button>
                   <span className="ms-2 small text-muted">or</span>
-                  <Link to={`/voting/${pollId}`} state={{ tab: 'eligibility' }} className="btn btn-sm btn-link ms-1">
+                  <Link to={`/dashboard/voting/${pollId}`} state={{ tab: 'eligibility' }} className="btn btn-sm btn-link ms-1">
                     Edit eligibility
                   </Link>
                 </div>

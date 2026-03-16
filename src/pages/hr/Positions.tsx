@@ -35,8 +35,8 @@ export function Positions() {
     };
   }, []);
 
-  const handleCreatePosition = () => navigate('/hr/positions/create');
-  const handleEditPosition = (id: string) => navigate(`/hr/positions/${id}/edit`);
+  const handleCreatePosition = () => navigate('/dashboard/hr/positions/create');
+  const handleEditPosition = (id: string) => navigate(`/dashboard/hr/positions/${id}/edit`);
   const handleDeletePosition = async (id: string) => {
     try {
       await hrService.deletePosition(id);

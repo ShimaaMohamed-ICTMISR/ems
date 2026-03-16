@@ -41,7 +41,7 @@ export function PollsDashboard() {
     <div className="container-fluid py-3">
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h2 className="mb-0">Voting</h2>
-        <Link to="/voting/create" className="btn btn-primary">
+        <Link to="/dashboard/voting/create" className="btn btn-primary">
           <i className="bi bi-plus-lg me-1" />
           Create poll
         </Link>
@@ -57,7 +57,7 @@ export function PollsDashboard() {
         <div className="card">
           <div className="card-body text-center text-muted py-5">
             <p className="mb-3">No polls yet.</p>
-            <Link to="/voting/create" className="btn btn-primary">
+            <Link to="/dashboard/voting/create" className="btn btn-primary">
               Create your first poll
             </Link>
           </div>

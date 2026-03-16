@@ -12,7 +12,6 @@ import {
   ProjectDetails,
   ProjectDocuments,
   TaskDetails,
-  Meetings,
   Projects,
   AuditLog,
   Workflows,
@@ -107,7 +106,7 @@ const router = createBrowserRouter([
       },
       // Other modules
       { path: 'projects', element: <Projects /> },
-      { path: 'meetings', element: <Meetings /> },
+      { path: 'meetings', element: <MeetingsList /> },
       { path: 'meetings/create', element: <CreateMeeting /> },
       { path: 'meetings/:id', element: <MeetingDetails /> },
       {

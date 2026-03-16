@@ -168,7 +168,7 @@ export function MeetingsList() {
         </div>
         <button 
           className="btn btn-meetings-primary btn-lg shadow-sm"
-          onClick={() => navigate('/meetings/create')}
+          onClick={() => navigate('/dashboard/meetings/create')}
         >
           <i className="bi bi-plus-circle me-2"></i>
           Create Meeting
@@ -313,7 +313,7 @@ export function MeetingsList() {
                 <div className="d-flex gap-2">
                   <button
                     className="btn btn-sm btn-outline-primary flex-fill"
-                    onClick={() => navigate(`/meetings/${meeting.id}`)}
+                    onClick={() => navigate(`/dashboard/meetings/${meeting.id}`)}
                   >
                     <i className="bi bi-eye me-1"></i>
                     View Details
@@ -367,7 +367,7 @@ export function MeetingsList() {
           <div className="d-flex gap-3 justify-content-center">
             <button 
               className="btn btn-primary btn-lg"
-              onClick={() => navigate('/meetings/create')}
+              onClick={() => navigate('/dashboard/meetings/create')}
             >
               <i className="bi bi-plus-circle me-2"></i>
               {error ? 'Create Meeting Offline' : 'Create Your First Meeting'}

@@ -30,7 +30,7 @@ export function Departments() {
   };
 
   const handleCreateDepartment = () => {
-    navigate('/hr/departments/create');
+    navigate('/dashboard/hr/departments/create');
   };
 
   const handleEditDepartment = (id: string) => {

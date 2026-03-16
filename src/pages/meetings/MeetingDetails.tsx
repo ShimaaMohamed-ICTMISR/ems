@@ -86,7 +86,7 @@ export function MeetingDetails() {
         <p className="text-muted mb-4">{error || 'The meeting you are looking for does not exist.'}</p>
         <button 
           className="btn btn-secondary btn-lg"
-          onClick={() => navigate('/meetings')}
+          onClick={() => navigate('/dashboard/meetings')}
         >
           <i className="bi bi-arrow-left me-2"></i>
           Back to Meetings
@@ -116,7 +116,7 @@ export function MeetingDetails() {
         </div>
         <button 
           className="btn btn-outline-secondary" 
-          onClick={() => navigate('/meetings')}
+          onClick={() => navigate('/dashboard/meetings')}
         >
           <i className="bi bi-arrow-left me-2"></i>
           Back to Meetings

@@ -62,7 +62,7 @@ export function ResultsPage() {
     return (
       <div className="container-fluid py-3">
         <div className="alert alert-danger" role="alert">{error}</div>
-        <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/voting')}>
+        <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/voting')}>
           Back to Voting
         </button>
       </div>

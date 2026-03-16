@@ -37,7 +37,7 @@ export function CreateMeeting() {
       console.log('Sending meeting data:', meetingData);
       
       await meetingService.createMeeting(meetingData);
-      navigate('/meetings');
+      navigate('/dashboard/meetings');
     } catch (err) {
       console.error('Failed to create meeting:', err);
       alert('Failed to create meeting');
@@ -70,7 +70,7 @@ export function CreateMeeting() {
         </div>
         <button 
           className="btn btn-outline-secondary" 
-          onClick={() => navigate('/meetings')}
+          onClick={() => navigate('/dashboard/meetings')}
         >
           <i className="bi bi-arrow-left me-2"></i>
           Back to Meetings
@@ -240,7 +240,7 @@ export function CreateMeeting() {
                   <button 
                     type="button" 
                     className="btn btn-lg btn-outline-secondary px-4"
-                    onClick={() => navigate('/meetings')}
+                    onClick={() => navigate('/dashboard/meetings')}
                   >
                     <i className="bi bi-x-circle me-2"></i>
                     Cancel

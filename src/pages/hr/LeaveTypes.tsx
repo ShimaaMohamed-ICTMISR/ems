@@ -39,7 +39,7 @@ export default function LeaveTypes() {
                     <h1 className="page-title"><i className="bi bi-calendar2-week me-3"></i>Leave Types</h1>
                     <p className="page-subtitle">Manage leave type configurations</p>
                 </div>
-                <button className="btn btn-primary btn-lg" onClick={() => navigate('/hr/leave-types/create')}>
+                <button className="btn btn-primary btn-lg" onClick={() => navigate('/dashboard/hr/leave-types/create')}>
                     <i className="bi bi-plus-circle me-2"></i>New Leave Type
                 </button>
             </div>

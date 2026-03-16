@@ -78,7 +78,7 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
     try {
       await deletePoll(poll.id);
       onStatusChange?.();
-      navigate('/voting');
+      navigate('/dashboard/voting');
     } catch (e) {
       setDeleteError(e instanceof Error ? e.message : 'Failed to delete poll');
     } finally {
@@ -93,7 +93,7 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
       <div className="card-body d-flex flex-column">
         <div className="d-flex justify-content-between align-items-start mb-2 gap-2">
           <Link
-            to={`/voting/${poll.id}`}
+            to={`/dashboard/voting/${poll.id}`}
             className="card-title mb-0 text-decoration-none text-dark fw-semibold flex-grow-1"
             style={{ fontSize: '1rem' }}
           >
@@ -120,7 +120,7 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
         <div className="mt-auto pt-2">
           {statusStr.toUpperCase() === 'DRAFT' && (
             <div className="d-flex flex-wrap justify-content-center gap-2">
-              <Link to={`/voting/${poll.id}`} className={`${btnClass} btn-outline-primary`}>
+              <Link to={`/dashboard/voting/${poll.id}`} className={`${btnClass} btn-outline-primary`}>
                 Edit
               </Link>
               <button type="button" className={`${btnClass} btn-success`} onClick={handleActivate}>

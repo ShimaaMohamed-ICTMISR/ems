@@ -142,7 +142,7 @@ export function PollDetailsPage() {
     return (
       <div className="container-fluid py-3">
         <div className="alert alert-danger" role="alert">{error}</div>
-        <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/voting')}>
+        <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/voting')}>
           Back to Voting
         </button>
       </div>
@@ -182,7 +182,7 @@ export function PollDetailsPage() {
               Close poll
             </button>
           )}
-          <Link to="/voting" className="btn btn-outline-secondary">Back to list</Link>
+          <Link to="/dashboard/voting" className="btn btn-outline-secondary">Back to list</Link>
         </div>
       </div>
       {error && (
@@ -230,7 +230,7 @@ export function PollDetailsPage() {
           {tab === 'vote' && (
             <div>
               {poll && asText((poll as Record<string, unknown>).status).toUpperCase() === 'ACTIVE' ? (
-                <Link to={`/voting/${pollId}/vote`} className="btn btn-primary">
+                <Link to={`/dashboard/voting/${pollId}/vote`} className="btn btn-primary">
                   Go to vote
                 </Link>
               ) : (

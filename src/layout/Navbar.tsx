@@ -155,7 +155,7 @@ export function Navbar() {
             className="btn btn-link text-white position-relative p-0 icon-bounce"
             type="button"
             aria-label="Notifications"
-            onClick={() => navigate("/notifications")}
+            onClick={() => navigate("/dashboard/notifications")}
           >
             <i className="bi bi-bell fs-5"></i>
             {unreadCount > 0 && (
@@ -187,7 +187,7 @@ export function Navbar() {
               <li>
                 <button
                   className="dropdown-item"
-                  onClick={() => navigate("/profile")}
+                  onClick={() => navigate("/dashboard/profile")}
                   style={{
                     border: "none",
                     background: "none",

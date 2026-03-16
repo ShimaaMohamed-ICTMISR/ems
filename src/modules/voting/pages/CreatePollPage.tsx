@@ -75,7 +75,7 @@ export function CreatePollPage() {
             <button
               type="button"
               className="btn btn-outline-secondary"
-              onClick={() => navigate('/voting')}
+              onClick={() => navigate('/dashboard/voting')}
             >
               Cancel
             </button>

@@ -29,7 +29,7 @@ export default function CreateLeaveType() {
         try {
             await hrService.createLeaveType(form);
             alert('Leave type created successfully!');
-            navigate('/hr/leave-types');
+            navigate('/dashboard/hr/leave-types');
         } catch (err: any) { alert(err.response?.data?.message || 'Failed to create leave type'); }
         finally { setLoading(false); }
     };
@@ -41,7 +41,7 @@ export default function CreateLeaveType() {
                     <h1 className="page-title"><i className="bi bi-plus-square me-3"></i>New Leave Type</h1>
                     <p className="page-subtitle">Configure a new leave type</p>
                 </div>
-                <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate('/hr/leave-types')}>
+                <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate('/dashboard/hr/leave-types')}>
                     <i className="bi bi-arrow-left me-2"></i>Back
                 </button>
             </div>
@@ -63,7 +63,7 @@ export default function CreateLeaveType() {
                     </div>
                 </div>
                 <div className="form-actions">
-                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/hr/leave-types')}>Cancel</button>
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/hr/leave-types')}>Cancel</button>
                     <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Creating...' : 'Create Leave Type'}</button>
                 </div>
             </form>
