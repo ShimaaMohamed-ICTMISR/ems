@@ -1,10 +1,5 @@
 // src/app/router.tsx
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Outlet,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { AppLayout } from "../layout/AppLayout";
 import Login from "../pages/Login";
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -17,7 +12,6 @@ import {
   ProjectDetails,
   ProjectDocuments,
   TaskDetails,
-  Meetings,
   AuditLog,
   Workflows,
   Settings,
@@ -57,7 +51,7 @@ import { OpportunityRoutes } from "../modules/opportunities/routes/opportunityRo
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navigate to="/login" replace />,
+    element: <Login />,
   },
   {
     path: "/login",
@@ -65,10 +59,6 @@ const router = createBrowserRouter([
   },
   {
     path: "/dashboard",
-    element: <Navigate to="/" replace />,
-  },
-  {
-    path: "/",
     element: (
       <ProtectedRoute>
         <AppLayout />
@@ -108,14 +98,7 @@ const router = createBrowserRouter([
         path: "project-management/resource-requests",
         element: <ResourceRequests />,
       },
-      {
-        path: "project-management/projects/create",
-        element: <CreateProject />,
-      },
-      {
-        path: "projects/create",
-        element: <Navigate to="/project-management/projects/create" replace />,
-      },
+      { path: "projects/create", element: <CreateProject /> },
       {
         path: "portfolios/:portfolioId/projects/:projectId",
         element: <ProjectDetails />,
@@ -128,15 +111,11 @@ const router = createBrowserRouter([
         path: "portfolios/:portfolioId/projects/:projectId/tasks/:taskId",
         element: <TaskDetails />,
       },
-      // Other modules
+      // Meetings
       { path: "meetings", element: <MeetingsList /> },
-      {
-        path: "projects",
-        element: <Navigate to="/project-management" replace />,
-      },
-      { path: "meetings", element: <Meetings /> },
       { path: "meetings/create", element: <CreateMeeting /> },
       { path: "meetings/:id", element: <MeetingDetails /> },
+      // Voting
       {
         path: "voting",
         element: <Outlet />,
@@ -148,6 +127,7 @@ const router = createBrowserRouter([
           { path: ":pollId/results", element: <ResultsPage /> },
         ],
       },
+      // Opportunities
       {
         path: "opportunities/*",
         element: <OpportunityRoutes />,
