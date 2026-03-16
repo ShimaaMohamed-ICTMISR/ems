@@ -36,11 +36,15 @@ import { OpportunityRoutes } from '../modules/opportunities/routes/opportunityRo
 
 const router = createBrowserRouter([
   {
+    path: "/",
+    element: <Login />,
+  },
+  {
     path: "/login",
     element: <Login />,
   },
   {
-    path: "/",
+    path: "/dashboard",
     element: (
       <ProtectedRoute>
         <AppLayout />

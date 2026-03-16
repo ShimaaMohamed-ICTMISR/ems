@@ -11,10 +11,11 @@ import type {
   VoteRequest,
 } from '../types/voting.types';
 
-const RAW_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ??
-  import.meta.env.VITE_VOTING_API_BASE_URL ??
-  'https://ems-voting-service.onrender.com';
+const RAW_BASE_URL = import.meta.env.DEV 
+  ? '/api/voting'  // Use proxy in development
+  : (import.meta.env.VITE_API_BASE_URL ?? 
+     import.meta.env.VITE_VOTING_API_BASE_URL ?? 
+     'https://ems-voting-service.onrender.com');
 
 // Normalize: لو الـ env فيه /api في الآخر، نشيلها
 const BASE_URL = RAW_BASE_URL.replace(/\/api\/?$/, '');
