@@ -138,10 +138,10 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
           )}
           {statusStr.toUpperCase() === 'ACTIVE' && (
             <div className="d-flex flex-wrap justify-content-center gap-2">
-              <Link to={`/voting/${poll.id}/vote`} className={`${btnClass} btn-primary`}>
+              <Link to={`/dashboard/voting/${poll.id}/vote`} className={`${btnClass} btn-primary`}>
                 Vote
               </Link>
-              <Link to={`/voting/${poll.id}/results`} className={`${btnClass} btn-outline-secondary`}>
+              <Link to={`/dashboard/voting/${poll.id}/results`} className={`${btnClass} btn-outline-secondary`}>
                 Results
               </Link>
               <button type="button" className={`${btnClass} btn-outline-dark`} onClick={handleClose}>
@@ -151,7 +151,7 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
           )}
           {statusStr.toUpperCase() === 'CLOSED' && (
             <div className="d-flex justify-content-center">
-              <Link to={`/voting/${poll.id}/results`} className={`${btnClass} btn-primary`}>
+              <Link to={`/dashboard/voting/${poll.id}/results`} className={`${btnClass} btn-primary`}>
                 View Results
               </Link>
             </div>
