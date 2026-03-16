@@ -19,6 +19,11 @@ const moduleNavItems: NavItem[] = [
   { to: "/project-management", icon: "bi-kanban", label: "Project Manager" },
   { to: "/meetings", icon: "bi-calendar-event", label: "Meetings" },
   { to: "/voting-polls", icon: "bi-bar-chart", label: "Voting & Polls" },
+  { to: '/hr', icon: 'bi-people', label: 'Human Resources' },
+  { to: '/projects', icon: 'bi-kanban', label: 'Projects' },
+  { to: '/meetings', icon: 'bi-calendar-event', label: 'Meetings' },
+  { to: '/voting', icon: 'bi-bar-chart', label: 'Voting & Polls' },
+  { to: '/opportunities', icon: 'bi-graph-up-arrow', label: 'Opportunities' },
 ];
 
 const systemNavItems: NavItem[] = [

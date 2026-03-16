@@ -28,7 +28,7 @@
 }
 
 .page-title i {
-  color: #667eea;
+  color: #06b6d4;
 }
 
 .page-subtitle {
@@ -46,9 +46,9 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  color: white;
+  background: linear-gradient(135deg, #212529 0%, #495057 100%) !important;
+  border: none !important;
+  color: white !important;
 }
 
 .btn-primary:hover {
@@ -88,8 +88,8 @@
 }
 
 .search-box .form-control:focus {
-  border-color: #667eea;
-  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 0.2rem rgba(6, 182, 212, 0.15);
 }
 
 .btn-outline-secondary {
@@ -102,8 +102,8 @@
 
 .btn-outline-secondary:hover {
   background: #ecf0f1;
-  border-color: #667eea;
-  color: #667eea;
+  border-color: #06b6d4;
+  color: #06b6d4;
 }
 
 .departments-grid {
@@ -146,8 +146,8 @@
 }
 
 .card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: linear-gradient(135deg, #212529 0%, #495057 100%) !important;
+  color: white !important;
   padding: 1.5rem;
   border-bottom: none;
 }
@@ -231,7 +231,7 @@
 }
 
 .info-item label i {
-  color: #667eea;
+  color: #06b6d4;
 }
 
 .info-item p {
@@ -274,13 +274,13 @@
 }
 
 .btn-outline-primary {
-  color: #667eea;
-  border-color: #667eea;
+  color: #06b6d4;
+  border-color: #06b6d4;
   background: transparent;
 }
 
 .btn-outline-primary:hover {
-  background: #667eea;
+  background: #06b6d4;
   color: white;
 }
 
@@ -339,7 +339,7 @@
   align-items: center;
   min-height: 400px;
   text-align: center;
-  color: #667eea;
+  color: #06b6d4;
 }
 
 .departments-loading .spinner-border {
