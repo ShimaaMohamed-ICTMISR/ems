@@ -77,6 +77,32 @@ function safeInt(value: string | undefined, fallback = 0): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function resolveEmployeeUserId(employee: Employee): string {
+  const withUser = employee as Employee & {
+    userId?: string;
+    user?: { id?: string };
+  };
+
+  return withUser.userId?.trim() || withUser.user?.id?.trim() || employee.id;
+}
+
+function getEmployeeIdentityCandidates(employee: Employee): string[] {
+  const withUser = employee as Employee & {
+    userId?: string;
+    user?: { id?: string };
+  };
+
+  return [
+    withUser.userId,
+    withUser.user?.id,
+    employee.email,
+    employee.employeeCode,
+    employee.id,
+  ]
+    .map((value) => value?.trim())
+    .filter((value): value is string => Boolean(value));
+}
+
 type EditProjectFormState = {
   name: string;
   objectives: string;
@@ -436,14 +462,21 @@ export function ProjectDetails() {
   function getMemberDisplayName(memberId: string) {
     const member = projectMembers.find((m) => m.id === memberId);
     if (!member) return "";
-    const emp = employees.find((e) => e.id === member.userId);
+    const emp = employees.find(
+      (e) => resolveEmployeeUserId(e) === member.userId,
+    );
     return emp ? `${emp.firstName} ${emp.lastName}` : member.fullName;
   }
 
   // Employees not yet added to the project
-  const availableEmployees = employees.filter(
-    (e) => !projectMembers.some((m) => m.userId === e.id),
-  );
+  const availableEmployees = employees.filter((e) => {
+    const identityCandidates = getEmployeeIdentityCandidates(e);
+    return !projectMembers.some(
+      (m) =>
+        identityCandidates.includes((m.userId || "").trim()) ||
+        m.fullName === `${e.firstName} ${e.lastName}`,
+    );
+  });
   const filteredAvailableEmployees = availableEmployees.filter((e) => {
     const fullName = `${e.firstName} ${e.lastName}`.toLowerCase();
     const search = employeeSearch.toLowerCase();
@@ -467,17 +500,48 @@ export function ProjectDetails() {
     if (!projectId) return;
     try {
       setAddingMember(true);
+
+      const resolvedUserId = resolveEmployeeUserId(emp);
+      const fullName = `${emp.firstName} ${emp.lastName}`;
+      const identityCandidates = getEmployeeIdentityCandidates(emp);
+      const alreadyExists = projectMembers.some(
+        (member) =>
+          identityCandidates.includes((member.userId || "").trim()) ||
+          member.fullName === fullName,
+      );
+
+      if (alreadyExists) {
+        toast("This employee is already a project member.");
+        return;
+      }
+
       const created = await memberService.createProjectMember({
         projectId,
-        userId: emp.id,
-        fullName: `${emp.firstName} ${emp.lastName}`,
+        userId: resolvedUserId,
+        fullName,
         role: emp.position?.title || "Member",
       });
       setProjectMembers((prev) => [...prev, created]);
+      await refreshMembers();
       toast.success(`${emp.firstName} ${emp.lastName} added to project.`);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to add member.");
+      const axiosErr = error as {
+        response?: {
+          status?: number;
+          data?: { message?: string };
+        };
+      };
+
+      if (axiosErr.response?.status === 409) {
+        await refreshMembers();
+        toast.error(
+          axiosErr.response?.data?.message ||
+            "Backend constraint is blocking additional members for this project (409).",
+        );
+      } else {
+        toast.error("Failed to add member.");
+      }
     } finally {
       setAddingMember(false);
     }
@@ -1127,9 +1191,9 @@ export function ProjectDetails() {
           <h1 className="project-details-title mb-2">
             {project.name || "Unnamed project"}
           </h1>
-          <p className="project-details-subtitle mb-0">
+          {/* <p className="project-details-subtitle mb-0">
             Portfolio ID: {portfolioId || project.portfolioId || "N/A"}
-          </p>
+          </p> */}
         </div>
         <div className="project-details-actions">
           <button
@@ -1374,10 +1438,10 @@ export function ProjectDetails() {
         <section className="project-details-grid">
           <article className="details-card">
             <h2 className="h6">Project Overview</h2>
-            <div className="details-row">
+            {/* <div className="details-row">
               <span>ID</span>
               <strong>{project.id}</strong>
-            </div>
+            </div> */}
             <div className="details-row">
               <span>Stage</span>
               <strong>{ProjectStage[project.stage ?? 0]}</strong>
@@ -1390,10 +1454,10 @@ export function ProjectDetails() {
               <span>Methodology</span>
               <strong>{MethodologyType[project.methodology ?? 0]}</strong>
             </div>
-            <div className="details-row">
+            {/* <div className="details-row">
               <span>Portfolio</span>
               <strong>{project.portfolioId || "N/A"}</strong>
-            </div>
+            </div> */}
           </article>
 
           <article className="details-card">
@@ -1557,7 +1621,9 @@ export function ProjectDetails() {
           ) : (
             <div className="members-grid">
               {projectMembers.map((member) => {
-                const emp = employees.find((e) => e.id === member.userId);
+                const emp = employees.find(
+                  (e) => resolveEmployeeUserId(e) === member.userId,
+                );
                 const initials = member.fullName
                   .split(" ")
                   .map((n) => n.charAt(0))
@@ -1800,7 +1866,7 @@ export function ProjectDetails() {
                           ) : (
                             filteredMembers.map((m) => {
                               const emp = employees.find(
-                                (e) => e.id === m.userId,
+                                (e) => resolveEmployeeUserId(e) === m.userId,
                               );
                               return (
                                 <div

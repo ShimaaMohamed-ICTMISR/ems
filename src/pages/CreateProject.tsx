@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -43,12 +43,22 @@ const initialFormState: FormState = {
 export function CreateProject() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const selectedPortfolioId = searchParams.get("portfolioId")?.trim() || "";
   const [submitting, setSubmitting] = useState(false);
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [form, setForm] = useState<FormState>(() => {
-    const portfolioId = searchParams.get("portfolioId") || "";
-    return { ...initialFormState, portfolioId };
+    return { ...initialFormState, portfolioId: selectedPortfolioId };
   });
+
+  const visiblePortfolios = useMemo(() => {
+    if (!selectedPortfolioId) {
+      return portfolios;
+    }
+
+    return portfolios.filter(
+      (portfolio) => portfolio.id === selectedPortfolioId,
+    );
+  }, [portfolios, selectedPortfolioId]);
 
   useEffect(() => {
     portfolioService
@@ -163,9 +173,12 @@ export function CreateProject() {
                   name="portfolioId"
                   value={form.portfolioId}
                   onChange={handleChange}
+                  disabled={!!selectedPortfolioId}
                 >
-                  <option value="">No portfolio</option>
-                  {portfolios.map((p) => (
+                  {!selectedPortfolioId && (
+                    <option value="">No portfolio</option>
+                  )}
+                  {visiblePortfolios.map((p) => (
                     <option key={p.id} value={p.id}>
                       {p.name}
                     </option>

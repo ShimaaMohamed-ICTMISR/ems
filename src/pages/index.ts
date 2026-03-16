@@ -1,14 +1,11 @@
 export { Dashboard } from './Dashboard';
 export { default as Notifications } from './notifications';
 export { HumanResources } from './HumanResources';
-export { Projects } from './Projects';
 export { CreateProject } from './CreateProject';
 export { Portfolios } from './Portfolios';
 export { ProjectDetails } from './ProjectDetails';
 export { ProjectDocuments } from './ProjectDocuments';
 export { TaskDetails } from './TaskDetails';
-export { Meetings } from './Meetings';
-export { VotingPolls } from './VotingPolls';
 export { MeetingsList as Meetings } from './meetings/MeetingsList';
 export { AuditLog } from './AuditLog';
 export { Workflows } from './Workflows';
@@ -20,4 +17,3 @@ export { default as Users } from './Users';
 export { ProjectManagement } from './ProjectManagement';
 export { Resources } from './Resources';
 export { ResourceRequests } from './ResourceRequests';
-export { Notifications }
