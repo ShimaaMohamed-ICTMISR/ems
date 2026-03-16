@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import DepartmentForm from './DepartmentForm';
-import hrService from '../../services/hrService';
+import hrService from '../../services/hrProjectManagementService';
 
 export function CreateDepartment() {
   const navigate = useNavigate();

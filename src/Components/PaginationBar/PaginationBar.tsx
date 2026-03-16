@@ -1,4 +1,3 @@
-import React from "react";
 import type { Notification } from "../../store/notificationSlice";
 
 interface Props {
@@ -10,37 +9,35 @@ interface Props {
   setCurrentPage: (page: number) => void;
 }
 
-
-
 export default function PaginationBar({
   loopedItem,
   totalPages,
   totalItems,
   currentPage,
   itemsPerPage,
-  setCurrentPage
+  setCurrentPage,
 }: Props) {
   // Show pagination info even if only 1 page
   if (loopedItem.length === 0) return null;
 
   const handlePageChange = (page: number) => {
-  setCurrentPage(page);
-  window.scrollTo({ top: 0, behavior: "smooth" });
-};
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const pages = [];
 
   // If only 1 page, show simplified pagination
-//   if (totalPages <= 1) {
-//     return (
-//       <div className="pagination-container">
-//         <div className="pagination-info">
-//           Showing {loopedItem.length} of {totalItems || loopedItem.length}{" "}
-//           notifications
-//         </div>
-//       </div>
-//     );
-//   }
+  //   if (totalPages <= 1) {
+  //     return (
+  //       <div className="pagination-container">
+  //         <div className="pagination-info">
+  //           Showing {loopedItem.length} of {totalItems || loopedItem.length}{" "}
+  //           notifications
+  //         </div>
+  //       </div>
+  //     );
+  //   }
 
   const maxVisiblePages = 5;
   let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));

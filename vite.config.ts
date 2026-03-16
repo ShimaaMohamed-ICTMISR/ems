@@ -15,6 +15,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/hr/, '/api/hr'),
       },
+      '/api/project-management': {
+        target: 'http://projectmanagmentservices.runasp.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/project-management/, '/api'),
+      },
       '/api': {
         target: 'http://iamauth.runasp.net',
         changeOrigin: true,

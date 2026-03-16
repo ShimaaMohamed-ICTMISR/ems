@@ -12,8 +12,11 @@ export interface Department {
 
 export interface Employee {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email?: string;
+  department?: { id: string; name: string; code: string };
+  position?: { id: string; title: string; code: string };
 }
 
 export interface CreateDepartmentRequest {

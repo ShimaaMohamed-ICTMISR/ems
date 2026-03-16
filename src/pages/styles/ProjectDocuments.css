@@ -1,0 +1,262 @@
+.project-documents-page {
+  min-height: 100%;
+  padding: 1.2rem;
+  background:
+    radial-gradient(circle at 16% 8%, rgba(56, 189, 248, 0.12), transparent 36%),
+    linear-gradient(180deg, #f7fbff 0%, #edf6fc 100%);
+}
+
+.project-documents-loading {
+  min-height: 60vh;
+  color: #5a7186;
+}
+
+.project-documents-hero {
+  border-radius: 16px;
+  padding: 1.2rem;
+  color: #f4fbff;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  background: linear-gradient(135deg, #1b4965, #0f2f43);
+  box-shadow: 0 16px 28px rgba(15, 47, 67, 0.2);
+}
+
+.project-documents-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08rem;
+  font-size: 0.72rem;
+  color: #9be7ff;
+}
+
+.project-documents-title {
+  font-size: clamp(1.25rem, 2.6vw, 2rem);
+  font-weight: 700;
+}
+
+.project-documents-subtitle {
+  color: rgba(244, 251, 255, 0.9);
+}
+
+.project-documents-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.project-document-form-card {
+  background: #1e293b;
+  border-radius: 12px;
+  padding: 1.35rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.project-document-form-card .form-label {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.project-document-form-card .form-control,
+.project-document-form-card .form-select {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+  border-radius: 8px;
+}
+
+.project-document-form-card .form-control:focus,
+.project-document-form-card .form-select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.project-documents-empty {
+  text-align: center;
+  background: #fff;
+  border: 1px dashed #ccdceb;
+  border-radius: 14px;
+  padding: 2rem 1rem;
+  color: #5a7186;
+}
+
+.project-documents-empty i {
+  font-size: 1.8rem;
+  color: #1b4965;
+}
+
+.project-documents-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+
+.project-document-card {
+  width: 100%;
+  background: #fff;
+  border: 1px solid #d9e8f2;
+  border-radius: 14px;
+  padding: 0.9rem;
+  box-shadow: 0 8px 20px rgba(15, 47, 67, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.project-document-card-editing {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+}
+
+.project-document-card-editing .form-label {
+  font-size: 0.76rem;
+  color: #94a3b8;
+}
+
+.project-document-card-editing .form-control,
+.project-document-card-editing .form-select {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e2e8f0;
+}
+
+.project-document-card-editing .form-control:focus,
+.project-document-card-editing .form-select:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.project-document-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.project-document-title {
+  margin: 0;
+  font-size: 1rem;
+  color: #153247;
+  font-weight: 700;
+}
+
+.project-document-type {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  color: #0f2f43;
+  background: #bdeefe;
+}
+
+.project-document-meta {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.project-document-meta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+}
+
+.project-document-meta-item span {
+  color: #5a7186;
+}
+
+.project-document-meta-item strong {
+  color: #153247;
+  text-align: right;
+  word-break: break-word;
+}
+
+.project-document-link-wrap {
+  background: #f6fbff;
+  border: 1px dashed #d6e8f4;
+  border-radius: 10px;
+  padding: 0.55rem 0.7rem;
+}
+
+.project-document-link {
+  color: #136f8e;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.project-document-link:hover {
+  text-decoration: underline;
+  color: #0f5b75;
+}
+
+.project-document-path {
+  color: #4e6b81;
+  font-size: 0.8rem;
+  word-break: break-all;
+}
+
+.project-document-actions {
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.project-document-picked-file {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  border: 1px dashed rgba(56, 189, 248, 0.35);
+  background: rgba(56, 189, 248, 0.08);
+  font-size: 0.82rem;
+}
+
+.project-document-picked-file strong {
+  color: #e2e8f0;
+  word-break: break-all;
+}
+
+.project-document-picked-file span {
+  color: #9bc4d6;
+  white-space: nowrap;
+}
+
+.confirm-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.confirm-inline-text {
+  font-size: 0.78rem;
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.confirm-inline-sm .btn {
+  padding: 0.15rem 0.5rem;
+  font-size: 0.74rem;
+}
+
+@media (max-width: 768px) {
+  .project-documents-page {
+    padding: 0.85rem;
+  }
+
+  .project-documents-hero {
+    flex-direction: column;
+  }
+
+  .project-documents-actions {
+    width: 100%;
+  }
+}
