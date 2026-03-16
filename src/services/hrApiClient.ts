@@ -23,6 +23,12 @@ hrApiClient.interceptors.request.use(
     } else {
       console.warn('No auth token found in localStorage for HR API request:', config.url);
     }
+    // Log request body for debugging (temporary)
+    try {
+      if (config.data) console.debug('HR API Request body:', config.data);
+    } catch (e) {
+      console.debug('HR API Request body: <unserializable>');
+    }
     return config;
   },
   (error) => {
@@ -34,7 +40,15 @@ hrApiClient.interceptors.request.use(
 hrApiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const status = error.response?.status;
+    // Log response error body for debugging
+    try {
+      console.debug('HR API Error response:', error.response?.data);
+    } catch (e) {
+      console.debug('HR API Error response: <unserializable>');
+    }
+
+    if (status === 401) {
       console.error('Unauthorized! HR Service token may be invalid or expired.');
       // Clear invalid token
       localStorage.removeItem('authToken');

@@ -1,0 +1,190 @@
+/* ─── Leave Types ────────────────────────────────────── */
+.leave-types-container {
+    padding: 2rem;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.leave-types-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.leave-type-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    overflow: hidden;
+    transition: all .3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.leave-type-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(102, 126, 234, .2);
+}
+
+.leave-type-card .lt-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+}
+
+.leave-type-card .lt-header h3 {
+    margin: 0 0 .3rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+}
+
+.leave-type-card .lt-header .lt-code {
+    font-size: .82rem;
+    opacity: .8;
+}
+
+.leave-type-card .lt-body {
+    padding: 1.5rem;
+    flex: 1;
+}
+
+.lt-badges {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.lt-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    padding: .3rem .7rem;
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 600;
+}
+
+.lt-badge.paid {
+    background: #d4edda;
+    color: #155724;
+}
+
+.lt-badge.unpaid {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.lt-badge.approval {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.lt-badge.carry {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.lt-days {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #667eea;
+}
+
+.lt-days-label {
+    font-size: .78rem;
+    color: #95a5a6;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+}
+
+/* ─── Leave Type Form ───────────────────────────────── */
+.leave-type-form-container {
+    padding: 2rem;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+.leave-type-form {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+    padding: 2rem;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.leave-type-form .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
+}
+
+.leave-type-form .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.leave-type-form .form-group.full-width {
+    grid-column: 1 / -1;
+}
+
+.leave-type-form label {
+    font-size: .82rem;
+    font-weight: 600;
+    color: #34495e;
+    margin-bottom: .4rem;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+}
+
+.leave-type-form .form-control {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: .6rem .8rem;
+    font-size: .92rem;
+    transition: all .3s ease;
+}
+
+.leave-type-form .form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 .2rem rgba(102, 126, 234, .15);
+    outline: none;
+}
+
+.leave-type-form .form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    justify-content: flex-end;
+}
+
+.leave-type-form .form-check {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .5rem 0;
+}
+
+.leave-type-form .form-check input {
+    width: 18px;
+    height: 18px;
+    accent-color: #667eea;
+}
+
+@media (max-width: 768px) {
+
+    .leave-types-container,
+    .leave-type-form-container {
+        padding: 1rem;
+    }
+
+    .leave-types-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .leave-type-form .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
