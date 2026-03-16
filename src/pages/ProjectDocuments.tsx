@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
-import type { ChangeEvent, FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import toast from 'react-hot-toast';
-import projectService, { type Project } from '../services/projectService';
+import { useEffect, useMemo, useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import projectService, { type Project } from "../services/projectService";
 import documentService, {
   type ProjectDocument,
   type DocumentCreateDTO,
   type DocumentUpdateDTO,
-} from '../services/documentService';
-import { DocumentType } from '../config/enums';
-import type { RootState } from '../store/store';
-import './styles/ProjectDocuments.css';
+} from "../services/documentService";
+import { DocumentType } from "../config/enums";
+import type { RootState } from "../store/store";
+import "./styles/ProjectDocuments.css";
 
 type CreateDocumentFormState = {
   name: string;
@@ -29,25 +29,27 @@ type EditDocumentFormState = {
 };
 
 const initialCreateForm: CreateDocumentFormState = {
-  name: '',
-  type: '0',
-  version: '1',
+  name: "",
+  type: "0",
+  version: "1",
 };
 
 const initialEditForm: EditDocumentFormState = {
-  name: '',
-  type: '0',
-  filePath: '',
-  version: '1',
-  uploadedBy: '',
-  uploadedAtUtc: '',
+  name: "",
+  type: "0",
+  filePath: "",
+  version: "1",
+  uploadedBy: "",
+  uploadedAtUtc: "",
 };
 
 function toDateTimeLocal(value?: string | null): string {
-  if (!value) return '';
+  if (!value) return "";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '';
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
 }
 
 function toIso(value: string): string | undefined {
@@ -62,17 +64,20 @@ function isHttpUrl(value: string): boolean {
 }
 
 function toSlugName(value: string): string {
-  return value.trim().toLowerCase().replace(/[^a-z0-9._-]+/g, '-');
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-");
 }
 
 function inferDocumentPath(projectId: string, file: File): string {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const normalizedFile = toSlugName(file.name || 'document');
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const normalizedFile = toSlugName(file.name || "document");
   return `documents/${projectId}/${timestamp}-${normalizedFile}`;
 }
 
 function trimExtension(fileName: string): string {
-  const lastDot = fileName.lastIndexOf('.');
+  const lastDot = fileName.lastIndexOf(".");
   if (lastDot <= 0) return fileName;
   return fileName.slice(0, lastDot);
 }
@@ -88,16 +93,19 @@ export function ProjectDocuments() {
 
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [createForm, setCreateForm] = useState<CreateDocumentFormState>(initialCreateForm);
-  const [selectedCreateFile, setSelectedCreateFile] = useState<File | null>(null);
+  const [createForm, setCreateForm] =
+    useState<CreateDocumentFormState>(initialCreateForm);
+  const [selectedCreateFile, setSelectedCreateFile] = useState<File | null>(
+    null,
+  );
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<EditDocumentFormState>(initialEditForm);
+  const [editForm, setEditForm] =
+    useState<EditDocumentFormState>(initialEditForm);
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-console.log('Document List:', documents);
-
+  console.log("Document List:", documents);
 
   useEffect(() => {
     async function load() {
@@ -116,7 +124,7 @@ console.log('Document List:', documents);
         setDocuments(docsData);
       } catch (error) {
         console.error(error);
-        toast.error('Failed to load project documents.');
+        toast.error("Failed to load project documents.");
       } finally {
         setLoading(false);
       }
@@ -126,11 +134,18 @@ console.log('Document List:', documents);
   }, [projectId]);
 
   const sortedDocuments = useMemo(
-    () => [...documents].sort((a, b) => (new Date(b.updatedDateUtc || b.createdDateUtc || 0).getTime() - new Date(a.updatedDateUtc || a.createdDateUtc || 0).getTime())),
+    () =>
+      [...documents].sort(
+        (a, b) =>
+          new Date(b.updatedDateUtc || b.createdDateUtc || 0).getTime() -
+          new Date(a.updatedDateUtc || a.createdDateUtc || 0).getTime(),
+      ),
     [documents],
   );
 
-  function handleCreateChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+  function handleCreateChange(
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) {
     const { name, value } = e.target;
     setCreateForm((prev) => ({ ...prev, [name]: value }));
   }
@@ -149,7 +164,9 @@ console.log('Document List:', documents);
     }));
   }
 
-  function handleEditChange(e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
+  function handleEditChange(
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) {
     const { name, value } = e.target;
     setEditForm((prev) => ({ ...prev, [name]: value }));
   }
@@ -159,18 +176,22 @@ console.log('Document List:', documents);
     if (!projectId) return;
 
     if (!createForm.name.trim()) {
-      toast.error('Document name is required.');
+      toast.error("Document name is required.");
       return;
     }
 
     if (!selectedCreateFile) {
-      toast.error('Please choose a file first.');
+      toast.error("Please choose a file first.");
       return;
     }
 
     try {
       setCreating(true);
-      const uploadedBy = authUser?.fullName || authUser?.username || authUser?.email || 'Unknown User';
+      const uploadedBy =
+        authUser?.fullName ||
+        authUser?.username ||
+        authUser?.email ||
+        "Unknown User";
       const uploadedAtUtc = new Date().toISOString();
       const payload: DocumentCreateDTO = {
         projectId,
@@ -183,7 +204,7 @@ console.log('Document List:', documents);
       };
 
       await documentService.createDocument(payload);
-      toast.success('Document added successfully.');
+      toast.success("Document added successfully.");
       setCreateForm(initialCreateForm);
       setSelectedCreateFile(null);
       setShowCreate(false);
@@ -191,7 +212,7 @@ console.log('Document List:', documents);
       setDocuments(refreshed);
     } catch (error) {
       console.error(error);
-      toast.error('Failed to add document.');
+      toast.error("Failed to add document.");
     } finally {
       setCreating(false);
     }
@@ -200,11 +221,11 @@ console.log('Document List:', documents);
   function startEdit(doc: ProjectDocument) {
     setEditingId(doc.id);
     setEditForm({
-      name: doc.name || '',
+      name: doc.name || "",
       type: String(doc.type ?? 0),
-      filePath: doc.filePath || '',
+      filePath: doc.filePath || "",
       version: String(doc.version ?? 1),
-      uploadedBy: doc.uploadedBy || '',
+      uploadedBy: doc.uploadedBy || "",
       uploadedAtUtc: toDateTimeLocal(doc.uploadedAtUtc),
     });
   }
@@ -213,7 +234,7 @@ console.log('Document List:', documents);
     if (!projectId) return;
 
     if (!editForm.name.trim() || !editForm.filePath.trim()) {
-      toast.error('Name and file path are required.');
+      toast.error("Name and file path are required.");
       return;
     }
 
@@ -222,7 +243,7 @@ console.log('Document List:', documents);
       const payload: DocumentUpdateDTO = {
         id: doc.id,
         projectId,
-        rowVersion: latest.rowVersion || doc.rowVersion || '',
+        rowVersion: latest.rowVersion || doc.rowVersion || "",
         name: editForm.name.trim(),
         type: parseInt(editForm.type, 10),
         filePath: editForm.filePath.trim(),
@@ -232,13 +253,13 @@ console.log('Document List:', documents);
       };
 
       await documentService.updateDocumentById(doc.id, payload);
-      toast.success('Document updated.');
+      toast.success("Document updated.");
       setEditingId(null);
       const refreshed = await documentService.getDocuments(projectId);
       setDocuments(refreshed);
     } catch (error) {
       console.error(error);
-      toast.error('Failed to update document.');
+      toast.error("Failed to update document.");
     }
   }
 
@@ -247,11 +268,11 @@ console.log('Document List:', documents);
 
     try {
       await documentService.deleteDocumentById(id);
-      toast.success('Document deleted.');
+      toast.success("Document deleted.");
       setDocuments((prev) => prev.filter((d) => d.id !== id));
     } catch (error) {
       console.error(error);
-      toast.error('Failed to delete document.');
+      toast.error("Failed to delete document.");
     } finally {
       setConfirmDeleteId(null);
     }
@@ -275,7 +296,8 @@ console.log('Document List:', documents);
           <p className="project-documents-kicker mb-2">Project Assets</p>
           <h1 className="project-documents-title mb-2">Documents</h1>
           <p className="project-documents-subtitle mb-0">
-            {project?.name || 'Project'} - manage plans, contracts, reports, and references.
+            {project?.name || "Project"} - manage plans, contracts, reports, and
+            references.
           </p>
         </div>
 
@@ -285,14 +307,18 @@ console.log('Document List:', documents);
             className="btn btn-light"
             onClick={() => setShowCreate((prev) => !prev)}
           >
-            <i className={`bi ${showCreate ? 'bi-x-circle' : 'bi-plus-lg'} me-2`} />
-            {showCreate ? 'Close Form' : 'New Document'}
+            <i
+              className={`bi ${showCreate ? "bi-x-circle" : "bi-plus-lg"} me-2`}
+            />
+            {showCreate ? "Close Form" : "New Document"}
           </button>
           <button
             type="button"
             className="btn btn-outline-light"
             onClick={() =>
-              navigate(`/portfolios/${portfolioId || project?.portfolioId || ''}/projects/${projectId}`)
+              navigate(
+                `/portfolios/${portfolioId || project?.portfolioId || ""}/projects/${projectId}`,
+              )
             }
           >
             <i className="bi bi-arrow-left me-2" />
@@ -356,7 +382,12 @@ console.log('Document List:', documents);
               <label className="form-label">Uploaded By</label>
               <input
                 className="form-control"
-                value={authUser?.fullName || authUser?.username || authUser?.email || 'Current User'}
+                value={
+                  authUser?.fullName ||
+                  authUser?.username ||
+                  authUser?.email ||
+                  "Current User"
+                }
                 disabled
                 readOnly
               />
@@ -382,8 +413,12 @@ console.log('Document List:', documents);
               </div>
             )}
             <div className="col-12 d-flex justify-content-end">
-              <button type="submit" className="btn btn-success" disabled={creating}>
-                {creating ? 'Saving...' : 'Create Document'}
+              <button
+                type="submit"
+                className="btn btn-success"
+                disabled={creating}
+              >
+                {creating ? "Saving..." : "Create Document"}
               </button>
             </div>
           </form>
@@ -394,13 +429,18 @@ console.log('Document List:', documents);
         <section className="project-documents-empty">
           <i className="bi bi-folder2-open" />
           <h2 className="h6 mt-2">No documents yet</h2>
-          <p className="mb-0">Start by adding your first document for this project.</p>
+          <p className="mb-0">
+            Start by adding your first document for this project.
+          </p>
         </section>
       ) : (
         <section className="project-documents-grid">
           {sortedDocuments.map((doc) =>
             editingId === doc.id ? (
-              <article key={doc.id} className="project-document-card project-document-card-editing">
+              <article
+                key={doc.id}
+                className="project-document-card project-document-card-editing"
+              >
                 <h3 className="h6 mb-3">Edit Document</h3>
                 <div className="row g-2">
                   <div className="col-12">
@@ -470,11 +510,19 @@ console.log('Document List:', documents);
                   </div>
                 </div>
                 <div className="project-document-actions mt-3">
-                  <button type="button" className="btn btn-success btn-sm" onClick={() => handleUpdate(doc)}>
+                  <button
+                    type="button"
+                    className="btn btn-success btn-sm"
+                    onClick={() => handleUpdate(doc)}
+                  >
                     <i className="bi bi-check2 me-1" />
                     Save
                   </button>
-                  <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setEditingId(null)}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-secondary btn-sm"
+                    onClick={() => setEditingId(null)}
+                  >
                     Cancel
                   </button>
                 </div>
@@ -482,8 +530,12 @@ console.log('Document List:', documents);
             ) : (
               <article key={doc.id} className="project-document-card">
                 <div className="project-document-head">
-                  <h3 className="project-document-title">{doc.name || 'Untitled document'}</h3>
-                  <span className="project-document-type">{DocumentType[doc.type ?? 5] || 'Other'}</span>
+                  <h3 className="project-document-title">
+                    {doc.name || "Untitled document"}
+                  </h3>
+                  <span className="project-document-type">
+                    {DocumentType[doc.type ?? 5] || "Other"}
+                  </span>
                 </div>
 
                 <div className="project-document-meta">
@@ -493,27 +545,42 @@ console.log('Document List:', documents);
                   </div>
                   <div className="project-document-meta-item">
                     <span>Uploaded By</span>
-                    <strong>{doc.uploadedBy || 'N/A'}</strong>
+                    <strong>{doc.uploadedBy || "N/A"}</strong>
                   </div>
                   <div className="project-document-meta-item">
                     <span>Uploaded At</span>
-                    <strong>{doc.uploadedAtUtc ? new Date(doc.uploadedAtUtc).toLocaleString() : 'N/A'}</strong>
+                    <strong>
+                      {doc.uploadedAtUtc
+                        ? new Date(doc.uploadedAtUtc).toLocaleString()
+                        : "N/A"}
+                    </strong>
                   </div>
                 </div>
 
                 <div className="project-document-link-wrap">
                   {doc.filePath && isHttpUrl(doc.filePath) ? (
-                    <a href={doc.filePath} target="_blank" rel="noreferrer" className="project-document-link">
+                    <a
+                      href={doc.filePath}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="project-document-link"
+                    >
                       <i className="bi bi-link-45deg me-1" />
                       Open Document Link
                     </a>
                   ) : (
-                    <div className="project-document-path">{doc.filePath || 'N/A'}</div>
+                    <div className="project-document-path">
+                      {doc.filePath || "N/A"}
+                    </div>
                   )}
                 </div>
 
                 <div className="project-document-actions">
-                  <button type="button" className="btn btn-outline-primary btn-sm" onClick={() => startEdit(doc)}>
+                  <button
+                    type="button"
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => startEdit(doc)}
+                  >
                     <i className="bi bi-pencil-square me-1" />
                     Edit
                   </button>
@@ -521,15 +588,27 @@ console.log('Document List:', documents);
                   {confirmDeleteId === doc.id ? (
                     <span className="confirm-inline confirm-inline-sm">
                       <span className="confirm-inline-text">Delete?</span>
-                      <button type="button" className="btn btn-danger btn-sm" onClick={() => handleDelete(doc.id)}>
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm"
+                        onClick={() => handleDelete(doc.id)}
+                      >
                         Yes
                       </button>
-                      <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setConfirmDeleteId(null)}>
+                      <button
+                        type="button"
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() => setConfirmDeleteId(null)}
+                      >
                         No
                       </button>
                     </span>
                   ) : (
-                    <button type="button" className="btn btn-outline-danger btn-sm" onClick={() => setConfirmDeleteId(doc.id)}>
+                    <button
+                      type="button"
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={() => setConfirmDeleteId(doc.id)}
+                    >
                       <i className="bi bi-trash me-1" />
                       Delete
                     </button>

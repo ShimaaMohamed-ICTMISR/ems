@@ -18,7 +18,9 @@ import {
 import projectService, { type Project } from "../services/projectService";
 import taskService, { type Task } from "../services/taskService";
 import phaseService, { type Phase } from "../services/phaseService";
-import hrService, { type Employee } from "../services/hrProjectManagementService";
+import hrService, {
+  type Employee,
+} from "../services/hrProjectManagementService";
 import memberService, { type ProjectMember } from "../services/memberService";
 import financeService, {
   type Budget,
@@ -924,7 +926,9 @@ export function ProjectDetails() {
     const category = safeInt(newBudget.category);
     const duplicate = budgets.some((b) => (b.category ?? 0) === category);
     if (duplicate) {
-      toast.error("A budget for this category already exists for this project.");
+      toast.error(
+        "A budget for this category already exists for this project.",
+      );
       return;
     }
 
@@ -976,7 +980,9 @@ export function ProjectDetails() {
       (b) => b.id !== budget.id && (b.category ?? 0) === category,
     );
     if (duplicate) {
-      toast.error("A budget for this category already exists for this project.");
+      toast.error(
+        "A budget for this category already exists for this project.",
+      );
       return;
     }
 
@@ -1189,42 +1195,48 @@ export function ProjectDetails() {
           className={`project-tab-btn ${activeTab === "overview" ? "active" : ""}`}
           onClick={() => setActiveTab("overview")}
         >
-          <i className="bi bi-grid-1x2 me-2" />Overview
+          <i className="bi bi-grid-1x2 me-2" />
+          Overview
         </button>
         <button
           type="button"
           className={`project-tab-btn ${activeTab === "team" ? "active" : ""}`}
           onClick={() => setActiveTab("team")}
         >
-          <i className="bi bi-people me-2" />Team
+          <i className="bi bi-people me-2" />
+          Team
         </button>
         <button
           type="button"
           className={`project-tab-btn ${activeTab === "tasks" ? "active" : ""}`}
           onClick={() => setActiveTab("tasks")}
         >
-          <i className="bi bi-check2-square me-2" />Tasks
+          <i className="bi bi-check2-square me-2" />
+          Tasks
         </button>
         <button
           type="button"
           className={`project-tab-btn ${activeTab === "phases" ? "active" : ""}`}
           onClick={() => setActiveTab("phases")}
         >
-          <i className="bi bi-layers me-2" />Phases
+          <i className="bi bi-layers me-2" />
+          Phases
         </button>
         <button
           type="button"
           className={`project-tab-btn ${activeTab === "resources" ? "active" : ""}`}
           onClick={() => setActiveTab("resources")}
         >
-          <i className="bi bi-box-seam me-2" />Resources
+          <i className="bi bi-box-seam me-2" />
+          Resources
         </button>
         <button
           type="button"
           className={`project-tab-btn ${activeTab === "finance" ? "active" : ""}`}
           onClick={() => setActiveTab("finance")}
         >
-          <i className="bi bi-cash-coin me-2" />Finance
+          <i className="bi bi-cash-coin me-2" />
+          Finance
         </button>
       </section>
 
@@ -1359,824 +1371,572 @@ export function ProjectDetails() {
       )}
 
       {activeTab === "overview" && (
-      <section className="project-details-grid">
-        <article className="details-card">
-          <h2 className="h6">Project Overview</h2>
-          <div className="details-row">
-            <span>ID</span>
-            <strong>{project.id}</strong>
-          </div>
-          <div className="details-row">
-            <span>Stage</span>
-            <strong>{ProjectStage[project.stage ?? 0]}</strong>
-          </div>
-          <div className="details-row">
-            <span>Health</span>
-            <strong>{HealthStatus[project.healthStatus ?? 0]}</strong>
-          </div>
-          <div className="details-row">
-            <span>Methodology</span>
-            <strong>{MethodologyType[project.methodology ?? 0]}</strong>
-          </div>
-          <div className="details-row">
-            <span>Portfolio</span>
-            <strong>{project.portfolioId || "N/A"}</strong>
-          </div>
-        </article>
-
-        <article className="details-card">
-          <h2 className="h6">Schedule</h2>
-          <div className="details-row">
-            <span>Start Date</span>
-            <strong>{formatDate(project.startDateUtc)}</strong>
-          </div>
-          <div className="details-row">
-            <span>End Date</span>
-            <strong>{formatDate(project.endDateUtc)}</strong>
-          </div>
-          <div className="details-row">
-            <span>Created</span>
-            <strong>{formatDate(project.createdDateUtc)}</strong>
-          </div>
-          <div className="details-row">
-            <span>Updated</span>
-            <strong>{formatDate(project.updatedDateUtc)}</strong>
-          </div>
-        </article>
-
-        <article className="details-card full-width">
-          <h2 className="h6">Objectives</h2>
-          <p className="mb-0">
-            {project.objectives || "No objectives provided."}
-          </p>
-        </article>
-
-        <article className="details-card full-width">
-          <h2 className="h6">Scope</h2>
-          <p className="mb-0">{project.scope || "No scope provided."}</p>
-        </article>
-
-        <article className="details-card full-width documents-workspace-card">
-          <div className="documents-workspace-head">
-            <div className="documents-workspace-icon" aria-hidden="true">
-              <i className="bi bi-folder2-open" />
+        <section className="project-details-grid">
+          <article className="details-card">
+            <h2 className="h6">Project Overview</h2>
+            <div className="details-row">
+              <span>ID</span>
+              <strong>{project.id}</strong>
             </div>
-            <div>
-              <h2 className="h6 mb-1">Documents Workspace</h2>
-              <p className="documents-workspace-subtitle mb-0">
-                Centralize plans, specs, reports, and contracts with version tracking.
-              </p>
+            <div className="details-row">
+              <span>Stage</span>
+              <strong>{ProjectStage[project.stage ?? 0]}</strong>
             </div>
-          </div>
+            <div className="details-row">
+              <span>Health</span>
+              <strong>{HealthStatus[project.healthStatus ?? 0]}</strong>
+            </div>
+            <div className="details-row">
+              <span>Methodology</span>
+              <strong>{MethodologyType[project.methodology ?? 0]}</strong>
+            </div>
+            <div className="details-row">
+              <span>Portfolio</span>
+              <strong>{project.portfolioId || "N/A"}</strong>
+            </div>
+          </article>
 
-          <div className="documents-workspace-body">
-            <div className="documents-workspace-feature">
-              <i className="bi bi-check2-circle" />
-              <span>Project-scoped document list</span>
+          <article className="details-card">
+            <h2 className="h6">Schedule</h2>
+            <div className="details-row">
+              <span>Start Date</span>
+              <strong>{formatDate(project.startDateUtc)}</strong>
             </div>
-            <div className="documents-workspace-feature">
-              <i className="bi bi-check2-circle" />
-              <span>Create, update, and delete operations</span>
+            <div className="details-row">
+              <span>End Date</span>
+              <strong>{formatDate(project.endDateUtc)}</strong>
             </div>
-            <div className="documents-workspace-feature">
-              <i className="bi bi-check2-circle" />
-              <span>Uploader and timestamp metadata</span>
+            <div className="details-row">
+              <span>Created</span>
+              <strong>{formatDate(project.createdDateUtc)}</strong>
             </div>
-          </div>
+            <div className="details-row">
+              <span>Updated</span>
+              <strong>{formatDate(project.updatedDateUtc)}</strong>
+            </div>
+          </article>
 
-          <div className="documents-workspace-actions">
-            <button
-              type="button"
-              className="btn btn-info text-white"
-              onClick={openDocumentsWorkspace}
-            >
-              <i className="bi bi-folder2-open me-2" />
-              Open Documents Workspace
-            </button>
-          </div>
-        </article>
-      </section>
+          <article className="details-card full-width">
+            <h2 className="h6">Objectives</h2>
+            <p className="mb-0">
+              {project.objectives || "No objectives provided."}
+            </p>
+          </article>
+
+          <article className="details-card full-width">
+            <h2 className="h6">Scope</h2>
+            <p className="mb-0">{project.scope || "No scope provided."}</p>
+          </article>
+
+          <article className="details-card full-width documents-workspace-card">
+            <div className="documents-workspace-head">
+              <div className="documents-workspace-icon" aria-hidden="true">
+                <i className="bi bi-folder2-open" />
+              </div>
+              <div>
+                <h2 className="h6 mb-1">Documents Workspace</h2>
+                <p className="documents-workspace-subtitle mb-0">
+                  Centralize plans, specs, reports, and contracts with version
+                  tracking.
+                </p>
+              </div>
+            </div>
+
+            <div className="documents-workspace-body">
+              <div className="documents-workspace-feature">
+                <i className="bi bi-check2-circle" />
+                <span>Project-scoped document list</span>
+              </div>
+              <div className="documents-workspace-feature">
+                <i className="bi bi-check2-circle" />
+                <span>Create, update, and delete operations</span>
+              </div>
+              <div className="documents-workspace-feature">
+                <i className="bi bi-check2-circle" />
+                <span>Uploader and timestamp metadata</span>
+              </div>
+            </div>
+
+            <div className="documents-workspace-actions">
+              <button
+                type="button"
+                className="btn btn-info text-white"
+                onClick={openDocumentsWorkspace}
+              >
+                <i className="bi bi-folder2-open me-2" />
+                Open Documents Workspace
+              </button>
+            </div>
+          </article>
+        </section>
       )}
 
       {/* ── Team Members Section ── */}
       {activeTab === "team" && (
-      <section className="members-section">
-        <div className="members-section-header">
-          <h2>
-            <i className="bi bi-people-fill me-2" />
-            Team Members
-          </h2>
-          <button
-            type="button"
-            className="btn btn-info text-white btn-sm"
-            onClick={() => setShowAddMember((prev) => !prev)}
-          >
-            <i
-              className={`bi ${showAddMember ? "bi-x-circle" : "bi-person-plus"} me-1`}
-            />
-            {showAddMember ? "Close" : "Add Member"}
-          </button>
-        </div>
+        <section className="members-section">
+          <div className="members-section-header">
+            <h2>
+              <i className="bi bi-people-fill me-2" />
+              Team Members
+            </h2>
+            <button
+              type="button"
+              className="btn btn-info text-white btn-sm"
+              onClick={() => setShowAddMember((prev) => !prev)}
+            >
+              <i
+                className={`bi ${showAddMember ? "bi-x-circle" : "bi-person-plus"} me-1`}
+              />
+              {showAddMember ? "Close" : "Add Member"}
+            </button>
+          </div>
 
-        {showAddMember && (
-          <div className="member-add-card">
-            <h3 className="h6 mb-3">Add HR Employee to Project</h3>
-            <input
-              className="form-control form-control-sm mb-3"
-              placeholder="Search employees by name or email..."
-              value={employeeSearch}
-              onChange={(e) => setEmployeeSearch(e.target.value)}
-            />
-            <div className="member-add-list">
-              {filteredAvailableEmployees.length === 0 ? (
-                <div className="member-add-empty">
-                  <i className="bi bi-people" />
-                  <span>No available employees found.</span>
-                </div>
-              ) : (
-                filteredAvailableEmployees.map((emp) => (
-                  <div key={emp.id} className="member-add-item">
-                    <div className="member-add-avatar">
-                      {emp.firstName.charAt(0)}
-                      {emp.lastName.charAt(0)}
-                    </div>
-                    <div className="member-add-info">
-                      <span className="member-add-name">
-                        {emp.firstName} {emp.lastName}
-                      </span>
-                      <span className="member-add-meta">
-                        {emp.position?.title || "No position"} ·{" "}
-                        {emp.department?.name || "No dept"}
-                        {emp.email ? ` · ${emp.email}` : ""}
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      className="btn btn-outline-success btn-sm"
-                      disabled={addingMember}
-                      onClick={() => handleAddMemberFromEmployee(emp)}
-                    >
-                      <i className="bi bi-plus-lg me-1" />
-                      Add
-                    </button>
+          {showAddMember && (
+            <div className="member-add-card">
+              <h3 className="h6 mb-3">Add HR Employee to Project</h3>
+              <input
+                className="form-control form-control-sm mb-3"
+                placeholder="Search employees by name or email..."
+                value={employeeSearch}
+                onChange={(e) => setEmployeeSearch(e.target.value)}
+              />
+              <div className="member-add-list">
+                {filteredAvailableEmployees.length === 0 ? (
+                  <div className="member-add-empty">
+                    <i className="bi bi-people" />
+                    <span>No available employees found.</span>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-
-        {membersLoading ? (
-          <div className="text-center py-4">
-            <div
-              className="spinner-border spinner-border-sm text-info"
-              role="status"
-            />
-          </div>
-        ) : projectMembers.length === 0 ? (
-          <div className="members-empty">
-            <i className="bi bi-person-x" />
-            <p className="mb-0">
-              No members yet. Click "Add Member" to add HR employees to this
-              project.
-            </p>
-          </div>
-        ) : (
-          <div className="members-grid">
-            {projectMembers.map((member) => {
-              const emp = employees.find((e) => e.id === member.userId);
-              const initials = member.fullName
-                .split(" ")
-                .map((n) => n.charAt(0))
-                .join("")
-                .slice(0, 2);
-              return (
-                <div key={member.id} className="member-card">
-                  <div className="member-card-header">
-                    <div className="member-card-avatar">{initials}</div>
-                    <div className="member-card-actions">
-                      <button
-                        type="button"
-                        className="btn btn-outline-primary btn-sm"
-                        title="Edit Role"
-                        onClick={() => {
-                          setEditingMemberId(member.id);
-                          setEditMemberRole(member.role);
-                        }}
-                      >
-                        <i className="bi bi-pencil" />
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-outline-danger btn-sm"
-                        title="Remove Member"
-                        onClick={() => handleDeleteMember(member)}
-                      >
-                        <i className="bi bi-trash" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="member-card-body">
-                    <h4 className="member-card-name">{member.fullName}</h4>
-                    {editingMemberId === member.id ? (
-                      <div className="member-card-edit-role">
-                        <input
-                          className="form-control form-control-sm"
-                          value={editMemberRole}
-                          onChange={(e) => setEditMemberRole(e.target.value)}
-                          placeholder="Role"
-                        />
-                        <div className="member-card-edit-actions">
-                          <button
-                            type="button"
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleUpdateMemberRole(member)}
-                          >
-                            <i className="bi bi-check" />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-sm"
-                            onClick={() => setEditingMemberId(null)}
-                          >
-                            <i className="bi bi-x" />
-                          </button>
-                        </div>
+                ) : (
+                  filteredAvailableEmployees.map((emp) => (
+                    <div key={emp.id} className="member-add-item">
+                      <div className="member-add-avatar">
+                        {emp.firstName.charAt(0)}
+                        {emp.lastName.charAt(0)}
                       </div>
-                    ) : (
-                      <span className="member-card-role">{member.role}</span>
-                    )}
-                    {emp && (
-                      <span className="member-card-dept">
-                        {emp.department?.name || "No dept"}{" "}
-                        {emp.email ? `· ${emp.email}` : ""}
-                      </span>
-                    )}
+                      <div className="member-add-info">
+                        <span className="member-add-name">
+                          {emp.firstName} {emp.lastName}
+                        </span>
+                        <span className="member-add-meta">
+                          {emp.position?.title || "No position"} ·{" "}
+                          {emp.department?.name || "No dept"}
+                          {emp.email ? ` · ${emp.email}` : ""}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-outline-success btn-sm"
+                        disabled={addingMember}
+                        onClick={() => handleAddMemberFromEmployee(emp)}
+                      >
+                        <i className="bi bi-plus-lg me-1" />
+                        Add
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {membersLoading ? (
+            <div className="text-center py-4">
+              <div
+                className="spinner-border spinner-border-sm text-info"
+                role="status"
+              />
+            </div>
+          ) : projectMembers.length === 0 ? (
+            <div className="members-empty">
+              <i className="bi bi-person-x" />
+              <p className="mb-0">
+                No members yet. Click "Add Member" to add HR employees to this
+                project.
+              </p>
+            </div>
+          ) : (
+            <div className="members-grid">
+              {projectMembers.map((member) => {
+                const emp = employees.find((e) => e.id === member.userId);
+                const initials = member.fullName
+                  .split(" ")
+                  .map((n) => n.charAt(0))
+                  .join("")
+                  .slice(0, 2);
+                return (
+                  <div key={member.id} className="member-card">
+                    <div className="member-card-header">
+                      <div className="member-card-avatar">{initials}</div>
+                      <div className="member-card-actions">
+                        <button
+                          type="button"
+                          className="btn btn-outline-primary btn-sm"
+                          title="Edit Role"
+                          onClick={() => {
+                            setEditingMemberId(member.id);
+                            setEditMemberRole(member.role);
+                          }}
+                        >
+                          <i className="bi bi-pencil" />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline-danger btn-sm"
+                          title="Remove Member"
+                          onClick={() => handleDeleteMember(member)}
+                        >
+                          <i className="bi bi-trash" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="member-card-body">
+                      <h4 className="member-card-name">{member.fullName}</h4>
+                      {editingMemberId === member.id ? (
+                        <div className="member-card-edit-role">
+                          <input
+                            className="form-control form-control-sm"
+                            value={editMemberRole}
+                            onChange={(e) => setEditMemberRole(e.target.value)}
+                            placeholder="Role"
+                          />
+                          <div className="member-card-edit-actions">
+                            <button
+                              type="button"
+                              className="btn btn-success btn-sm"
+                              onClick={() => handleUpdateMemberRole(member)}
+                            >
+                              <i className="bi bi-check" />
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => setEditingMemberId(null)}
+                            >
+                              <i className="bi bi-x" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="member-card-role">{member.role}</span>
+                      )}
+                      {emp && (
+                        <span className="member-card-dept">
+                          {emp.department?.name || "No dept"}{" "}
+                          {emp.email ? `· ${emp.email}` : ""}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                );
+              })}
+            </div>
+          )}
+        </section>
       )}
 
       {/* ── Tasks Section ── */}
       {activeTab === "tasks" && (
-      <section className="tasks-section">
-        <div className="tasks-section-header">
-          <h2>
-            <i className="bi bi-check2-square me-2" />
-            Tasks
-          </h2>
-          <button
-            type="button"
-            className="btn btn-info text-white btn-sm"
-            onClick={() => setShowCreateTask((prev) => !prev)}
-          >
-            <i
-              className={`bi ${showCreateTask ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-            />
-            {showCreateTask ? "Cancel" : "New Task"}
-          </button>
-        </div>
+        <section className="tasks-section">
+          <div className="tasks-section-header">
+            <h2>
+              <i className="bi bi-check2-square me-2" />
+              Tasks
+            </h2>
+            <button
+              type="button"
+              className="btn btn-info text-white btn-sm"
+              onClick={() => setShowCreateTask((prev) => !prev)}
+            >
+              <i
+                className={`bi ${showCreateTask ? "bi-x-circle" : "bi-plus-lg"} me-1`}
+              />
+              {showCreateTask ? "Cancel" : "New Task"}
+            </button>
+          </div>
 
-        {showCreateTask && (
-          <div className="task-create-card">
-            <h3 className="h6 mb-3">Create Task</h3>
-            <form className="row g-3" onSubmit={handleCreateTask}>
-              <div className="col-12 col-lg-6">
-                <label className="form-label">Title *</label>
-                <input
-                  className="form-control"
-                  name="title"
-                  value={newTask.title}
-                  onChange={handleNewTaskChange}
-                  maxLength={180}
-                  required
-                />
-              </div>
-              <div className="col-12 col-lg-3">
-                <label className="form-label">Priority</label>
-                <select
-                  className="form-select"
-                  name="priority"
-                  value={newTask.priority}
-                  onChange={handleNewTaskChange}
-                >
-                  {Object.entries(PriorityLevel).map(([v, l]) => (
-                    <option key={v} value={v}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-12 col-lg-3">
-                <label className="form-label">Status</label>
-                <select
-                  className="form-select"
-                  name="status"
-                  value={newTask.status}
-                  onChange={handleNewTaskChange}
-                >
-                  {Object.entries(TaskStatusEnum).map(([v, l]) => (
-                    <option key={v} value={v}>
-                      {l}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-12 col-lg-4">
-                <label className="form-label">Start Date</label>
-                <input
-                  className="form-control"
-                  type="date"
-                  name="startDateUtc"
-                  value={newTask.startDateUtc}
-                  onChange={handleNewTaskChange}
-                />
-              </div>
-              <div className="col-12 col-lg-4">
-                <label className="form-label">Due Date</label>
-                <input
-                  className="form-control"
-                  type="date"
-                  name="dueDateUtc"
-                  value={newTask.dueDateUtc}
-                  onChange={handleNewTaskChange}
-                />
-              </div>
-              <div className="col-12 col-lg-4">
-                <label className="form-label">Completion %</label>
-                <input
-                  className="form-control"
-                  type="number"
-                  min="0"
-                  max="100"
-                  name="completionPercentage"
-                  value={newTask.completionPercentage}
-                  onChange={handleNewTaskChange}
-                />
-              </div>
-              <div className="col-12 col-lg-6">
-                <label className="form-label">Effort (Hours)</label>
-                <input
-                  className="form-control"
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  name="effortEstimateHours"
-                  value={newTask.effortEstimateHours}
-                  onChange={handleNewTaskChange}
-                />
-              </div>
-              <div className="col-12 col-lg-6">
-                <label className="form-label">Assign To (Project Member)</label>
-                <div className="employee-dropdown-wrap" ref={memberDropdownRef}>
-                  <div
-                    className="employee-selected-input"
-                    onClick={() => setShowMemberDropdown((prev) => !prev)}
-                  >
-                    {newTask.assignedToMemberId ? (
-                      <span className="employee-selected-name">
-                        <i className="bi bi-person-fill me-1" />
-                        {getMemberDisplayName(newTask.assignedToMemberId) ||
-                          newTask.assignedToMemberId}
-                        <button
-                          type="button"
-                          className="employee-clear-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setNewTask((prev) => ({
-                              ...prev,
-                              assignedToMemberId: "",
-                            }));
-                          }}
-                        >
-                          <i className="bi bi-x" />
-                        </button>
-                      </span>
-                    ) : (
-                      <span className="employee-placeholder">
-                        Select a project member...
-                      </span>
-                    )}
-                    <i
-                      className={`bi bi-chevron-${showMemberDropdown ? "up" : "down"} employee-chevron`}
-                    />
-                  </div>
-                  {showMemberDropdown && (
-                    <div className="employee-dropdown-list">
-                      <input
-                        className="form-control form-control-sm employee-search-input"
-                        placeholder="Search by name or role..."
-                        value={memberSearch}
-                        onChange={(e) => setMemberSearch(e.target.value)}
-                        autoFocus
-                      />
-                      <div className="employee-options">
-                        {filteredMembers.length === 0 ? (
-                          <div className="employee-option-empty">
-                            No project members found. Add members first.
-                          </div>
-                        ) : (
-                          filteredMembers.map((m) => {
-                            const emp = employees.find(
-                              (e) => e.id === m.userId,
-                            );
-                            return (
-                              <div
-                                key={m.id}
-                                className={`employee-option ${newTask.assignedToMemberId === m.id ? "selected" : ""}`}
-                                onClick={() => {
-                                  setNewTask((prev) => ({
-                                    ...prev,
-                                    assignedToMemberId: m.id,
-                                  }));
-                                  setShowMemberDropdown(false);
-                                  setMemberSearch("");
-                                }}
-                              >
-                                <div className="employee-option-avatar">
-                                  {m.fullName
-                                    .split(" ")
-                                    .map((n) => n.charAt(0))
-                                    .join("")
-                                    .slice(0, 2)}
-                                </div>
-                                <div className="employee-option-info">
-                                  <span className="employee-option-name">
-                                    {m.fullName}
-                                  </span>
-                                  <span className="employee-option-meta">
-                                    {m.role}{" "}
-                                    {emp?.department?.name
-                                      ? `· ${emp.department.name}`
-                                      : ""}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
-                  )}
+          {showCreateTask && (
+            <div className="task-create-card">
+              <h3 className="h6 mb-3">Create Task</h3>
+              <form className="row g-3" onSubmit={handleCreateTask}>
+                <div className="col-12 col-lg-6">
+                  <label className="form-label">Title *</label>
+                  <input
+                    className="form-control"
+                    name="title"
+                    value={newTask.title}
+                    onChange={handleNewTaskChange}
+                    maxLength={180}
+                    required
+                  />
                 </div>
-              </div>
-              <div className="col-12">
-                <label className="form-label">Description</label>
-                <textarea
-                  className="form-control"
-                  rows={2}
-                  name="description"
-                  value={newTask.description}
-                  onChange={handleNewTaskChange}
-                  maxLength={2000}
-                />
-              </div>
-              <div className="col-12 d-flex justify-content-end">
-                <button
-                  type="submit"
-                  className="btn btn-success"
-                  disabled={creatingTask}
-                >
-                  {creatingTask ? "Creating..." : "Create Task"}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {tasksLoading ? (
-          <div className="text-center py-4">
-            <div
-              className="spinner-border spinner-border-sm text-info"
-              role="status"
-            />
-          </div>
-        ) : tasks.length === 0 ? (
-          <div className="tasks-table-wrap">
-            <div className="tasks-empty-message">
-              <i className="bi bi-inbox" />
-              No tasks yet. Click "New Task" to add one.
-            </div>
-          </div>
-        ) : (
-          <div className="tasks-table-wrap">
-            <table className="tasks-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Priority</th>
-                  <th>Status</th>
-                  <th>Due Date</th>
-                  <th>Progress</th>
-                  <th style={{ width: 80 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.map((t) => (
-                  <tr
-                    key={t.id}
-                    onClick={() =>
-                      navigate(
-                        `/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
-                      )
-                    }
+                <div className="col-12 col-lg-3">
+                  <label className="form-label">Priority</label>
+                  <select
+                    className="form-select"
+                    name="priority"
+                    value={newTask.priority}
+                    onChange={handleNewTaskChange}
                   >
-                    <td>{t.title || "Untitled"}</td>
-                    <td>
-                      <span
-                        className="task-row-badge"
-                        style={{
-                          background:
-                            priorityColor[t.priority ?? 1] || "#6c757d",
-                        }}
-                      >
-                        {PriorityLevel[t.priority ?? 1] || "N/A"}
-                      </span>
-                    </td>
-                    <td>
-                      <span
-                        className="task-row-badge"
-                        style={{
-                          background: statusColor[t.status ?? 0] || "#6c757d",
-                        }}
-                      >
-                        {TaskStatusEnum[t.status ?? 0] || "N/A"}
-                      </span>
-                    </td>
-                    <td>
-                      {t.dueDateUtc
-                        ? new Date(t.dueDateUtc).toLocaleDateString()
-                        : "—"}
-                    </td>
-                    <td>{t.completionPercentage ?? 0}%</td>
-                    <td>
-                      <div
-                        className="task-row-actions"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {confirmDeleteTaskId === t.id ? (
-                          <span className="confirm-inline confirm-inline-sm">
-                            <span className="confirm-inline-text">Delete?</span>
-                            <button
-                              type="button"
-                              className="btn btn-danger btn-sm"
-                              onClick={() => handleDeleteTask(t.id)}
-                            >
-                              Yes
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={() => setConfirmDeleteTaskId(null)}
-                            >
-                              No
-                            </button>
-                          </span>
-                        ) : (
+                    {Object.entries(PriorityLevel).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 col-lg-3">
+                  <label className="form-label">Status</label>
+                  <select
+                    className="form-select"
+                    name="status"
+                    value={newTask.status}
+                    onChange={handleNewTaskChange}
+                  >
+                    {Object.entries(TaskStatusEnum).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 col-lg-4">
+                  <label className="form-label">Start Date</label>
+                  <input
+                    className="form-control"
+                    type="date"
+                    name="startDateUtc"
+                    value={newTask.startDateUtc}
+                    onChange={handleNewTaskChange}
+                  />
+                </div>
+                <div className="col-12 col-lg-4">
+                  <label className="form-label">Due Date</label>
+                  <input
+                    className="form-control"
+                    type="date"
+                    name="dueDateUtc"
+                    value={newTask.dueDateUtc}
+                    onChange={handleNewTaskChange}
+                  />
+                </div>
+                <div className="col-12 col-lg-4">
+                  <label className="form-label">Completion %</label>
+                  <input
+                    className="form-control"
+                    type="number"
+                    min="0"
+                    max="100"
+                    name="completionPercentage"
+                    value={newTask.completionPercentage}
+                    onChange={handleNewTaskChange}
+                  />
+                </div>
+                <div className="col-12 col-lg-6">
+                  <label className="form-label">Effort (Hours)</label>
+                  <input
+                    className="form-control"
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    name="effortEstimateHours"
+                    value={newTask.effortEstimateHours}
+                    onChange={handleNewTaskChange}
+                  />
+                </div>
+                <div className="col-12 col-lg-6">
+                  <label className="form-label">
+                    Assign To (Project Member)
+                  </label>
+                  <div
+                    className="employee-dropdown-wrap"
+                    ref={memberDropdownRef}
+                  >
+                    <div
+                      className="employee-selected-input"
+                      onClick={() => setShowMemberDropdown((prev) => !prev)}
+                    >
+                      {newTask.assignedToMemberId ? (
+                        <span className="employee-selected-name">
+                          <i className="bi bi-person-fill me-1" />
+                          {getMemberDisplayName(newTask.assignedToMemberId) ||
+                            newTask.assignedToMemberId}
                           <button
                             type="button"
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => setConfirmDeleteTaskId(t.id)}
+                            className="employee-clear-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setNewTask((prev) => ({
+                                ...prev,
+                                assignedToMemberId: "",
+                              }));
+                            }}
                           >
-                            <i className="bi bi-trash" />
+                            <i className="bi bi-x" />
                           </button>
-                        )}
+                        </span>
+                      ) : (
+                        <span className="employee-placeholder">
+                          Select a project member...
+                        </span>
+                      )}
+                      <i
+                        className={`bi bi-chevron-${showMemberDropdown ? "up" : "down"} employee-chevron`}
+                      />
+                    </div>
+                    {showMemberDropdown && (
+                      <div className="employee-dropdown-list">
+                        <input
+                          className="form-control form-control-sm employee-search-input"
+                          placeholder="Search by name or role..."
+                          value={memberSearch}
+                          onChange={(e) => setMemberSearch(e.target.value)}
+                          autoFocus
+                        />
+                        <div className="employee-options">
+                          {filteredMembers.length === 0 ? (
+                            <div className="employee-option-empty">
+                              No project members found. Add members first.
+                            </div>
+                          ) : (
+                            filteredMembers.map((m) => {
+                              const emp = employees.find(
+                                (e) => e.id === m.userId,
+                              );
+                              return (
+                                <div
+                                  key={m.id}
+                                  className={`employee-option ${newTask.assignedToMemberId === m.id ? "selected" : ""}`}
+                                  onClick={() => {
+                                    setNewTask((prev) => ({
+                                      ...prev,
+                                      assignedToMemberId: m.id,
+                                    }));
+                                    setShowMemberDropdown(false);
+                                    setMemberSearch("");
+                                  }}
+                                >
+                                  <div className="employee-option-avatar">
+                                    {m.fullName
+                                      .split(" ")
+                                      .map((n) => n.charAt(0))
+                                      .join("")
+                                      .slice(0, 2)}
+                                  </div>
+                                  <div className="employee-option-info">
+                                    <span className="employee-option-name">
+                                      {m.fullName}
+                                    </span>
+                                    <span className="employee-option-meta">
+                                      {m.role}{" "}
+                                      {emp?.department?.name
+                                        ? `· ${emp.department.name}`
+                                        : ""}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-      )}
-
-      {/* ── Phases Section ── */}
-      {activeTab === "phases" && (
-      <section className="tasks-section">
-        <div className="tasks-section-header">
-          <h2>
-            <i className="bi bi-layers me-2" />
-            Phases
-          </h2>
-          <button
-            type="button"
-            className="btn btn-info text-white btn-sm"
-            onClick={() => setShowCreatePhase((prev) => !prev)}
-          >
-            <i
-              className={`bi ${showCreatePhase ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-            />
-            {showCreatePhase ? "Cancel" : "New Phase"}
-          </button>
-        </div>
-
-        {showCreatePhase && (
-          <div className="task-create-card">
-            <h3 className="h6 mb-3">Create Phase</h3>
-            <form className="row g-3" onSubmit={handleCreatePhase}>
-              <div className="col-12 col-lg-6">
-                <label className="form-label">Name *</label>
-                <input
-                  className="form-control"
-                  name="name"
-                  value={newPhase.name}
-                  onChange={handleNewPhaseChange}
-                  maxLength={120}
-                  required
-                />
-              </div>
-              <div className="col-12 col-lg-3">
-                <label className="form-label">Start Date</label>
-                <input
-                  className="form-control"
-                  type="date"
-                  name="startDateUtc"
-                  value={newPhase.startDateUtc}
-                  onChange={handleNewPhaseChange}
-                />
-              </div>
-              <div className="col-12 col-lg-3">
-                <label className="form-label">End Date</label>
-                <input
-                  className="form-control"
-                  type="date"
-                  name="endDateUtc"
-                  value={newPhase.endDateUtc}
-                  onChange={handleNewPhaseChange}
-                />
-              </div>
-              <div className="col-12">
-                <label className="form-label">Deliverables</label>
-                <textarea
-                  className="form-control"
-                  rows={2}
-                  name="deliverables"
-                  value={newPhase.deliverables}
-                  onChange={handleNewPhaseChange}
-                  maxLength={1000}
-                />
-              </div>
-              <div className="col-12 d-flex align-items-center gap-3">
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    id="newPhaseGate"
-                    name="isGatePassed"
-                    checked={newPhase.isGatePassed}
-                    onChange={handleNewPhaseChange}
-                  />
-                  <label className="form-check-label" htmlFor="newPhaseGate">
-                    Gate Passed
-                  </label>
+                    )}
+                  </div>
                 </div>
-                <div className="ms-auto">
+                <div className="col-12">
+                  <label className="form-label">Description</label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    name="description"
+                    value={newTask.description}
+                    onChange={handleNewTaskChange}
+                    maxLength={2000}
+                  />
+                </div>
+                <div className="col-12 d-flex justify-content-end">
                   <button
                     type="submit"
                     className="btn btn-success"
-                    disabled={creatingPhase}
+                    disabled={creatingTask}
                   >
-                    {creatingPhase ? "Creating..." : "Create Phase"}
+                    {creatingTask ? "Creating..." : "Create Task"}
                   </button>
                 </div>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {phasesLoading ? (
-          <div className="text-center py-4">
-            <div
-              className="spinner-border spinner-border-sm text-info"
-              role="status"
-            />
-          </div>
-        ) : phases.length === 0 ? (
-          <div className="tasks-table-wrap">
-            <div className="tasks-empty-message">
-              <i className="bi bi-inbox" />
-              No phases yet. Click "New Phase" to add one.
+              </form>
             </div>
-          </div>
-        ) : (
-          <div className="tasks-table-wrap">
-            <table className="tasks-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th>Gate</th>
-                  <th>Deliverables</th>
-                  <th style={{ width: 120 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {phases.map((p) =>
-                  editingPhaseId === p.id ? (
-                    <tr key={p.id} className="phase-edit-row">
+          )}
+
+          {tasksLoading ? (
+            <div className="text-center py-4">
+              <div
+                className="spinner-border spinner-border-sm text-info"
+                role="status"
+              />
+            </div>
+          ) : tasks.length === 0 ? (
+            <div className="tasks-table-wrap">
+              <div className="tasks-empty-message">
+                <i className="bi bi-inbox" />
+                No tasks yet. Click "New Task" to add one.
+              </div>
+            </div>
+          ) : (
+            <div className="tasks-table-wrap">
+              <table className="tasks-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Due Date</th>
+                    <th>Progress</th>
+                    <th style={{ width: 80 }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.map((t) => (
+                    <tr
+                      key={t.id}
+                      onClick={() =>
+                        navigate(
+                          `/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
+                        )
+                      }
+                    >
+                      <td>{t.title || "Untitled"}</td>
                       <td>
-                        <input
-                          className="form-control form-control-sm"
-                          name="name"
-                          value={editPhaseForm.name}
-                          onChange={handleEditPhaseChange}
-                          maxLength={120}
-                          required
-                        />
-                      </td>
-                      <td>
-                        <input
-                          className="form-control form-control-sm"
-                          type="date"
-                          name="startDateUtc"
-                          value={editPhaseForm.startDateUtc}
-                          onChange={handleEditPhaseChange}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          className="form-control form-control-sm"
-                          type="date"
-                          name="endDateUtc"
-                          value={editPhaseForm.endDateUtc}
-                          onChange={handleEditPhaseChange}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          name="isGatePassed"
-                          checked={editPhaseForm.isGatePassed}
-                          onChange={handleEditPhaseChange}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          className="form-control form-control-sm"
-                          name="deliverables"
-                          value={editPhaseForm.deliverables}
-                          onChange={handleEditPhaseChange}
-                          maxLength={1000}
-                        />
-                      </td>
-                      <td>
-                        <div className="task-row-actions">
-                          <button
-                            type="button"
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleUpdatePhase(p)}
-                            title="Save"
-                          >
-                            <i className="bi bi-check-lg" />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-outline-secondary btn-sm"
-                            onClick={() => setEditingPhaseId(null)}
-                            title="Cancel"
-                          >
-                            <i className="bi bi-x-lg" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    <tr key={p.id}>
-                      <td>{p.name || "Unnamed"}</td>
-                      <td>
-                        {p.startDateUtc
-                          ? new Date(p.startDateUtc).toLocaleDateString()
-                          : "—"}
-                      </td>
-                      <td>
-                        {p.endDateUtc
-                          ? new Date(p.endDateUtc).toLocaleDateString()
-                          : "—"}
+                        <span
+                          className="task-row-badge"
+                          style={{
+                            background:
+                              priorityColor[t.priority ?? 1] || "#6c757d",
+                          }}
+                        >
+                          {PriorityLevel[t.priority ?? 1] || "N/A"}
+                        </span>
                       </td>
                       <td>
                         <span
                           className="task-row-badge"
                           style={{
-                            background: p.isGatePassed ? "#28a745" : "#6c757d",
+                            background: statusColor[t.status ?? 0] || "#6c757d",
                           }}
                         >
-                          {p.isGatePassed ? "Passed" : "Pending"}
+                          {TaskStatusEnum[t.status ?? 0] || "N/A"}
                         </span>
                       </td>
-                      <td className="phase-deliverables-cell">
-                        {p.deliverables || "—"}
-                      </td>
                       <td>
-                        <div className="task-row-actions">
-                          {confirmDeletePhaseId === p.id ? (
+                        {t.dueDateUtc
+                          ? new Date(t.dueDateUtc).toLocaleDateString()
+                          : "—"}
+                      </td>
+                      <td>{t.completionPercentage ?? 0}%</td>
+                      <td>
+                        <div
+                          className="task-row-actions"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {confirmDeleteTaskId === t.id ? (
                             <span className="confirm-inline confirm-inline-sm">
                               <span className="confirm-inline-text">
                                 Delete?
@@ -2184,526 +1944,207 @@ export function ProjectDetails() {
                               <button
                                 type="button"
                                 className="btn btn-danger btn-sm"
-                                onClick={() => handleDeletePhase(p.id)}
+                                onClick={() => handleDeleteTask(t.id)}
                               >
                                 Yes
                               </button>
                               <button
                                 type="button"
                                 className="btn btn-outline-secondary btn-sm"
-                                onClick={() => setConfirmDeletePhaseId(null)}
+                                onClick={() => setConfirmDeleteTaskId(null)}
                               >
                                 No
                               </button>
                             </span>
                           ) : (
-                            <>
-                              <button
-                                type="button"
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={() => startEditPhase(p)}
-                                title="Edit"
-                              >
-                                <i className="bi bi-pencil" />
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-outline-danger btn-sm"
-                                onClick={() => setConfirmDeletePhaseId(p.id)}
-                                title="Delete"
-                              >
-                                <i className="bi bi-trash" />
-                              </button>
-                            </>
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() => setConfirmDeleteTaskId(t.id)}
+                            >
+                              <i className="bi bi-trash" />
+                            </button>
                           )}
                         </div>
                       </td>
                     </tr>
-                  ),
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-      )}
-
-      {/* ── Resources Section ── */}
-      {activeTab === "resources" && (
-      <section className="tasks-section">
-        <div className="tasks-section-header">
-          <h2>
-            <i className="bi bi-box-seam me-2" />
-            Resources
-          </h2>
-          <button
-            type="button"
-            className="btn btn-info text-white btn-sm"
-            onClick={() => setShowCreateResourceReq((prev) => !prev)}
-          >
-            <i
-              className={`bi ${showCreateResourceReq ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-            />
-            {showCreateResourceReq ? "Cancel" : "Request Resource"}
-          </button>
-        </div>
-
-        {showCreateResourceReq && (
-          <div className="task-create-card">
-            <h3 className="h6 mb-3">Request a Resource</h3>
-            <form className="row g-3" onSubmit={handleCreateResourceReq}>
-              <div className="col-12 col-md-4">
-                <label className="form-label">Resource</label>
-                <select
-                  className="form-select"
-                  name="resourceId"
-                  value={newResourceReq.resourceId}
-                  onChange={handleNewResourceReqChange}
-                >
-                  <option value="">— None —</option>
-                  {allResources.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.name || r.id}
-                    </option>
                   ))}
-                </select>
-              </div>
-              <div className="col-12 col-md-4">
-                <label className="form-label">Resource Type</label>
-                <select
-                  className="form-select"
-                  name="resourceType"
-                  value={newResourceReq.resourceType}
-                  onChange={handleNewResourceReqChange}
-                  disabled={!!newResourceReq.resourceId}
-                >
-                  {Object.entries(ResourceType).map(([k, v]) => (
-                    <option key={k} value={k}>
-                      {v}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="col-12 col-md-4">
-                <label className="form-label">Allocation %</label>
-                <input
-                  className="form-control"
-                  type="number"
-                  name="requestedAllocationPercentage"
-                  value={newResourceReq.requestedAllocationPercentage}
-                  onChange={handleNewResourceReqChange}
-                  min={0}
-                  max={100}
-                />
-              </div>
-              <div className="col-12">
-                <label className="form-label">Comments</label>
-                <textarea
-                  className="form-control"
-                  rows={2}
-                  name="comments"
-                  value={newResourceReq.comments}
-                  onChange={handleNewResourceReqChange}
-                  maxLength={500}
-                />
-              </div>
-              <div className="col-12 text-end">
-                <button
-                  type="submit"
-                  className="btn btn-success"
-                  disabled={creatingResourceReq}
-                >
-                  {creatingResourceReq ? "Submitting..." : "Submit Request"}
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {resourceRequestsLoading ? (
-          <div className="text-center py-4">
-            <div
-              className="spinner-border spinner-border-sm text-info"
-              role="status"
-            />
-          </div>
-        ) : resourceRequests.length === 0 ? (
-          <div className="tasks-table-wrap">
-            <div className="tasks-empty-message">
-              <i className="bi bi-inbox" />
-              No resource requests yet. Click "Request Resource" to add one.
+                </tbody>
+              </table>
             </div>
-          </div>
-        ) : (
-          <div className="tasks-table-wrap">
-            <table className="tasks-table">
-              <thead>
-                <tr>
-                  <th>Resource</th>
-                  <th>Type</th>
-                  <th>Allocation</th>
-                  <th>Status</th>
-                  <th>Comments</th>
-                  <th style={{ width: 120 }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {resourceRequests.map((req) => (
-                  <tr key={req.id}>
-                    <td>{getResourceName(req.resourceId)}</td>
-                    <td>
-                      <span
-                        className="task-row-badge"
-                        style={{
-                          background: resourceTypeColor[req.resourceType ?? 0],
-                        }}
-                      >
-                        {ResourceType[req.resourceType ?? 0] || "Unknown"}
-                      </span>
-                    </td>
-                    <td>{req.requestedAllocationPercentage ?? 0}%</td>
-                    <td>
-                      <span
-                        className="task-row-badge"
-                        style={{
-                          background: requestStatusColor[req.status ?? 0],
-                        }}
-                      >
-                        {RequestStatus[req.status ?? 0] || "Unknown"}
-                      </span>
-                    </td>
-                    <td className="phase-deliverables-cell">
-                      {req.comments || "—"}
-                    </td>
-                    <td>
-                      <div className="task-row-actions">
-                        {confirmDeleteReqId === req.id ? (
-                          <span className="confirm-inline confirm-inline-sm">
-                            <span className="confirm-inline-text">Delete?</span>
-                            <button
-                              type="button"
-                              className="btn btn-danger btn-sm"
-                              onClick={() => handleDeleteResourceReq(req.id)}
-                            >
-                              Yes
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={() => setConfirmDeleteReqId(null)}
-                            >
-                              No
-                            </button>
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            className="btn btn-outline-danger btn-sm"
-                            onClick={() => setConfirmDeleteReqId(req.id)}
-                            title="Delete"
-                          >
-                            <i className="bi bi-trash" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+          )}
+        </section>
       )}
 
-      {/* ── Finance Section ── */}
-      {activeTab === "finance" && (
-      <section className="tasks-section">
-        <div className="tasks-section-header">
-          <h2>
-            <i className="bi bi-cash-coin me-2" />
-            Finance
-          </h2>
-          <button
-            type="button"
-            className="btn btn-info text-white btn-sm"
-            onClick={() => setShowCreateBudget((prev) => !prev)}
-            disabled={availableBudgetCategoryEntries.length === 0}
-          >
-            <i
-              className={`bi ${showCreateBudget ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-            />
-            {showCreateBudget ? "Cancel" : "New Budget"}
-          </button>
-        </div>
+      {/* ── Phases Section ── */}
+      {activeTab === "phases" && (
+        <section className="tasks-section">
+          <div className="tasks-section-header">
+            <h2>
+              <i className="bi bi-layers me-2" />
+              Phases
+            </h2>
+            <button
+              type="button"
+              className="btn btn-info text-white btn-sm"
+              onClick={() => setShowCreatePhase((prev) => !prev)}
+            >
+              <i
+                className={`bi ${showCreatePhase ? "bi-x-circle" : "bi-plus-lg"} me-1`}
+              />
+              {showCreatePhase ? "Cancel" : "New Phase"}
+            </button>
+          </div>
 
-        {showCreateBudget && (
-          <div className="task-create-card">
-            <h3 className="h6 mb-3">Create Budget</h3>
-            {availableBudgetCategoryEntries.length === 0 ? (
-              <div className="tasks-empty-message py-3">
-                All budget categories are already used in this project.
-              </div>
-            ) : (
-              <form className="row g-3" onSubmit={handleCreateBudget}>
-                <div className="col-12 col-md-3">
-                  <label className="form-label">Category *</label>
-                  <select
-                    className="form-select"
-                    name="category"
-                    value={newBudget.category}
-                    onChange={handleNewBudgetChange}
+          {showCreatePhase && (
+            <div className="task-create-card">
+              <h3 className="h6 mb-3">Create Phase</h3>
+              <form className="row g-3" onSubmit={handleCreatePhase}>
+                <div className="col-12 col-lg-6">
+                  <label className="form-label">Name *</label>
+                  <input
+                    className="form-control"
+                    name="name"
+                    value={newPhase.name}
+                    onChange={handleNewPhaseChange}
+                    maxLength={120}
                     required
-                  >
-                    {availableBudgetCategoryEntries.map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12 col-md-3">
-                  <label className="form-label">Planned Amount</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    name="plannedAmount"
-                    value={newBudget.plannedAmount}
-                    onChange={handleNewBudgetChange}
                   />
                 </div>
-                <div className="col-12 col-md-3">
-                  <label className="form-label">Actual Amount</label>
+                <div className="col-12 col-lg-3">
+                  <label className="form-label">Start Date</label>
                   <input
                     className="form-control"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    name="actualAmount"
-                    value={newBudget.actualAmount}
-                    onChange={handleNewBudgetChange}
+                    type="date"
+                    name="startDateUtc"
+                    value={newPhase.startDateUtc}
+                    onChange={handleNewPhaseChange}
                   />
                 </div>
-                <div className="col-12 col-md-3">
-                  <label className="form-label">Forecast Amount</label>
+                <div className="col-12 col-lg-3">
+                  <label className="form-label">End Date</label>
                   <input
                     className="form-control"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    name="forecastAmount"
-                    value={newBudget.forecastAmount}
-                    onChange={handleNewBudgetChange}
+                    type="date"
+                    name="endDateUtc"
+                    value={newPhase.endDateUtc}
+                    onChange={handleNewPhaseChange}
                   />
                 </div>
-                <div className="col-12 d-flex justify-content-end">
-                  <button
-                    type="submit"
-                    className="btn btn-success"
-                    disabled={creatingBudget}
-                  >
-                    {creatingBudget ? "Creating..." : "Create Budget"}
-                  </button>
+                <div className="col-12">
+                  <label className="form-label">Deliverables</label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    name="deliverables"
+                    value={newPhase.deliverables}
+                    onChange={handleNewPhaseChange}
+                    maxLength={1000}
+                  />
+                </div>
+                <div className="col-12 d-flex align-items-center gap-3">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id="newPhaseGate"
+                      name="isGatePassed"
+                      checked={newPhase.isGatePassed}
+                      onChange={handleNewPhaseChange}
+                    />
+                    <label className="form-check-label" htmlFor="newPhaseGate">
+                      Gate Passed
+                    </label>
+                  </div>
+                  <div className="ms-auto">
+                    <button
+                      type="submit"
+                      className="btn btn-success"
+                      disabled={creatingPhase}
+                    >
+                      {creatingPhase ? "Creating..." : "Create Phase"}
+                    </button>
+                  </div>
                 </div>
               </form>
-            )}
-          </div>
-        )}
-
-        {budgetsLoading ? (
-          <div className="text-center py-4">
-            <div
-              className="spinner-border spinner-border-sm text-info"
-              role="status"
-            />
-          </div>
-        ) : budgets.length === 0 ? (
-          <div className="tasks-table-wrap">
-            <div className="tasks-empty-message">
-              <i className="bi bi-inbox" />
-              No budgets yet. Click "New Budget" to add one.
             </div>
-          </div>
-        ) : (
-          <>
-            <div className="finance-charts-grid mb-3">
-              <article className="details-card finance-chart-card">
-                <div className="finance-chart-header">
-                  <h3 className="h6 mb-1">Budget vs Actual vs Forecast</h3>
-                  <p className="mb-0">
-                    Compare planned budget, current spending, and projected final cost.
-                  </p>
-                </div>
-                <div className="finance-chart-body">
-                  <ResponsiveContainer width="100%" height={320}>
-                    <BarChart
-                      data={budgetChartData}
-                      margin={{ top: 12, right: 12, left: 4, bottom: 0 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e6eef5" />
-                      <XAxis dataKey="category" tick={{ fontSize: 12 }} />
-                      <YAxis tick={{ fontSize: 12 }} />
-                      <Tooltip
-                        formatter={(value) =>
-                          currencyFormatter.format(Number(value ?? 0))
-                        }
-                      />
-                      <Legend />
-                      <Bar
-                        dataKey="planned"
-                        name="Planned"
-                        fill="#1b4965"
-                        radius={[6, 6, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="actual"
-                        name="Actual"
-                        fill="#ef8354"
-                        radius={[6, 6, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="forecast"
-                        name="Forecast"
-                        fill="#189ab4"
-                        radius={[6, 6, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </article>
+          )}
 
-              <article className="details-card finance-chart-card">
-                <div className="finance-chart-header">
-                  <h3 className="h6 mb-1">Planned Budget Distribution</h3>
-                  <p className="mb-0">
-                    Allocation of planned budget across categories.
-                  </p>
-                </div>
-                <div className="finance-chart-body">
-                  <ResponsiveContainer width="100%" height={320}>
-                    <PieChart>
-                      <Pie
-                        data={budgetDistributionData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={105}
-                      >
-                        {budgetDistributionData.map((entry, index) => (
-                          <Cell
-                            key={`${entry.name}-${index}`}
-                            fill={chartPalette[index % chartPalette.length]}
-                          />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        formatter={(value) =>
-                          currencyFormatter.format(Number(value ?? 0))
-                        }
-                      />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </article>
+          {phasesLoading ? (
+            <div className="text-center py-4">
+              <div
+                className="spinner-border spinner-border-sm text-info"
+                role="status"
+              />
             </div>
-
-            <article className="details-card finance-consumption-card mb-3">
-              <h3 className="h6 mb-3">Budget Consumption by Category</h3>
-              <div className="finance-consumption-list">
-                {budgetConsumptionData.map((item) => {
-                  const boundedPercent = Math.max(0, Math.min(item.percent, 100));
-                  const overBudget = item.percent > 100;
-
-                  return (
-                    <div key={item.id} className="finance-consumption-item">
-                      <div className="finance-consumption-top">
-                        <span className="finance-consumption-name">{item.category}</span>
-                        <span
-                          className={`finance-consumption-percent ${overBudget ? "over" : ""}`}
-                        >
-                          {item.percent.toFixed(1)}%
-                        </span>
-                      </div>
-                      <div className="finance-consumption-track" role="progressbar">
-                        <span
-                          className={`finance-consumption-fill ${overBudget ? "over" : ""}`}
-                          style={{ width: `${boundedPercent}%` }}
-                        />
-                      </div>
-                      <p className="finance-consumption-meta mb-0">
-                        {currencyFormatter.format(item.actual)} of {" "}
-                        {currencyFormatter.format(item.planned)} consumed
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            </article>
-
+          ) : phases.length === 0 ? (
             <div className="tasks-table-wrap">
-              <table className="tasks-table budget-table">
+              <div className="tasks-empty-message">
+                <i className="bi bi-inbox" />
+                No phases yet. Click "New Phase" to add one.
+              </div>
+            </div>
+          ) : (
+            <div className="tasks-table-wrap">
+              <table className="tasks-table">
                 <thead>
                   <tr>
-                    <th>Category</th>
-                    <th>Planned</th>
-                    <th>Actual</th>
-                    <th>Forecast</th>
-                    <th style={{ width: 140 }}>Actions</th>
+                    <th>Name</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Gate</th>
+                    <th>Deliverables</th>
+                    <th style={{ width: 120 }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {budgets.map((b) =>
-                    editingBudgetId === b.id ? (
-                      <tr key={b.id} className="phase-edit-row">
-                        <td>
-                          <select
-                            className="form-select form-select-sm"
-                            name="category"
-                            value={editBudgetForm.category}
-                            onChange={handleEditBudgetChange}
-                          >
-                            {Object.entries(BudgetCategory).map(([value, label]) => (
-                              <option key={value} value={value}>
-                                {label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
+                  {phases.map((p) =>
+                    editingPhaseId === p.id ? (
+                      <tr key={p.id} className="phase-edit-row">
                         <td>
                           <input
                             className="form-control form-control-sm"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            name="plannedAmount"
-                            value={editBudgetForm.plannedAmount}
-                            onChange={handleEditBudgetChange}
+                            name="name"
+                            value={editPhaseForm.name}
+                            onChange={handleEditPhaseChange}
+                            maxLength={120}
+                            required
                           />
                         </td>
                         <td>
                           <input
                             className="form-control form-control-sm"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            name="actualAmount"
-                            value={editBudgetForm.actualAmount}
-                            onChange={handleEditBudgetChange}
+                            type="date"
+                            name="startDateUtc"
+                            value={editPhaseForm.startDateUtc}
+                            onChange={handleEditPhaseChange}
                           />
                         </td>
                         <td>
                           <input
                             className="form-control form-control-sm"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            name="forecastAmount"
-                            value={editBudgetForm.forecastAmount}
-                            onChange={handleEditBudgetChange}
+                            type="date"
+                            name="endDateUtc"
+                            value={editPhaseForm.endDateUtc}
+                            onChange={handleEditPhaseChange}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            name="isGatePassed"
+                            checked={editPhaseForm.isGatePassed}
+                            onChange={handleEditPhaseChange}
+                          />
+                        </td>
+                        <td>
+                          <input
+                            className="form-control form-control-sm"
+                            name="deliverables"
+                            value={editPhaseForm.deliverables}
+                            onChange={handleEditPhaseChange}
+                            maxLength={1000}
                           />
                         </td>
                         <td>
@@ -2711,7 +2152,7 @@ export function ProjectDetails() {
                             <button
                               type="button"
                               className="btn btn-success btn-sm"
-                              onClick={() => handleUpdateBudget(b)}
+                              onClick={() => handleUpdatePhase(p)}
                               title="Save"
                             >
                               <i className="bi bi-check-lg" />
@@ -2719,7 +2160,7 @@ export function ProjectDetails() {
                             <button
                               type="button"
                               className="btn btn-outline-secondary btn-sm"
-                              onClick={() => setEditingBudgetId(null)}
+                              onClick={() => setEditingPhaseId(null)}
                               title="Cancel"
                             >
                               <i className="bi bi-x-lg" />
@@ -2728,27 +2169,51 @@ export function ProjectDetails() {
                         </td>
                       </tr>
                     ) : (
-                      <tr key={b.id}>
-                        <td>{BudgetCategory[b.category ?? 0] || "Unknown"}</td>
-                        <td>${(b.plannedAmount ?? 0).toLocaleString()}</td>
-                        <td>${(b.actualAmount ?? 0).toLocaleString()}</td>
-                        <td>${(b.forecastAmount ?? 0).toLocaleString()}</td>
+                      <tr key={p.id}>
+                        <td>{p.name || "Unnamed"}</td>
+                        <td>
+                          {p.startDateUtc
+                            ? new Date(p.startDateUtc).toLocaleDateString()
+                            : "—"}
+                        </td>
+                        <td>
+                          {p.endDateUtc
+                            ? new Date(p.endDateUtc).toLocaleDateString()
+                            : "—"}
+                        </td>
+                        <td>
+                          <span
+                            className="task-row-badge"
+                            style={{
+                              background: p.isGatePassed
+                                ? "#28a745"
+                                : "#6c757d",
+                            }}
+                          >
+                            {p.isGatePassed ? "Passed" : "Pending"}
+                          </span>
+                        </td>
+                        <td className="phase-deliverables-cell">
+                          {p.deliverables || "—"}
+                        </td>
                         <td>
                           <div className="task-row-actions">
-                            {confirmDeleteBudgetId === b.id ? (
+                            {confirmDeletePhaseId === p.id ? (
                               <span className="confirm-inline confirm-inline-sm">
-                                <span className="confirm-inline-text">Delete?</span>
+                                <span className="confirm-inline-text">
+                                  Delete?
+                                </span>
                                 <button
                                   type="button"
                                   className="btn btn-danger btn-sm"
-                                  onClick={() => handleDeleteBudget(b.id)}
+                                  onClick={() => handleDeletePhase(p.id)}
                                 >
                                   Yes
                                 </button>
                                 <button
                                   type="button"
                                   className="btn btn-outline-secondary btn-sm"
-                                  onClick={() => setConfirmDeleteBudgetId(null)}
+                                  onClick={() => setConfirmDeletePhaseId(null)}
                                 >
                                   No
                                 </button>
@@ -2758,7 +2223,7 @@ export function ProjectDetails() {
                                 <button
                                   type="button"
                                   className="btn btn-outline-primary btn-sm"
-                                  onClick={() => startEditBudget(b)}
+                                  onClick={() => startEditPhase(p)}
                                   title="Edit"
                                 >
                                   <i className="bi bi-pencil" />
@@ -2766,7 +2231,7 @@ export function ProjectDetails() {
                                 <button
                                   type="button"
                                   className="btn btn-outline-danger btn-sm"
-                                  onClick={() => setConfirmDeleteBudgetId(b.id)}
+                                  onClick={() => setConfirmDeletePhaseId(p.id)}
                                   title="Delete"
                                 >
                                   <i className="bi bi-trash" />
@@ -2781,9 +2246,588 @@ export function ProjectDetails() {
                 </tbody>
               </table>
             </div>
-          </>
-        )}
-      </section>
+          )}
+        </section>
+      )}
+
+      {/* ── Resources Section ── */}
+      {activeTab === "resources" && (
+        <section className="tasks-section">
+          <div className="tasks-section-header">
+            <h2>
+              <i className="bi bi-box-seam me-2" />
+              Resources
+            </h2>
+            <button
+              type="button"
+              className="btn btn-info text-white btn-sm"
+              onClick={() => setShowCreateResourceReq((prev) => !prev)}
+            >
+              <i
+                className={`bi ${showCreateResourceReq ? "bi-x-circle" : "bi-plus-lg"} me-1`}
+              />
+              {showCreateResourceReq ? "Cancel" : "Request Resource"}
+            </button>
+          </div>
+
+          {showCreateResourceReq && (
+            <div className="task-create-card">
+              <h3 className="h6 mb-3">Request a Resource</h3>
+              <form className="row g-3" onSubmit={handleCreateResourceReq}>
+                <div className="col-12 col-md-4">
+                  <label className="form-label">Resource</label>
+                  <select
+                    className="form-select"
+                    name="resourceId"
+                    value={newResourceReq.resourceId}
+                    onChange={handleNewResourceReqChange}
+                  >
+                    <option value="">— None —</option>
+                    {allResources.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name || r.id}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 col-md-4">
+                  <label className="form-label">Resource Type</label>
+                  <select
+                    className="form-select"
+                    name="resourceType"
+                    value={newResourceReq.resourceType}
+                    onChange={handleNewResourceReqChange}
+                    disabled={!!newResourceReq.resourceId}
+                  >
+                    {Object.entries(ResourceType).map(([k, v]) => (
+                      <option key={k} value={k}>
+                        {v}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 col-md-4">
+                  <label className="form-label">Allocation %</label>
+                  <input
+                    className="form-control"
+                    type="number"
+                    name="requestedAllocationPercentage"
+                    value={newResourceReq.requestedAllocationPercentage}
+                    onChange={handleNewResourceReqChange}
+                    min={0}
+                    max={100}
+                  />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Comments</label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    name="comments"
+                    value={newResourceReq.comments}
+                    onChange={handleNewResourceReqChange}
+                    maxLength={500}
+                  />
+                </div>
+                <div className="col-12 text-end">
+                  <button
+                    type="submit"
+                    className="btn btn-success"
+                    disabled={creatingResourceReq}
+                  >
+                    {creatingResourceReq ? "Submitting..." : "Submit Request"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {resourceRequestsLoading ? (
+            <div className="text-center py-4">
+              <div
+                className="spinner-border spinner-border-sm text-info"
+                role="status"
+              />
+            </div>
+          ) : resourceRequests.length === 0 ? (
+            <div className="tasks-table-wrap">
+              <div className="tasks-empty-message">
+                <i className="bi bi-inbox" />
+                No resource requests yet. Click "Request Resource" to add one.
+              </div>
+            </div>
+          ) : (
+            <div className="tasks-table-wrap">
+              <table className="tasks-table">
+                <thead>
+                  <tr>
+                    <th>Resource</th>
+                    <th>Type</th>
+                    <th>Allocation</th>
+                    <th>Status</th>
+                    <th>Comments</th>
+                    <th style={{ width: 120 }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {resourceRequests.map((req) => (
+                    <tr key={req.id}>
+                      <td>{getResourceName(req.resourceId)}</td>
+                      <td>
+                        <span
+                          className="task-row-badge"
+                          style={{
+                            background:
+                              resourceTypeColor[req.resourceType ?? 0],
+                          }}
+                        >
+                          {ResourceType[req.resourceType ?? 0] || "Unknown"}
+                        </span>
+                      </td>
+                      <td>{req.requestedAllocationPercentage ?? 0}%</td>
+                      <td>
+                        <span
+                          className="task-row-badge"
+                          style={{
+                            background: requestStatusColor[req.status ?? 0],
+                          }}
+                        >
+                          {RequestStatus[req.status ?? 0] || "Unknown"}
+                        </span>
+                      </td>
+                      <td className="phase-deliverables-cell">
+                        {req.comments || "—"}
+                      </td>
+                      <td>
+                        <div className="task-row-actions">
+                          {confirmDeleteReqId === req.id ? (
+                            <span className="confirm-inline confirm-inline-sm">
+                              <span className="confirm-inline-text">
+                                Delete?
+                              </span>
+                              <button
+                                type="button"
+                                className="btn btn-danger btn-sm"
+                                onClick={() => handleDeleteResourceReq(req.id)}
+                              >
+                                Yes
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => setConfirmDeleteReqId(null)}
+                              >
+                                No
+                              </button>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm"
+                              onClick={() => setConfirmDeleteReqId(req.id)}
+                              title="Delete"
+                            >
+                              <i className="bi bi-trash" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ── Finance Section ── */}
+      {activeTab === "finance" && (
+        <section className="tasks-section">
+          <div className="tasks-section-header">
+            <h2>
+              <i className="bi bi-cash-coin me-2" />
+              Finance
+            </h2>
+            <button
+              type="button"
+              className="btn btn-info text-white btn-sm"
+              onClick={() => setShowCreateBudget((prev) => !prev)}
+              disabled={availableBudgetCategoryEntries.length === 0}
+            >
+              <i
+                className={`bi ${showCreateBudget ? "bi-x-circle" : "bi-plus-lg"} me-1`}
+              />
+              {showCreateBudget ? "Cancel" : "New Budget"}
+            </button>
+          </div>
+
+          {showCreateBudget && (
+            <div className="task-create-card">
+              <h3 className="h6 mb-3">Create Budget</h3>
+              {availableBudgetCategoryEntries.length === 0 ? (
+                <div className="tasks-empty-message py-3">
+                  All budget categories are already used in this project.
+                </div>
+              ) : (
+                <form className="row g-3" onSubmit={handleCreateBudget}>
+                  <div className="col-12 col-md-3">
+                    <label className="form-label">Category *</label>
+                    <select
+                      className="form-select"
+                      name="category"
+                      value={newBudget.category}
+                      onChange={handleNewBudgetChange}
+                      required
+                    >
+                      {availableBudgetCategoryEntries.map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-12 col-md-3">
+                    <label className="form-label">Planned Amount</label>
+                    <input
+                      className="form-control"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      name="plannedAmount"
+                      value={newBudget.plannedAmount}
+                      onChange={handleNewBudgetChange}
+                    />
+                  </div>
+                  <div className="col-12 col-md-3">
+                    <label className="form-label">Actual Amount</label>
+                    <input
+                      className="form-control"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      name="actualAmount"
+                      value={newBudget.actualAmount}
+                      onChange={handleNewBudgetChange}
+                    />
+                  </div>
+                  <div className="col-12 col-md-3">
+                    <label className="form-label">Forecast Amount</label>
+                    <input
+                      className="form-control"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      name="forecastAmount"
+                      value={newBudget.forecastAmount}
+                      onChange={handleNewBudgetChange}
+                    />
+                  </div>
+                  <div className="col-12 d-flex justify-content-end">
+                    <button
+                      type="submit"
+                      className="btn btn-success"
+                      disabled={creatingBudget}
+                    >
+                      {creatingBudget ? "Creating..." : "Create Budget"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          )}
+
+          {budgetsLoading ? (
+            <div className="text-center py-4">
+              <div
+                className="spinner-border spinner-border-sm text-info"
+                role="status"
+              />
+            </div>
+          ) : budgets.length === 0 ? (
+            <div className="tasks-table-wrap">
+              <div className="tasks-empty-message">
+                <i className="bi bi-inbox" />
+                No budgets yet. Click "New Budget" to add one.
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="finance-charts-grid mb-3">
+                <article className="details-card finance-chart-card">
+                  <div className="finance-chart-header">
+                    <h3 className="h6 mb-1">Budget vs Actual vs Forecast</h3>
+                    <p className="mb-0">
+                      Compare planned budget, current spending, and projected
+                      final cost.
+                    </p>
+                  </div>
+                  <div className="finance-chart-body">
+                    <ResponsiveContainer width="100%" height={320}>
+                      <BarChart
+                        data={budgetChartData}
+                        margin={{ top: 12, right: 12, left: 4, bottom: 0 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e6eef5" />
+                        <XAxis dataKey="category" tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip
+                          formatter={(value) =>
+                            currencyFormatter.format(Number(value ?? 0))
+                          }
+                        />
+                        <Legend />
+                        <Bar
+                          dataKey="planned"
+                          name="Planned"
+                          fill="#1b4965"
+                          radius={[6, 6, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="actual"
+                          name="Actual"
+                          fill="#ef8354"
+                          radius={[6, 6, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="forecast"
+                          name="Forecast"
+                          fill="#189ab4"
+                          radius={[6, 6, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </article>
+
+                <article className="details-card finance-chart-card">
+                  <div className="finance-chart-header">
+                    <h3 className="h6 mb-1">Planned Budget Distribution</h3>
+                    <p className="mb-0">
+                      Allocation of planned budget across categories.
+                    </p>
+                  </div>
+                  <div className="finance-chart-body">
+                    <ResponsiveContainer width="100%" height={320}>
+                      <PieChart>
+                        <Pie
+                          data={budgetDistributionData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={105}
+                        >
+                          {budgetDistributionData.map((entry, index) => (
+                            <Cell
+                              key={`${entry.name}-${index}`}
+                              fill={chartPalette[index % chartPalette.length]}
+                            />
+                          ))}
+                        </Pie>
+                        <Tooltip
+                          formatter={(value) =>
+                            currencyFormatter.format(Number(value ?? 0))
+                          }
+                        />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </article>
+              </div>
+
+              <article className="details-card finance-consumption-card mb-3">
+                <h3 className="h6 mb-3">Budget Consumption by Category</h3>
+                <div className="finance-consumption-list">
+                  {budgetConsumptionData.map((item) => {
+                    const boundedPercent = Math.max(
+                      0,
+                      Math.min(item.percent, 100),
+                    );
+                    const overBudget = item.percent > 100;
+
+                    return (
+                      <div key={item.id} className="finance-consumption-item">
+                        <div className="finance-consumption-top">
+                          <span className="finance-consumption-name">
+                            {item.category}
+                          </span>
+                          <span
+                            className={`finance-consumption-percent ${overBudget ? "over" : ""}`}
+                          >
+                            {item.percent.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div
+                          className="finance-consumption-track"
+                          role="progressbar"
+                        >
+                          <span
+                            className={`finance-consumption-fill ${overBudget ? "over" : ""}`}
+                            style={{ width: `${boundedPercent}%` }}
+                          />
+                        </div>
+                        <p className="finance-consumption-meta mb-0">
+                          {currencyFormatter.format(item.actual)} of{" "}
+                          {currencyFormatter.format(item.planned)} consumed
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </article>
+
+              <div className="tasks-table-wrap">
+                <table className="tasks-table budget-table">
+                  <thead>
+                    <tr>
+                      <th>Category</th>
+                      <th>Planned</th>
+                      <th>Actual</th>
+                      <th>Forecast</th>
+                      <th style={{ width: 140 }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {budgets.map((b) =>
+                      editingBudgetId === b.id ? (
+                        <tr key={b.id} className="phase-edit-row">
+                          <td>
+                            <select
+                              className="form-select form-select-sm"
+                              name="category"
+                              value={editBudgetForm.category}
+                              onChange={handleEditBudgetChange}
+                            >
+                              {Object.entries(BudgetCategory).map(
+                                ([value, label]) => (
+                                  <option key={value} value={value}>
+                                    {label}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                          </td>
+                          <td>
+                            <input
+                              className="form-control form-control-sm"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              name="plannedAmount"
+                              value={editBudgetForm.plannedAmount}
+                              onChange={handleEditBudgetChange}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              className="form-control form-control-sm"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              name="actualAmount"
+                              value={editBudgetForm.actualAmount}
+                              onChange={handleEditBudgetChange}
+                            />
+                          </td>
+                          <td>
+                            <input
+                              className="form-control form-control-sm"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              name="forecastAmount"
+                              value={editBudgetForm.forecastAmount}
+                              onChange={handleEditBudgetChange}
+                            />
+                          </td>
+                          <td>
+                            <div className="task-row-actions">
+                              <button
+                                type="button"
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleUpdateBudget(b)}
+                                title="Save"
+                              >
+                                <i className="bi bi-check-lg" />
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => setEditingBudgetId(null)}
+                                title="Cancel"
+                              >
+                                <i className="bi bi-x-lg" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr key={b.id}>
+                          <td>
+                            {BudgetCategory[b.category ?? 0] || "Unknown"}
+                          </td>
+                          <td>${(b.plannedAmount ?? 0).toLocaleString()}</td>
+                          <td>${(b.actualAmount ?? 0).toLocaleString()}</td>
+                          <td>${(b.forecastAmount ?? 0).toLocaleString()}</td>
+                          <td>
+                            <div className="task-row-actions">
+                              {confirmDeleteBudgetId === b.id ? (
+                                <span className="confirm-inline confirm-inline-sm">
+                                  <span className="confirm-inline-text">
+                                    Delete?
+                                  </span>
+                                  <button
+                                    type="button"
+                                    className="btn btn-danger btn-sm"
+                                    onClick={() => handleDeleteBudget(b.id)}
+                                  >
+                                    Yes
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-secondary btn-sm"
+                                    onClick={() =>
+                                      setConfirmDeleteBudgetId(null)
+                                    }
+                                  >
+                                    No
+                                  </button>
+                                </span>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => startEditBudget(b)}
+                                    title="Edit"
+                                  >
+                                    <i className="bi bi-pencil" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() =>
+                                      setConfirmDeleteBudgetId(b.id)
+                                    }
+                                    title="Delete"
+                                  >
+                                    <i className="bi bi-trash" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ),
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </section>
       )}
     </div>
   );
