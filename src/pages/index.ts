@@ -1,7 +1,6 @@
 export { Dashboard } from './Dashboard';
 export { default as Notifications } from './notifications';
 export { HumanResources } from './HumanResources';
-export { Projects } from './Projects';
 export { CreateProject } from './CreateProject';
 export { Portfolios } from './Portfolios';
 export { ProjectDetails } from './ProjectDetails';

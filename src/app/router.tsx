@@ -1,5 +1,10 @@
 // src/app/router.tsx
-import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  Outlet,
+  Navigate,
+} from "react-router-dom";
 import { AppLayout } from "../layout/AppLayout";
 import Login from "../pages/Login";
 import { ProtectedRoute } from "./ProtectedRoute";
@@ -12,7 +17,7 @@ import {
   ProjectDetails,
   ProjectDocuments,
   TaskDetails,
-  Projects,
+  Meetings,
   AuditLog,
   Workflows,
   Settings,
@@ -52,7 +57,7 @@ import { OpportunityRoutes } from "../modules/opportunities/routes/opportunityRo
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Login />,
+    element: <Navigate to="/login" replace />,
   },
   {
     path: "/login",
@@ -60,6 +65,10 @@ const router = createBrowserRouter([
   },
   {
     path: "/dashboard",
+    element: <Navigate to="/" replace />,
+  },
+  {
+    path: "/",
     element: (
       <ProtectedRoute>
         <AppLayout />
@@ -99,7 +108,14 @@ const router = createBrowserRouter([
         path: "project-management/resource-requests",
         element: <ResourceRequests />,
       },
-      { path: "projects/create", element: <CreateProject /> },
+      {
+        path: "project-management/projects/create",
+        element: <CreateProject />,
+      },
+      {
+        path: "projects/create",
+        element: <Navigate to="/project-management/projects/create" replace />,
+      },
       {
         path: "portfolios/:portfolioId/projects/:projectId",
         element: <ProjectDetails />,
@@ -113,8 +129,12 @@ const router = createBrowserRouter([
         element: <TaskDetails />,
       },
       // Other modules
-      { path: "projects", element: <Projects /> },
       { path: "meetings", element: <MeetingsList /> },
+      {
+        path: "projects",
+        element: <Navigate to="/project-management" replace />,
+      },
+      { path: "meetings", element: <Meetings /> },
       { path: "meetings/create", element: <CreateMeeting /> },
       { path: "meetings/:id", element: <MeetingDetails /> },
       {

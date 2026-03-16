@@ -36,6 +36,53 @@ function getCurrentUserIdFromLocalStorage() {
   }
 }
 
+function getCurrentUserNameFromLocalStorage() {
+  try {
+    const userRaw = localStorage.getItem("user");
+
+    if (!userRaw) {
+      return "";
+    }
+
+    const parsedUser = JSON.parse(userRaw) as {
+      fullName?: string;
+      name?: string;
+      firstName?: string;
+      lastName?: string;
+      username?: string;
+      email?: string;
+    };
+
+    const fullName =
+      parsedUser.fullName ||
+      parsedUser.name ||
+      `${parsedUser.firstName || ""} ${parsedUser.lastName || ""}`.trim() ||
+      parsedUser.username ||
+      parsedUser.email ||
+      "";
+
+    return typeof fullName === "string" ? fullName : "";
+  } catch {
+    return "";
+  }
+}
+
+function getManagerDisplayName(
+  managerId: string,
+  currentUserId: string,
+  currentUserName: string,
+) {
+  if (!managerId) {
+    return "N/A";
+  }
+
+  if (currentUserId && managerId === currentUserId) {
+    return currentUserName || managerId;
+  }
+
+  return managerId;
+}
+
 function normalizeText(value: string) {
   return value.trim();
 }
@@ -74,6 +121,10 @@ export function Portfolios() {
     null,
   );
   const currentUserId = useMemo(() => getCurrentUserIdFromLocalStorage(), []);
+  const currentUserName = useMemo(
+    () => getCurrentUserNameFromLocalStorage(),
+    [],
+  );
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const filteredPortfolios = useMemo(() => {
@@ -101,9 +152,6 @@ export function Portfolios() {
     (sum, portfolio) => sum + (portfolio.projects?.length || 0),
     0,
   );
-  const avgProjectsPerPortfolio = portfolioCount
-    ? (totalProjects / portfolioCount).toFixed(1)
-    : "0.0";
 
   async function fetchPortfolios() {
     try {
@@ -378,10 +426,14 @@ export function Portfolios() {
               />
             </div>
             <div className="col-12 col-lg-6">
-              <label className="form-label">Portfolio Manager ID</label>
+              <label className="form-label">Portfolio Manager</label>
               <input
                 className="form-control"
-                value={currentUserId || "No user id found in localStorage"}
+                value={
+                  currentUserName ||
+                  currentUserId ||
+                  "No manager user found in localStorage"
+                }
                 maxLength={100}
                 readOnly
               />
@@ -607,7 +659,7 @@ export function Portfolios() {
                     onClick={() => {
                       setDetailsPortfolio(null);
                       navigate(
-                        `/projects/create?portfolioId=${detailsPortfolio.id}`,
+                        `/project-management/projects/create?portfolioId=${detailsPortfolio.id}`,
                       );
                     }}
                   >
@@ -720,13 +772,16 @@ export function Portfolios() {
                 />
               </div>
               <div className="col-12">
-                <label className="form-label">Portfolio Manager ID</label>
+                <label className="form-label">Portfolio Manager</label>
                 <input
                   className="form-control"
-                  name="portfolioManagerId"
-                  value={editForm.portfolioManagerId}
-                  onChange={handleEditInputChange}
+                  value={getManagerDisplayName(
+                    editForm.portfolioManagerId,
+                    currentUserId,
+                    currentUserName,
+                  )}
                   maxLength={100}
+                  readOnly
                 />
               </div>
               <div className="col-12">

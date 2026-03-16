@@ -24,8 +24,6 @@ type EditDocumentFormState = {
   type: string;
   filePath: string;
   version: string;
-  uploadedBy: string;
-  uploadedAtUtc: string;
 };
 
 const initialCreateForm: CreateDocumentFormState = {
@@ -39,25 +37,7 @@ const initialEditForm: EditDocumentFormState = {
   type: "0",
   filePath: "",
   version: "1",
-  uploadedBy: "",
-  uploadedAtUtc: "",
 };
-
-function toDateTimeLocal(value?: string | null): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
-    .toISOString()
-    .slice(0, 16);
-}
-
-function toIso(value: string): string | undefined {
-  if (!value) return undefined;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return undefined;
-  return date.toISOString();
-}
 
 function isHttpUrl(value: string): boolean {
   return /^https?:\/\//i.test(value);
@@ -74,6 +54,28 @@ function inferDocumentPath(projectId: string, file: File): string {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const normalizedFile = toSlugName(file.name || "document");
   return `documents/${projectId}/${timestamp}-${normalizedFile}`;
+}
+
+function parseApiUtcDate(value?: string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  const raw = value.trim();
+  if (!raw) {
+    return null;
+  }
+
+  const hasTimezone = /([zZ]|[+-]\d{2}:\d{2})$/.test(raw);
+  const normalized = hasTimezone ? raw : `${raw}Z`;
+  const parsed = new Date(normalized);
+
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatApiDateTime(value?: string | null): string {
+  const parsed = parseApiUtcDate(value);
+  return parsed ? parsed.toLocaleString() : "N/A";
 }
 
 function trimExtension(fileName: string): string {
@@ -102,6 +104,7 @@ export function ProjectDocuments() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] =
     useState<EditDocumentFormState>(initialEditForm);
+  const [selectedEditFile, setSelectedEditFile] = useState<File | null>(null);
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -137,8 +140,10 @@ export function ProjectDocuments() {
     () =>
       [...documents].sort(
         (a, b) =>
-          new Date(b.updatedDateUtc || b.createdDateUtc || 0).getTime() -
-          new Date(a.updatedDateUtc || a.createdDateUtc || 0).getTime(),
+          (parseApiUtcDate(b.updatedDateUtc || b.createdDateUtc)?.getTime() ||
+            0) -
+          (parseApiUtcDate(a.updatedDateUtc || a.createdDateUtc)?.getTime() ||
+            0),
       ),
     [documents],
   );
@@ -169,6 +174,20 @@ export function ProjectDocuments() {
   ) {
     const { name, value } = e.target;
     setEditForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleEditFileChange(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] || null;
+    setSelectedEditFile(file);
+
+    if (!file) {
+      return;
+    }
+
+    setEditForm((prev) => ({
+      ...prev,
+      name: prev.name.trim() ? prev.name : trimExtension(file.name),
+    }));
   }
 
   async function handleCreate(e: FormEvent) {
@@ -220,41 +239,58 @@ export function ProjectDocuments() {
 
   function startEdit(doc: ProjectDocument) {
     setEditingId(doc.id);
+    setSelectedEditFile(null);
     setEditForm({
       name: doc.name || "",
       type: String(doc.type ?? 0),
       filePath: doc.filePath || "",
       version: String(doc.version ?? 1),
-      uploadedBy: doc.uploadedBy || "",
-      uploadedAtUtc: toDateTimeLocal(doc.uploadedAtUtc),
     });
   }
 
   async function handleUpdate(doc: ProjectDocument) {
     if (!projectId) return;
 
-    if (!editForm.name.trim() || !editForm.filePath.trim()) {
-      toast.error("Name and file path are required.");
+    if (!editForm.name.trim()) {
+      toast.error("Document name is required.");
       return;
     }
 
     try {
       const latest = await documentService.getDocumentById(doc.id);
+      const replacingFile = Boolean(selectedEditFile);
+      const resolvedFilePath = selectedEditFile
+        ? inferDocumentPath(projectId, selectedEditFile)
+        : editForm.filePath.trim();
+
+      if (!resolvedFilePath) {
+        toast.error("Please choose a file.");
+        return;
+      }
+
       const payload: DocumentUpdateDTO = {
         id: doc.id,
         projectId,
         rowVersion: latest.rowVersion || doc.rowVersion || "",
         name: editForm.name.trim(),
         type: parseInt(editForm.type, 10),
-        filePath: editForm.filePath.trim(),
+        filePath: resolvedFilePath,
         version: parseInt(editForm.version, 10) || 1,
-        uploadedBy: editForm.uploadedBy.trim() || undefined,
-        uploadedAtUtc: toIso(editForm.uploadedAtUtc),
+        uploadedBy: replacingFile
+          ? authUser?.fullName ||
+            authUser?.username ||
+            authUser?.email ||
+            "Unknown User"
+          : latest.uploadedBy || doc.uploadedBy || undefined,
+        uploadedAtUtc: replacingFile
+          ? new Date().toISOString()
+          : latest.uploadedAtUtc || doc.uploadedAtUtc || undefined,
       };
 
       await documentService.updateDocumentById(doc.id, payload);
       toast.success("Document updated.");
       setEditingId(null);
+      setSelectedEditFile(null);
       const refreshed = await documentService.getDocuments(projectId);
       setDocuments(refreshed);
     } catch (error) {
@@ -480,34 +516,61 @@ export function ProjectDocuments() {
                     />
                   </div>
                   <div className="col-12">
-                    <label className="form-label">File Path *</label>
+                    <label className="form-label">Current File Path</label>
+                    <div className="project-document-path">
+                      {editForm.filePath || "N/A"}
+                    </div>
+                  </div>
+                  <div className="col-12">
+                    <label className="form-label">
+                      Replace File (Optional)
+                    </label>
                     <input
                       className="form-control form-control-sm"
-                      name="filePath"
-                      value={editForm.filePath}
-                      onChange={handleEditChange}
-                      required
+                      type="file"
+                      onChange={handleEditFileChange}
                     />
                   </div>
                   <div className="col-12">
                     <label className="form-label">Uploaded By</label>
                     <input
                       className="form-control form-control-sm"
-                      name="uploadedBy"
-                      value={editForm.uploadedBy}
-                      onChange={handleEditChange}
+                      value={
+                        selectedEditFile
+                          ? authUser?.fullName ||
+                            authUser?.username ||
+                            authUser?.email ||
+                            "Current User"
+                          : doc.uploadedBy || "N/A"
+                      }
+                      readOnly
+                      disabled
                     />
                   </div>
                   <div className="col-12">
                     <label className="form-label">Uploaded At</label>
                     <input
                       className="form-control form-control-sm"
-                      type="datetime-local"
-                      name="uploadedAtUtc"
-                      value={editForm.uploadedAtUtc}
-                      onChange={handleEditChange}
+                      value={
+                        selectedEditFile
+                          ? new Date().toLocaleString()
+                          : formatApiDateTime(doc.uploadedAtUtc)
+                      }
+                      readOnly
+                      disabled
                     />
                   </div>
+                  {selectedEditFile && (
+                    <div className="col-12">
+                      <div className="project-document-picked-file">
+                        <i className="bi bi-file-earmark-arrow-up me-2" />
+                        <strong>{selectedEditFile.name}</strong>
+                        <span>
+                          {(selectedEditFile.size / 1024 / 1024).toFixed(2)} MB
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="project-document-actions mt-3">
                   <button
@@ -521,7 +584,10 @@ export function ProjectDocuments() {
                   <button
                     type="button"
                     className="btn btn-outline-secondary btn-sm"
-                    onClick={() => setEditingId(null)}
+                    onClick={() => {
+                      setEditingId(null);
+                      setSelectedEditFile(null);
+                    }}
                   >
                     Cancel
                   </button>
@@ -549,11 +615,7 @@ export function ProjectDocuments() {
                   </div>
                   <div className="project-document-meta-item">
                     <span>Uploaded At</span>
-                    <strong>
-                      {doc.uploadedAtUtc
-                        ? new Date(doc.uploadedAtUtc).toLocaleString()
-                        : "N/A"}
-                    </strong>
+                    <strong>{formatApiDateTime(doc.uploadedAtUtc)}</strong>
                   </div>
                 </div>
 
