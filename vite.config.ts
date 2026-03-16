@@ -26,7 +26,11 @@ export default defineConfig({
         secure: true,
         rewrite: (path) => path.replace(/^\/api\/hr/, '/api/hr'),
       },
-      // General API proxy (MUST be last)
+      '/api/project-management': {
+        target: 'http://projectmanagmentservices.runasp.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/project-management/, '/api'),
+      },
       '/api': {
         target: 'http://iamauth.runasp.net',
         changeOrigin: true,
