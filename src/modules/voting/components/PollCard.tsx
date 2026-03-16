@@ -86,76 +86,79 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
     }
   };
 
-  const btnClass = 'btn btn-sm rounded-2 px-3';
+  const btnClass = 'btn btn-sm px-3';
 
   return (
-    <div className="card h-100 shadow-sm border-0 rounded-3">
-      <div className="card-body d-flex flex-column">
-        <div className="d-flex justify-content-between align-items-start mb-2 gap-2">
-          <Link
-            to={`/dashboard/voting/${poll.id}`}
-            className="card-title mb-0 text-decoration-none text-dark fw-semibold flex-grow-1"
-            style={{ fontSize: '1rem' }}
-          >
-            {asText((poll as any).title)}
-          </Link>
-          <span className={`badge rounded-pill ${statusClass} text-uppercase`} style={{ fontSize: '0.7rem' }}>
-            {statusText}
-          </span>
-        </div>
-        {(poll as any).description && (
-          <p className="card-text text-muted small flex-grow-1 mb-2" style={{ lineHeight: 1.4 }}>
-            {asText((poll as any).description)}
-          </p>
-        )}
-        <p className="text-muted small mb-3">
-          <i className="bi bi-calendar3 me-1" />
-          {formatDate(poll.createdAt)}
-        </p>
-        {deleteError && (
-          <div className="alert alert-danger py-2 small mb-2" role="alert">
-            {deleteError}
+    <div className="voting-page">
+      <div className="card h-100 shadow-sm border-0">
+        <div className="card-body d-flex flex-column">
+          <div className="d-flex justify-content-between align-items-start mb-3 gap-2">
+            <Link
+              to={`/dashboard/voting/${poll.id}`}
+              className="card-title mb-0 text-decoration-none flex-grow-1"
+              style={{ fontSize: '1.1rem' }}
+            >
+              {asText((poll as any).title)}
+            </Link>
+            <span className={`badge ${statusClass} text-uppercase`} style={{ fontSize: '0.7rem' }}>
+              {statusText}
+            </span>
           </div>
-        )}
-        <div className="mt-auto pt-2">
-          {statusStr.toUpperCase() === 'DRAFT' && (
-            <div className="d-flex flex-wrap justify-content-center gap-2">
-              <Link to={`/dashboard/voting/${poll.id}`} className={`${btnClass} btn-outline-primary`}>
-                Edit
-              </Link>
-              <button type="button" className={`${btnClass} btn-success`} onClick={handleActivate}>
-                Activate
-              </button>
-              <button
-                type="button"
-                className={`${btnClass} btn-outline-danger`}
-                onClick={handleDelete}
-                disabled={deleting}
-              >
-                {deleting ? '…' : 'Delete'}
-              </button>
+          {(poll as any).description && (
+            <p className="card-text text-muted small flex-grow-1 mb-3" style={{ lineHeight: 1.5 }}>
+              {asText((poll as any).description)}
+            </p>
+          )}
+          <div className="d-flex align-items-center text-muted small mb-3">
+            <i className="bi bi-calendar3 me-2" />
+            <span>Created {formatDate(poll.createdAt)}</span>
+          </div>
+          {deleteError && (
+            <div className="alert alert-danger py-2 small mb-3" role="alert">
+              <i className="bi bi-exclamation-triangle me-2"></i>
+              {deleteError}
             </div>
           )}
-          {statusStr.toUpperCase() === 'ACTIVE' && (
-            <div className="d-flex flex-wrap justify-content-center gap-2">
-              <Link to={`/dashboard/voting/${poll.id}/vote`} className={`${btnClass} btn-primary`}>
-                Vote
-              </Link>
-              <Link to={`/dashboard/voting/${poll.id}/results`} className={`${btnClass} btn-outline-secondary`}>
-                Results
-              </Link>
-              <button type="button" className={`${btnClass} btn-outline-dark`} onClick={handleClose}>
-                Close
-              </button>
-            </div>
-          )}
-          {statusStr.toUpperCase() === 'CLOSED' && (
-            <div className="d-flex justify-content-center">
-              <Link to={`/dashboard/voting/${poll.id}/results`} className={`${btnClass} btn-primary`}>
-                View Results
-              </Link>
-            </div>
-          )}
+          <div className="mt-auto pt-2">
+            {statusStr.toUpperCase() === 'DRAFT' && (
+              <div className="d-flex flex-wrap justify-content-center gap-2">
+                <Link to={`/dashboard/voting/${poll.id}`} className={`${btnClass} btn-outline-primary`}>
+                  <i className="bi bi-pencil me-1"></i>Edit
+                </Link>
+                <button type="button" className={`${btnClass} btn-success`} onClick={handleActivate}>
+                  <i className="bi bi-play-fill me-1"></i>Activate
+                </button>
+                <button
+                  type="button"
+                  className={`${btnClass} btn-outline-danger`}
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
+                  <i className="bi bi-trash me-1"></i>{deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            )}
+            {statusStr.toUpperCase() === 'ACTIVE' && (
+              <div className="d-flex flex-wrap justify-content-center gap-2">
+                <Link to={`/dashboard/voting/${poll.id}/vote`} className={`${btnClass} btn-primary`}>
+                  <i className="bi bi-check-circle me-1"></i>Vote
+                </Link>
+                <Link to={`/dashboard/voting/${poll.id}/results`} className={`${btnClass} btn-outline-secondary`}>
+                  <i className="bi bi-bar-chart me-1"></i>Results
+                </Link>
+                <button type="button" className={`${btnClass} btn-outline-dark`} onClick={handleClose}>
+                  <i className="bi bi-stop-fill me-1"></i>Close
+                </button>
+              </div>
+            )}
+            {statusStr.toUpperCase() === 'CLOSED' && (
+              <div className="d-flex justify-content-center">
+                <Link to={`/dashboard/voting/${poll.id}/results`} className={`${btnClass} btn-primary`}>
+                  <i className="bi bi-bar-chart me-1"></i>View Results
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

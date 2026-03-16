@@ -1,3 +1,4 @@
+import '../styles/voting.css';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { fetchPoll, fetchPollOptions, submitVote, createEligibility } from '../api/votingApi';
@@ -92,25 +93,43 @@ export function VotePage() {
   };
 
   if (!pollId) return null;
-  if (loading) return <div className="container-fluid py-3"><p className="text-muted">Loading…</p></div>;
+  if (loading) return (
+    <div className="voting-page">
+      <div className="container-fluid py-3">
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary mb-3" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted">Loading poll...</p>
+        </div>
+      </div>
+    </div>
+  );
   if (error && !poll) {
     return (
-      <div className="container-fluid py-3">
-        <div className="alert alert-danger" role="alert">{error}</div>
-        <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/voting')}>
-          Back to Voting
-        </button>
+      <div className="voting-page">
+        <div className="container-fluid py-3">
+          <div className="alert alert-danger" role="alert">
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            {error}
+          </div>
+          <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/voting')}>
+            <i className="bi bi-arrow-left me-2"></i>
+            Back to Voting
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid py-4">
-      <div className="row justify-content-center">
-        <div className="col-12 col-md-10 col-lg-8">
-          <h2 className="mb-2 fw-semibold">{poll ? asText((poll as Record<string, unknown>).title) : 'Vote'}</h2>
+    <div className="voting-page">
+      <div className="container-fluid py-3">
+        <div className="row justify-content-center">
+          <div className="col-12 col-md-10 col-lg-8">
+          <h2 className="mb-2 fw-semibold">{poll ? asText((poll as any).title) : 'Vote'}</h2>
           {poll?.description != null && (
-            <p className="text-muted mb-4 small">{asText((poll as Record<string, unknown>).description)}</p>
+            <p className="text-muted mb-4 small">{asText((poll as any).description)}</p>
           )}
           {error && (
             <div className="alert alert-danger mb-3 rounded-3" role="alert">
@@ -161,7 +180,7 @@ export function VotePage() {
                           onChange={() => setSelectedId(opt.id)}
                         />
                         <span className={isSelected ? 'fw-medium' : ''}>
-                          {asText((opt as Record<string, unknown>).optionText ?? (opt as Record<string, unknown>).title)}
+                          {asText((opt as any).optionText ?? (opt as any).title)}
                         </span>
                       </label>
                     );
@@ -187,6 +206,7 @@ export function VotePage() {
               </div>
             </div>
           )}
+          </div>
         </div>
       </div>
     </div>

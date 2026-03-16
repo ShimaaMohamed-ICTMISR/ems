@@ -1,3 +1,4 @@
+import '../styles/voting.css';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchPoll, fetchPollResults } from '../api/votingApi';
@@ -57,20 +58,38 @@ export function ResultsPage() {
   };
 
   if (!pollId) return null;
-  if (loading) return <div className="container-fluid py-3"><p className="text-muted">Loading…</p></div>;
+  if (loading) return (
+    <div className="voting-page">
+      <div className="container-fluid py-3">
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary mb-3" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted">Loading results...</p>
+        </div>
+      </div>
+    </div>
+  );
   if (error && !poll) {
     return (
-      <div className="container-fluid py-3">
-        <div className="alert alert-danger" role="alert">{error}</div>
-        <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/voting')}>
-          Back to Voting
-        </button>
+      <div className="voting-page">
+        <div className="container-fluid py-3">
+          <div className="alert alert-danger" role="alert">
+            <i className="bi bi-exclamation-triangle me-2"></i>
+            {error}
+          </div>
+          <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/voting')}>
+            <i className="bi bi-arrow-left me-2"></i>
+            Back to Voting
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid py-3">
+    <div className="voting-page">
+      <div className="container-fluid py-3">
       <h2 className="mb-2">{formatTitle(poll ? (poll as any).title : 'Results')}</h2>
       {poll?.description && (
         <p className="text-muted mb-4">
@@ -94,10 +113,12 @@ export function ResultsPage() {
       <button
         type="button"
         className="btn btn-outline-secondary mt-3"
-        onClick={() => navigate(`/voting/${pollId}`)}
+        onClick={() => navigate(`/dashboard/voting/${pollId}`)}
       >
+        <i className="bi bi-arrow-left me-2"></i>
         Back to poll
       </button>
+      </div>
     </div>
   );
 }
