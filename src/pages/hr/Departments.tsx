@@ -34,7 +34,7 @@ export function Departments() {
   };
 
   const handleEditDepartment = (id: string) => {
-    navigate(`/hr/departments/${id}/edit`);
+    navigate(`/dashboard/hr/departments/${id}/edit`);
   };
 
   const handleDeleteDepartment = async (id: string) => {

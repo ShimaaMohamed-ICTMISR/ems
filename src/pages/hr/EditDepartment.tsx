@@ -39,7 +39,7 @@ export function EditDepartment() {
         await hrService.updateDepartment(id, data);
       }
       alert('Department updated successfully!');
-      navigate('/hr/departments');
+      navigate('/dashboard/hr/departments');
     } catch (error) {
       console.error('Error updating department:', error);
       throw error;

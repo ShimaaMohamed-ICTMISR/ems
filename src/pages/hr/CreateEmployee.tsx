@@ -31,7 +31,7 @@ export default function CreateEmployee() {
         try {
             await hrService.createEmployee(form);
             alert('Employee created successfully!');
-            navigate('/hr/employees');
+            navigate('/dashboard/hr/employees');
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to create employee');
         } finally { setLoading(false); }
@@ -44,7 +44,7 @@ export default function CreateEmployee() {
                     <h1 className="page-title"><i className="bi bi-person-plus me-3"></i>New Employee</h1>
                     <p className="page-subtitle">Add a new employee to the directory</p>
                 </div>
-                <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate('/hr/employees')}>
+                <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate('/dashboard/hr/employees')}>
                     <i className="bi bi-arrow-left me-2"></i>Back
                 </button>
             </div>
@@ -90,7 +90,7 @@ export default function CreateEmployee() {
                     <div className="form-group"><label>Emergency Contact</label><input className="form-control" name="emergencyContact" value={form.emergencyContact} onChange={handleChange} /></div>
                 </div>
                 <div className="form-actions">
-                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/hr/employees')}>Cancel</button>
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/hr/employees')}>Cancel</button>
                     <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Creating...' : 'Create Employee'}</button>
                 </div>
             </form>

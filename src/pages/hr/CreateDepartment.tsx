@@ -21,7 +21,7 @@ const handleSubmit = async (data: any) => {
 
       await hrService.createDepartment(payload);
       alert('Department created successfully!');
-      navigate('/hr/departments');
+      navigate('/dashboard/hr/departments');
     } catch (error) {
       console.error('Error creating department:', error);
       throw error;

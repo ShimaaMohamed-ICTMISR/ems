@@ -187,7 +187,7 @@ export function DepartmentForm({ initialData, onSubmit, isLoading = false }: Dep
             <button
               type="button"
               className="btn btn-outline-secondary"
-              onClick={() => navigate('/hr/departments')}
+              onClick={() => navigate('/dashboard/hr/departments')}
               disabled={isLoading}
             >
               <i className="bi bi-arrow-left me-2"></i>

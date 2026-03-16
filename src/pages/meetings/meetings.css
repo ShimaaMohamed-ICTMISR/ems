@@ -75,18 +75,21 @@
   color: #07748a !important;
 }
 
-/* Primary buttons - using voting green */
+/* Primary meetings button with enhanced styling */
 .meetings-page .btn-meetings-primary {
-  background-color: #07748a !important;
-  border-color: #07748a !important;
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+  border: none !important;
   color: #ffffff !important;
-  border-radius: 8px !important;
+  border-radius: 10px !important;
   font-weight: 500;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
+  transition: all 0.3s ease !important;
 }
 
 .meetings-page .btn-meetings-primary:hover {
-  background-color: #07748a !important;
-  border-color: #07748a !important;
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.35) !important;
   color: #ffffff !important;
 }
 
@@ -177,55 +180,72 @@
   border: none !important;
 }
 
-/* Buttons - ALL PRIMARY BUTTONS USE VOTING GREEN INCLUDING ZOOM JOIN BUTTON */
+/* Buttons - Enhanced with smooth gradients and sidebar color harmony */
 .meetings-page .btn-primary {
-  background-color: #07748a !important;
-  border-color: #07748a !important;
-  border-radius: 8px !important;
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
   font-weight: 500;
   color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
+  transition: all 0.3s ease !important;
 }
 
 .meetings-page .btn-primary:hover {
-  background-color: #047857 !important;
-  border-color: #047857 !important;
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.35) !important;
   color: #ffffff !important;
 }
 
 .meetings-page .btn-success {
-  background-color: #07748a !important;
-  border-color: #07748a !important;
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
+  transition: all 0.3s ease !important;
 }
 
 .meetings-page .btn-success:hover {
-  background-color: #07748a !important;
-  border-color: #07748a !important;
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.35) !important;
 }
 
-/* Zoom meeting button - use voting green instead of dark */
+/* Zoom meeting button - smooth gradient matching sidebar accent */
 .meetings-page .btn-dark {
-  background-color: #07748a !important;
-  border-color: #07748a !important;
-  border-radius: 8px !important;
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
   color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500;
 }
 
 .meetings-page .btn-dark:hover {
-  background-color: #047857 !important;
-  border-color: #047857 !important;
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.35) !important;
   color: #ffffff !important;
 }
 
 .meetings-page .btn-outline-secondary {
-  border-color: #d1d5db !important;
-  color: #6b7280 !important;
-  border-radius: 8px !important;
+  border: 2px solid #cbd5e1 !important;
+  color: #475569 !important;
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500;
 }
 
 .meetings-page .btn-outline-secondary:hover {
-  background-color: #f9fafb !important;
-  border-color: #9ca3af !important;
-  color: #374151 !important;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+  border-color: #94a3b8 !important;
+  color: #334155 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15) !important;
 }
 
 /* Text colors - exactly like Dashboard */
@@ -293,4 +313,37 @@
 .meetings-page .participant-circle .text-white,
 .meetings-page .organizer-circle .text-white {
   color: #07748a !important;
+}
+
+/* Enhanced outline primary buttons matching sidebar accent */
+.meetings-page .btn-outline-primary {
+  border: 2px solid #0891b2 !important;
+  color: #0891b2 !important;
+  border-radius: 10px !important;
+  background: rgba(8, 145, 178, 0.05) !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500;
+}
+
+.meetings-page .btn-outline-primary:hover {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+  border-color: #0891b2 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
+}
+
+/* Enhanced small buttons */
+.meetings-page .btn-sm {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  border-radius: 8px !important;
+}
+
+/* Enhanced large buttons */
+.meetings-page .btn-lg {
+  padding: 0.75rem 1.5rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
 }
