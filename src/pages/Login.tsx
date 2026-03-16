@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { loginStart, loginSuccess, loginFailure } from '../store/authSlice';
-import { authService } from '../services/authService';
-import 'bootstrap/dist/css/bootstrap.min.css';
-import './Login.css';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { loginStart, loginSuccess, loginFailure } from "../store/authSlice";
+import { authService } from "../services/authService";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./Login.css";
 
 const loginSchema = z.object({
-  identifier: z.string().nonempty('Email/Username is required'),
-  password: z.string().nonempty('Password is required'),
+  identifier: z.string().nonempty("Email/Username is required"),
+  password: z.string().nonempty("Password is required"),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -19,7 +19,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [apiError, setApiError] = useState<string>('');
+  const [apiError, setApiError] = useState<string>("");
 
   const {
     register,
@@ -31,24 +31,24 @@ export default function Login() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      setApiError('');
+      setApiError("");
       dispatch(loginStart());
 
       const response = await authService.login({
-        usernameOrEmail: data.identifier || '',
-        password: data.password || '',
+        usernameOrEmail: data.identifier || "",
+        password: data.password || "",
       });
 
       dispatch(
         loginSuccess({
           user: response.user,
           token: response.accessToken,
-        })
+        }),
       );
 
-      navigate('/dashboard');
+      navigate("/");
     } catch (error: any) {
-      const errorMessage = error.message || 'Login failed. Please try again.';
+      const errorMessage = error.message || "Login failed. Please try again.";
       setApiError(errorMessage);
       dispatch(loginFailure(errorMessage));
     }
@@ -65,12 +65,15 @@ export default function Login() {
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* API Error */}
           {apiError && (
-            <div className="alert alert-danger alert-dismissible fade show" role="alert">
+            <div
+              className="alert alert-danger alert-dismissible fade show"
+              role="alert"
+            >
               {apiError}
               <button
                 type="button"
                 className="btn-close"
-                onClick={() => setApiError('')}
+                onClick={() => setApiError("")}
               ></button>
             </div>
           )}
@@ -83,12 +86,14 @@ export default function Login() {
             <input
               id="identifier"
               type="text"
-              className={`form-control ${errors.identifier ? 'is-invalid' : ''}`}
+              className={`form-control ${errors.identifier ? "is-invalid" : ""}`}
               placeholder="Enter your email or username"
-              {...register('identifier')}
+              {...register("identifier")}
             />
             {errors.identifier && (
-              <div className="invalid-feedback d-block">{errors.identifier.message}</div>
+              <div className="invalid-feedback d-block">
+                {errors.identifier.message}
+              </div>
             )}
           </div>
 
@@ -100,12 +105,14 @@ export default function Login() {
             <input
               id="password"
               type="password"
-              className={`form-control ${errors.password ? 'is-invalid' : ''}`}
+              className={`form-control ${errors.password ? "is-invalid" : ""}`}
               placeholder="Enter your password"
-              {...register('password')}
+              {...register("password")}
             />
             {errors.password && (
-              <div className="invalid-feedback d-block">{errors.password.message}</div>
+              <div className="invalid-feedback d-block">
+                {errors.password.message}
+              </div>
             )}
           </div>
 
@@ -125,15 +132,13 @@ export default function Login() {
                 Logging in...
               </>
             ) : (
-              'Login'
+              "Login"
             )}
           </button>
         </form>
 
         <div className="login-footer">
-          <p className="text-muted">
-            © 2026 EMS System. All rights reserved.
-          </p>
+          <p className="text-muted">© 2026 EMS System. All rights reserved.</p>
         </div>
       </div>
     </div>
