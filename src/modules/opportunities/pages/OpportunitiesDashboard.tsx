@@ -145,7 +145,7 @@ export function OpportunitiesDashboard() {
         <div className="col-lg-4 text-lg-end">
           <div className="d-flex flex-column flex-lg-row gap-2 justify-content-lg-end">
             <Link
-              to="/opportunities/leads/create"
+              to="/dashboard/opportunities/leads/create"
               className="btn btn-outline-success btn-lg"
               style={{ borderWidth: "2px" }}
             >
@@ -153,7 +153,7 @@ export function OpportunitiesDashboard() {
               Add Lead
             </Link>
             <Link
-              to="/opportunities/create"
+              to="/dashboard/opportunities/create"
               className="btn btn-lg text-white"
               style={{
                 background: "linear-gradient(135deg, #059669 0%, #10b981 100%)",
@@ -454,7 +454,7 @@ export function OpportunitiesDashboard() {
               <div className="row g-3">
                 <div className="col-md-6">
                   <Link
-                    to="/opportunities/leads"
+                    to="/dashboard/opportunities/leads"
                     className="btn btn-outline-primary w-100 text-start p-3 h-100"
                     style={{ borderRadius: "12px", borderWidth: "2px" }}
                   >
@@ -480,7 +480,7 @@ export function OpportunitiesDashboard() {
                 </div>
                 <div className="col-md-6">
                   <Link
-                    to="/opportunities/pipeline"
+                    to="/dashboard/opportunities/pipeline"
                     className="btn btn-outline-primary w-100 text-start p-3 h-100"
                     style={{ borderRadius: "12px", borderWidth: "2px" }}
                   >
@@ -506,7 +506,7 @@ export function OpportunitiesDashboard() {
                 </div>
                 <div className="col-md-6">
                   <Link
-                    to="/opportunities/quotes"
+                    to="/dashboard/opportunities/quotes"
                     className="btn btn-outline-primary w-100 text-start p-3 h-100"
                     style={{ borderRadius: "12px", borderWidth: "2px" }}
                   >
@@ -532,7 +532,7 @@ export function OpportunitiesDashboard() {
                 </div>
                 <div className="col-md-6">
                   <Link
-                    to="/opportunities/reports"
+                    to="/dashboard/opportunities/reports"
                     className="btn btn-outline-primary w-100 text-start p-3 h-100"
                     style={{ borderRadius: "12px", borderWidth: "2px" }}
                   >

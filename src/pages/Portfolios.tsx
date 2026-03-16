@@ -659,7 +659,7 @@ export function Portfolios() {
                     onClick={() => {
                       setDetailsPortfolio(null);
                       navigate(
-                        `/project-management/projects/create?portfolioId=${detailsPortfolio.id}`,
+                        `/dashboard/project-management/projects/create?portfolioId=${detailsPortfolio.id}`,
                       );
                     }}
                   >
