@@ -222,7 +222,9 @@ export function OpportunitiesDashboard() {
   const canGoNext = page < totalPages;
 
   return (
-    <div className="container-fluid py-4 opportunities-dashboard">
+    <div className="container-fluid py-4 opportunities-dashboard" style={{ 
+      minHeight: '100vh'
+    }}>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div className="d-flex align-items-center">
           <div
@@ -230,26 +232,26 @@ export function OpportunitiesDashboard() {
             style={{
               width: '52px',
               height: '52px',
-              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+              background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
             }}
           >
             <i className="bi bi-graph-up-arrow text-white fs-4" />
           </div>
           <div>
-            <h2 className="mb-1 fw-bold text-dark">Opportunities</h2>
-            <p className="text-muted mb-0">
+            <h2 className="mb-1 fw-bold" style={{ color: '#1f2937' }}>Opportunities</h2>
+            <p className="mb-0" style={{ color: '#6b7280' }}>
               Track, assign, and close sales opportunities across your pipeline.
             </p>
           </div>
         </div>
         <div className="d-flex gap-2">
-          <Link to="/dashboard/opportunities/leads" className="btn btn-outline-secondary btn-lg">
+          <Link to="/dashboard/opportunities/leads" className="btn btn-opportunities-outline btn-lg">
             <i className="bi bi-people me-2" />
             Leads
           </Link>
           <button
             type="button"
-            className="btn btn-meetings-primary btn-lg"
+            className="btn btn-opportunities-primary btn-lg"
             onClick={() => setCreating(true)}
           >
             <i className="bi bi-plus-circle me-2" />
@@ -289,11 +291,17 @@ export function OpportunitiesDashboard() {
         </div>
       )}
 
-      <div className="card border-0 shadow-sm">
-        <div className="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+      <div className="card border-0" style={{ 
+        background: 'transparent',
+        border: 'none'
+      }}>
+        <div className="card-header border-0 d-flex justify-content-between align-items-center" style={{ 
+          background: 'transparent',
+          borderRadius: '16px 16px 0 0'
+        }}>
           <div>
-            <h5 className="mb-1 fw-bold text-dark">Opportunity List</h5>
-            <small className="text-muted">
+            <h5 className="mb-1 fw-bold" style={{ color: '#1f2937' }}>Opportunity List</h5>
+            <small style={{ color: '#6b7280' }}>
               Showing {visibleItems.length} of {totalItems} opportunities
             </small>
           </div>
@@ -302,22 +310,22 @@ export function OpportunitiesDashboard() {
           {loading ? (
             <div
               className="d-flex justify-content-center align-items-center py-5"
-              style={{ minHeight: '200px' }}
+              style={{ minHeight: '200px', backgroundColor: '#ffffff' }}
             >
               <div className="text-center">
-                <div className="spinner-border text-primary mb-3" role="status" />
-                <p className="text-muted mb-0">Loading opportunities...</p>
+                <div className="spinner-border mb-3" style={{ color: '#06b6d4' }} role="status" />
+                <p className="mb-0" style={{ color: '#6b7280' }}>Loading opportunities...</p>
               </div>
             </div>
           ) : visibleItems.length === 0 ? (
-            <div className="text-center py-5">
-              <h5 className="text-muted mb-2">No opportunities yet</h5>
-              <p className="text-muted mb-4">
+            <div className="text-center py-5" style={{ backgroundColor: '#ffffff' }}>
+              <h5 className="mb-2" style={{ color: '#6b7280' }}>No opportunities yet</h5>
+              <p className="mb-4" style={{ color: '#6b7280' }}>
                 Start by creating your first opportunity to track potential revenue.
               </p>
               <button
                 type="button"
-                className="btn btn-meetings-primary btn-lg"
+                className="btn btn-opportunities-primary btn-lg"
                 onClick={() => setCreating(true)}
               >
                 <i className="bi bi-plus-circle me-2" />
@@ -326,47 +334,47 @@ export function OpportunitiesDashboard() {
             </div>
           ) : (
             <div className="table-responsive">
-              <table className="table table-hover align-middle mb-0">
-                <thead className="table-light">
+              <table className="table table-hover align-middle mb-0" style={{ backgroundColor: '#ffffff' }}>
+                <thead style={{ backgroundColor: '#f8fafc' }}>
                   <tr>
-                    <th>Name</th>
-                    <th>Stage</th>
-                    <th>Amount</th>
-                    <th>Expected Close</th>
-                    <th className="text-end opp-actions-cell">Actions</th>
+                    <th style={{ color: '#374151', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Name</th>
+                    <th style={{ color: '#374151', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Stage</th>
+                    <th style={{ color: '#374151', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Amount</th>
+                    <th style={{ color: '#374151', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Expected Close</th>
+                    <th className="text-end opp-actions-cell" style={{ color: '#374151', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody style={{ backgroundColor: '#ffffff' }}>
                   {visibleItems.map((opp) => {
                     const st = normalizeStage(String(opp.stage));
                     const closed = isOpportunityClosedStage(String(opp.stage));
                     return (
-                    <tr key={opp.id}>
-                      <td>
-                        <div className="fw-semibold text-dark">{opportunityDisplayName(opp)}</div>
+                    <tr key={opp.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
+                      <td style={{ backgroundColor: '#ffffff' }}>
+                        <div className="fw-semibold" style={{ color: '#1f2937' }}>{opportunityDisplayName(opp)}</div>
                         {opp.description && (
-                          <small className="text-muted d-block text-truncate" style={{ maxWidth: '260px' }}>
+                          <small className="d-block text-truncate" style={{ maxWidth: '260px', color: '#6b7280' }}>
                             {opp.description}
                           </small>
                         )}
                       </td>
-                      <td>
+                      <td style={{ backgroundColor: '#ffffff' }}>
                         <span className={`badge ${STAGE_BADGE_CLASS[st] ?? 'bg-secondary'} px-3 py-2`}>
                           {STAGE_LABELS[st] ?? st}
                         </span>
                       </td>
-                      <td>
-                        <div className="fw-semibold">
+                      <td style={{ backgroundColor: '#ffffff' }}>
+                        <div className="fw-semibold" style={{ color: '#1f2937' }}>
                           {opportunityDisplayAmount(opp).toLocaleString()}
                         </div>
-                        {opp.type && <small className="text-muted d-block">{opp.type}</small>}
+                        {opp.type && <small className="d-block" style={{ color: '#6b7280' }}>{opp.type}</small>}
                       </td>
-                      <td>
+                      <td style={{ backgroundColor: '#ffffff', color: '#374151' }}>
                         {opp.expectedCloseDate
                           ? new Date(opp.expectedCloseDate).toLocaleDateString()
                           : '-'}
                       </td>
-                      <td className="opp-actions-cell">
+                      <td className="opp-actions-cell" style={{ backgroundColor: '#ffffff' }}>
                         <div
                           className="opp-actions-bar"
                           role="toolbar"
@@ -433,8 +441,8 @@ export function OpportunitiesDashboard() {
           )}
         </div>
         {!loading && visibleItems.length > 0 && (
-          <div className="card-footer bg-white d-flex justify-content-between align-items-center">
-            <small className="text-muted">
+          <div className="card-footer d-flex justify-content-between align-items-center" style={{ backgroundColor: '#ffffff', borderTop: '1px solid #f3f4f6' }}>
+            <small style={{ color: '#6b7280' }}>
               Page {page} of {totalPages}
             </small>
             <div className="btn-group">
@@ -443,6 +451,10 @@ export function OpportunitiesDashboard() {
                 className="btn btn-outline-secondary btn-sm"
                 disabled={!canGoPrev}
                 onClick={() => canGoPrev && loadPage(page - 1)}
+                style={{ 
+                  borderColor: '#d1d5db',
+                  color: '#374151'
+                }}
               >
                 <i className="bi bi-chevron-left me-1" />
                 Previous
@@ -452,6 +464,10 @@ export function OpportunitiesDashboard() {
                 className="btn btn-outline-secondary btn-sm"
                 disabled={!canGoNext}
                 onClick={() => canGoNext && loadPage(page + 1)}
+                style={{ 
+                  borderColor: '#d1d5db',
+                  color: '#374151'
+                }}
               >
                 Next
                 <i className="bi bi-chevron-right ms-1" />
@@ -606,7 +622,7 @@ export function OpportunitiesDashboard() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-meetings-primary" disabled={actionLoading}>
+                  <button type="submit" className="btn btn-opportunities-primary" disabled={actionLoading}>
                     {actionLoading ? (
                       <>
                         <span
@@ -674,7 +690,7 @@ export function OpportunitiesDashboard() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-meetings-primary" disabled={actionLoading}>
+                  <button type="submit" className="btn btn-opportunities-primary" disabled={actionLoading}>
                     {actionLoading ? 'Updating...' : 'Update Stage'}
                   </button>
                 </div>
@@ -737,7 +753,7 @@ export function OpportunitiesDashboard() {
                   </button>
                   <button
                     type="submit"
-                    className="btn btn-meetings-primary"
+                    className="btn btn-opportunities-primary"
                     disabled={actionLoading || hrEmployeesLoading || !assignForm.userId}
                   >
                     {actionLoading ? 'Assigning...' : 'Assign'}
@@ -805,7 +821,7 @@ export function OpportunitiesDashboard() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-meetings-primary" disabled={actionLoading}>
+                  <button type="submit" className="btn btn-opportunities-primary" disabled={actionLoading}>
                     {actionLoading ? 'Closing...' : 'Close Opportunity'}
                   </button>
                 </div>
@@ -814,6 +830,70 @@ export function OpportunitiesDashboard() {
           </div>
         </div>
       )}
+      
+      {/* Force override all gray backgrounds with inline styles */}
+      <style>{`
+        /* Light theme for opportunities dashboard */
+        .opportunities-dashboard {
+          background: transparent !important;
+          min-height: 100vh !important;
+        }
+        
+        .opportunities-dashboard .card {
+          background: transparent !important;
+          border: none !important;
+        }
+        
+        .opportunities-dashboard .card-header,
+        .opportunities-dashboard .card-body,
+        .opportunities-dashboard .card-footer {
+          background: transparent !important;
+        }
+        
+        .opportunities-dashboard .table {
+          background: transparent !important;
+        }
+        
+        .opportunities-dashboard .table thead th {
+          background: transparent !important;
+          color: #374151 !important;
+          border: none !important;
+          border-bottom: 1px solid #e5e7eb !important;
+          font-weight: 600 !important;
+        }
+        
+        .opportunities-dashboard .table tbody tr {
+          background: transparent !important;
+          border-bottom: 1px solid #f3f4f6 !important;
+        }
+        
+        .opportunities-dashboard .table tbody td {
+          background: transparent !important;
+          border: none !important;
+          color: #1f2937 !important;
+        }
+        
+        .opportunities-dashboard .table tbody tr:hover {
+          background: rgba(6, 182, 212, 0.05) !important;
+        }
+        
+        .opportunities-dashboard .table tbody tr:hover td {
+          background: transparent !important;
+        }
+        
+        /* Action buttons styling */
+        .opportunities-dashboard .opp-action-btn {
+          background: #ffffff !important;
+          border: 1px solid #e5e7eb !important;
+          color: #6b7280 !important;
+        }
+        
+        .opportunities-dashboard .opp-action-btn:hover {
+          background: #f9fafb !important;
+          border-color: #06b6d4 !important;
+          color: #06b6d4 !important;
+        }
+      `}</style>
     </div>
   );
 }
