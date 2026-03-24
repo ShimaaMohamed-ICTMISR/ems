@@ -178,9 +178,9 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
   if (!opp) return null;
 
   return (
-    <div className="opportunity-details-page container-fluid py-4" style={{ 
-      background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
-      minHeight: '100vh' 
+    <div className="opportunity-details-page container-fluid py-4" style={{
+      background: '#ffffff',
+      minHeight: '100vh'
     }}>
       {/* Header - matching voting/meetings style */}
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -322,9 +322,9 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
               <div className="row g-4">
                 <div className="col-md-4">
                   <div className="text-center p-3" style={{
-                    backgroundColor: '#d1fae5',
+                    backgroundColor: '#f0f9ff',
                     borderRadius: '12px',
-                    border: '1px solid #bbf7d0'
+                    border: '1px solid #dbeafe'
                   }}>
                     <i className="bi bi-currency-dollar mb-2" style={{ 
                       fontSize: '1.5rem', 
@@ -339,9 +339,9 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                   </div>
                 </div>                <div className="col-md-4">
                   <div className="text-center p-3" style={{
-                    backgroundColor: '#d1fae5',
+                    backgroundColor: '#f0f9ff',
                     borderRadius: '12px',
-                    border: '1px solid #bbf7d0'
+                    border: '1px solid #dbeafe'
                   }}>
                     <i className="bi bi-calendar-event mb-2" style={{ 
                       fontSize: '1.5rem', 
@@ -357,9 +357,9 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                 </div>
                 <div className="col-md-4">
                   <div className="text-center p-3" style={{
-                    backgroundColor: '#d1fae5',
+                    backgroundColor: '#f0f9ff',
                     borderRadius: '12px',
-                    border: '1px solid #bbf7d0'
+                    border: '1px solid #dbeafe'
                   }}>
                     <i className="bi bi-person-circle mb-2" style={{ 
                       fontSize: '1.5rem', 
@@ -375,8 +375,8 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                 </div>                {opp.description && (
                   <div className="col-12">
                     <div className="mt-3 p-3" style={{ 
-                      backgroundColor: '#f0fdf4',
-                      border: '1px solid #bbf7d0',
+                      backgroundColor: '#f0f9ff',
+                      border: '1px solid #bae6fd',
                       borderRadius: '12px',
                       borderLeft: '4px solid #06b6d4'
                     }}>
@@ -414,18 +414,18 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
               left: 0,
               right: 0,
               height: '4px',
-              background: 'linear-gradient(90deg, #10b981 0%, #059669 50%, #10b981 100%)',
+              background: 'linear-gradient(90deg, #38bdf8 0%, #0ea5e9 50%, #38bdf8 100%)',
               backgroundSize: '200% 100%',
               animation: 'shimmer 3s ease-in-out infinite'
             }} />
             <div className="card-header border-0" style={{ 
               backgroundColor: '#ffffff',
-              borderLeft: '4px solid #10b981',
+              borderLeft: '4px solid #0ea5e9',
               padding: '1rem 1.5rem'
             }}>
               <div>
                 <h5 className="mb-1 fw-bold" style={{ color: '#0f172a' }}>
-                  <i className="bi bi-file-earmark-text me-2" style={{ color: '#10b981' }} />
+                  <i className="bi bi-file-earmark-text me-2" style={{ color: '#0ea5e9' }} />
                   Quotes
                 </h5>
                 <small style={{ color: '#64748b' }}>Proposals and pricing information</small>
@@ -442,7 +442,7 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                     style={{
                       width: '64px',
                       height: '64px',
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      background: 'linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)',
                     }}
                   >
                     <i className="bi bi-file-earmark-plus text-white" style={{ fontSize: '1.5rem' }} />
@@ -466,8 +466,8 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                         <tr key={q.id}>
                           <td>
                             <code className="small px-2 py-1" style={{
-                              backgroundColor: '#f0fdf4',
-                              color: '#047857',
+                              backgroundColor: '#f0f9ff',
+                              color: '#0e7490',
                               borderRadius: '6px',
                               fontWeight: '500'
                             }}>
@@ -573,8 +573,8 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                               <small 
                                 className="px-2 py-1" 
                                 style={{ 
-                                  backgroundColor: '#f0fdf4',
-                                  color: '#047857',
+                                  backgroundColor: '#f0f9ff',
+                                  color: '#0e7490',
                                   borderRadius: '6px',
                                   fontSize: '0.75rem',
                                   fontWeight: '500'
@@ -665,6 +665,233 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
         </div>
       )}
 
+      {assignOpen && (
+        <div className="modal d-block" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content" style={{
+              borderRadius: '16px',
+              border: 'none',
+              boxShadow: '0 20px 40px rgba(15, 23, 42, 0.15)',
+            }}>
+              <div className="modal-header" style={{
+                borderBottom: '2px solid #e2e8f0',
+                borderRadius: '16px 16px 0 0',
+                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+              }}>
+                <h5 className="modal-title" style={{ color: '#0f172a', fontWeight: 600 }}>
+                  Assign Opportunity - {opp ? opportunityDisplayName(opp) : '...'}
+                </h5>
+                <button type="button" className="btn-close" onClick={() => !busy && setAssignOpen(false)} />
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void run(async () => {
+                    const selectedId = assignForm.userId;
+                    await assignOpportunity(id, {
+                      userId: selectedId,
+                      role: 'owner',
+                    });
+                    const emp = hrEmployees.find((x) => x.id === selectedId);
+                    const label = emp
+                      ? `${emp.firstName ?? ''} ${emp.lastName ?? ''}`.trim() || emp.email || emp.id
+                      : selectedId;
+                    setAssigneeLabelOverride(label);
+                    if (id) setStoredAssigneeDisplay(id, selectedId, label);
+                    setAssignOpen(false);
+                  });
+                }}
+              >
+                <div className="modal-body">
+                  <label className="form-label" style={{ color: '#0f172a', fontWeight: 600 }}>
+                    Employee
+                  </label>
+                  {hrEmployeesLoading && (
+                    <div className="small text-muted mb-1">Loading employees...</div>
+                  )}
+                  {hrEmployeesError && (
+                    <div className="alert alert-warning py-2 small mb-2">{hrEmployeesError}</div>
+                  )}
+                  <select
+                    className="form-select"
+                    required
+                    value={assignForm.userId}
+                    onChange={(e) => setAssignForm({ userId: e.target.value })}
+                    disabled={hrEmployeesLoading}
+                  >
+                    <option value="">Select employee...</option>
+                    {hrEmployees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.firstName} {emp.lastName} - {emp.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="modal-footer" style={{
+                  borderTop: '2px solid #e2e8f0',
+                  borderRadius: '0 0 16px 16px',
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                }}>
+                  <button type="button" className="btn btn-outline-secondary" onClick={() => setAssignOpen(false)}>
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={busy || hrEmployeesLoading || !assignForm.userId}
+                  >
+                    Assign
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {closeOpen && (
+        <div className="modal d-block" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content" style={{
+              borderRadius: '16px',
+              border: 'none',
+              boxShadow: '0 20px 40px rgba(15, 23, 42, 0.15)',
+            }}>
+              <div className="modal-header" style={{
+                borderBottom: '2px solid #e2e8f0',
+                borderRadius: '16px 16px 0 0',
+                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+              }}>
+                <h5 className="modal-title" style={{ color: '#0f172a', fontWeight: 600 }}>Close opportunity</h5>
+                <button type="button" className="btn-close" onClick={() => !busy && setCloseOpen(false)} />
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void run(async () => {
+                    await closeOpportunity(id, closeForm);
+                    setCloseOpen(false);
+                    navigate('/dashboard/opportunities');
+                  });
+                }}
+              >
+                <div className="modal-body">
+                  {closeForm.type === 'won' && !eligibleCloseWon && (
+                    <div className="alert alert-info small">
+                      Backend may reject close won without approved quote and signed contract.
+                    </div>
+                  )}
+                  <label className="form-label" style={{ color: '#0f172a', fontWeight: 600 }}>Result</label>
+                  <select
+                    className="form-select"
+                    value={closeForm.type}
+                    onChange={(e) =>
+                      setCloseForm({ ...closeForm, type: e.target.value as 'won' | 'lost' })
+                    }
+                  >
+                    <option value="won">Won</option>
+                    <option value="lost">Lost</option>
+                  </select>
+                  <label className="form-label mt-2" style={{ color: '#0f172a', fontWeight: 600 }}>
+                    Reason (optional)
+                  </label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    value={closeForm.reason ?? ''}
+                    onChange={(e) => setCloseForm({ ...closeForm, reason: e.target.value })}
+                  />
+                </div>
+                <div className="modal-footer" style={{
+                  borderTop: '2px solid #e2e8f0',
+                  borderRadius: '0 0 16px 16px',
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                }}>
+                  <button type="button" className="btn btn-outline-secondary" onClick={() => setCloseOpen(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={busy}>
+                    Save
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {quoteOpen && (
+        <div className="modal d-block" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content" style={{
+              borderRadius: '16px',
+              border: 'none',
+              boxShadow: '0 20px 40px rgba(15, 23, 42, 0.15)',
+            }}>
+              <div className="modal-header" style={{
+                borderBottom: '2px solid #e2e8f0',
+                borderRadius: '16px 16px 0 0',
+                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+              }}>
+                <h5 className="modal-title" style={{ color: '#0f172a', fontWeight: 600 }}>Create quote</h5>
+                <button type="button" className="btn-close" onClick={() => !busy && setQuoteOpen(false)} />
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void run(async () => {
+                    await createQuote(id, {
+                      validUntil: quoteForm.validUntil,
+                      totalAmount: quoteForm.totalAmount,
+                      currency: quoteForm.currency,
+                    });
+                    setQuoteOpen(false);
+                  });
+                }}
+              >
+                <div className="modal-body">
+                  <label className="form-label" style={{ color: '#0f172a', fontWeight: 600 }}>Valid until</label>
+                  <input
+                    className="form-control"
+                    type="date"
+                    value={quoteForm.validUntil}
+                    onChange={(e) => setQuoteForm({ ...quoteForm, validUntil: e.target.value })}
+                    required
+                  />
+                  <label className="form-label mt-2" style={{ color: '#0f172a', fontWeight: 600 }}>
+                    Total amount (optional)
+                  </label>
+                  <input
+                    className="form-control"
+                    type="number"
+                    min={0}
+                    value={quoteForm.totalAmount ?? ''}
+                    onChange={(e) =>
+                      setQuoteForm({
+                        ...quoteForm,
+                        totalAmount: e.target.value ? Number(e.target.value) : undefined,
+                      })
+                    }
+                  />
+                </div>
+                <div className="modal-footer" style={{
+                  borderTop: '2px solid #e2e8f0',
+                  borderRadius: '0 0 16px 16px',
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                }}>
+                  <button type="button" className="btn btn-outline-secondary" onClick={() => setQuoteOpen(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={busy}>
+                    Create
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* CSS Styles - voting/meetings theme */}
       <style>{`
         @keyframes shimmer {
@@ -672,10 +899,33 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
           50% { background-position: -200% 0; }
         }
 
+        @keyframes fadeUpIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .opportunity-details-page .card-header {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          background-image: none !important;
+        }
+
+        .opportunity-details-page .card {
+          animation: fadeUpIn 320ms ease-out;
+        }
+
         .opportunity-details-page .card:hover {
-          transform: translateY(-4px) !important;
-          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
-          border-color: rgba(8, 145, 178, 0.3) !important;
+          transform: translateY(-6px) !important;
+          box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14) !important;
+          border-color: rgba(14, 165, 233, 0.35) !important;
+        }
+
+        .opportunity-details-page .table tbody tr {
+          transition: background-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .opportunity-details-page .table tbody tr:hover {
+          background-color: #f8fbff;
         }
 
         .opportunity-details-page .btn {
@@ -716,45 +966,48 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
           box-shadow: 0 8px 20px rgba(6, 182, 212, 0.4) !important;
           color: #ffffff !important;
         }        .opportunity-details-page .btn-outline-primary {
-          border: 2px solid #06b6d4 !important;
-          color: #06b6d4 !important;
-          background: rgba(6, 182, 212, 0.05) !important;
+          border: 1.5px solid rgba(14, 165, 233, 0.45) !important;
+          color: #0284c7 !important;
+          background: rgba(14, 165, 233, 0.08) !important;
+          box-shadow: 0 2px 10px rgba(14, 165, 233, 0.12) !important;
           backdrop-filter: blur(10px) !important;
         }
 
         .opportunity-details-page .btn-outline-primary:hover {
-          background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+          background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%) !important;
           color: #ffffff !important;
           transform: translateY(-2px) !important;
-          box-shadow: 0 8px 20px rgba(6, 182, 212, 0.3) !important;
+          box-shadow: 0 10px 24px rgba(14, 165, 233, 0.35) !important;
         }
 
         .opportunity-details-page .btn-outline-secondary {
-          border: 2px solid #64748b !important;
-          color: #64748b !important;
-          background: rgba(100, 116, 139, 0.05) !important;
+          border: 1.5px solid rgba(99, 102, 241, 0.35) !important;
+          color: #4f46e5 !important;
+          background: rgba(99, 102, 241, 0.07) !important;
+          box-shadow: 0 2px 10px rgba(99, 102, 241, 0.1) !important;
           backdrop-filter: blur(10px) !important;
         }
 
         .opportunity-details-page .btn-outline-secondary:hover {
-          background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+          background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%) !important;
           color: #ffffff !important;
           transform: translateY(-2px) !important;
-          box-shadow: 0 8px 20px rgba(100, 116, 139, 0.3) !important;
+          box-shadow: 0 10px 24px rgba(99, 102, 241, 0.35) !important;
         }
 
         .opportunity-details-page .btn-outline-dark {
-          border: 2px solid #374151 !important;
-          color: #374151 !important;
-          background: rgba(55, 65, 81, 0.05) !important;
+          border: 1.5px solid rgba(100, 116, 139, 0.45) !important;
+          color: #475569 !important;
+          background: rgba(100, 116, 139, 0.08) !important;
+          box-shadow: 0 2px 10px rgba(100, 116, 139, 0.12) !important;
           backdrop-filter: blur(10px) !important;
         }
 
         .opportunity-details-page .btn-outline-dark:hover {
-          background: linear-gradient(135deg, #374151 0%, #1f2937 100%) !important;
+          background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
           color: #ffffff !important;
           transform: translateY(-2px) !important;
-          box-shadow: 0 8px 20px rgba(55, 65, 81, 0.3) !important;
+          box-shadow: 0 10px 24px rgba(71, 85, 105, 0.35) !important;
         }
 
         .opportunity-details-page .form-control,

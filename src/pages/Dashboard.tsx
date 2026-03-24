@@ -1,6 +1,6 @@
 export function Dashboard() {
   return (
-    <div className="container-fluid py-4" style={{ backgroundColor: '#f8fafc' }}>
+    <div className="dashboard-page container-fluid py-4" style={{ backgroundColor: '#f8fbff' }}>
       {/* Header Section - matching Opportunities page */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div className="d-flex align-items-center">
@@ -266,6 +266,29 @@ export function Dashboard() {
 
       <style>{`
         /* Dashboard specific styles with proper colors */
+        .dashboard-page .card {
+          border-radius: 12px !important;
+          border: 1px solid rgba(226, 232, 240, 0.9) !important;
+          box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06) !important;
+        }
+
+        .dashboard-page .card-header {
+          background: #ffffff !important;
+          background-color: #ffffff !important;
+          background-image: none !important;
+          border-bottom: 1px solid #eef2f7 !important;
+          border-radius: 12px 12px 0 0 !important;
+        }
+
+        .dashboard-page h5,
+        .dashboard-page h6 {
+          color: #0f172a !important;
+        }
+
+        .dashboard-page small {
+          color: #64748b;
+        }
+
         .btn-dashboard-primary {
           background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
           border: none !important;
@@ -293,18 +316,10 @@ export function Dashboard() {
         }
 
         .btn-dashboard-outline:hover {
-          background: #f9fafb !important;
+          background: #f8fbff !important;
           border-color: #06b6d4 !important;
           color: #06b6d4 !important;
           transform: translateY(-1px) !important;
-        }
-
-        .card {
-          border-radius: 12px !important;
-        }
-
-        .card-header {
-          border-radius: 12px 12px 0 0 !important;
         }
       `}</style>
     </div>
