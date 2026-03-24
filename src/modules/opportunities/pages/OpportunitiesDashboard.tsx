@@ -225,7 +225,7 @@ export function OpportunitiesDashboard() {
     <div className="container-fluid py-4 opportunities-dashboard" style={{ 
       minHeight: '100vh'
     }}>
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex justify-content-between align-items-center mb-4 opportunities-header">
         <div className="d-flex align-items-center">
           <div
             className="rounded-circle d-flex align-items-center justify-content-center me-3"
@@ -244,7 +244,7 @@ export function OpportunitiesDashboard() {
             </p>
           </div>
         </div>
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 opportunities-header-actions">
           <Link to="/dashboard/opportunities/leads" className="btn btn-opportunities-outline btn-lg">
             <i className="bi bi-people me-2" />
             Leads

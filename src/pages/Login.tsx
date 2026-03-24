@@ -58,6 +58,9 @@ export default function Login() {
     <div className="login-container">
       <div className="login-box">
         <div className="login-header">
+          <div className="login-brand-icon">
+            <i className="bi bi-shield-lock"></i>
+          </div>
           <h1>EMS System</h1>
           <p>Login to your account</p>
         </div>
@@ -119,7 +122,7 @@ export default function Login() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="btn btn-primary w-100 mb-3"
+            className="btn btn-login-primary w-100 mb-3"
             disabled={isSubmitting}
           >
             {isSubmitting ? (

@@ -255,6 +255,24 @@ small { font-size: 0.75rem; }
   animation: slideDown 0.5s ease-out;
 }
 
+@media (max-width: 991.98px) {
+  .mobile-sidebar-toggle {
+    position: fixed !important;
+    left: 10px !important;
+    top: 10px !important;
+    z-index: 1200 !important;
+    width: 40px;
+    height: 40px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px !important;
+    background: rgba(15, 23, 42, 0.9) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 16px rgba(2, 6, 23, 0.3) !important;
+  }
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;

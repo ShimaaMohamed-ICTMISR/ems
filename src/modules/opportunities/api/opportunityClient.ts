@@ -44,6 +44,7 @@ export function extractOpportunityApiError(error: unknown): string {
 
   const status = err.response?.status;
   const data = err.response?.data;
+  const rawData: unknown = err.response?.data;
 
   if (data?.message) {
     const m = data.message;
@@ -51,7 +52,7 @@ export function extractOpportunityApiError(error: unknown): string {
     return String(m);
   }
   // Plain string body (some gateways / proxies)
-  if (typeof data === 'string' && data.trim()) return data.trim();
+  if (typeof rawData === 'string' && rawData.trim()) return rawData.trim();
   if (data?.error) return String(data.error);
   if (data?.errors && typeof data.errors === 'object') {
     const parts = Object.entries(data.errors).flatMap(([k, v]) =>

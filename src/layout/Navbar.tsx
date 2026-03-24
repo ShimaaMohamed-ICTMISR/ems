@@ -75,10 +75,13 @@ export function Navbar() {
       className="navbar navbar-expand-lg navbar-dark  shadow-sm"
       style={{ backgroundColor: "#0f172a" }}
     >
-      <div className="container-fluid px-4">
+      <div
+        className="container-fluid px-4 navbar-shell"
+        style={{ position: "relative", minHeight: "64px" }}
+      >
         {/* Hamburger for mobile */}
         <button
-          className="btn btn-link text-white d-lg-none me-2 p-0"
+          className="btn btn-link text-white d-lg-none p-0 mobile-sidebar-toggle"
           type="button"
           data-bs-toggle="offcanvas"
           data-bs-target="#appSidebar"
@@ -239,6 +242,14 @@ export function Navbar() {
           </div>
         </div>
       </div>
+      <style>{`
+        @media (max-width: 991.98px) {
+          .navbar-shell {
+            min-height: 64px;
+            padding-left: 56px !important;
+          }
+        }
+      `}</style>
     </nav>
   );
 }
