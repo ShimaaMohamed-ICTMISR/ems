@@ -175,41 +175,7 @@ export function MeetingsList() {
         </button>
       </div>
 
-      {/* Filters */}
-      <div className="card border-0 shadow-sm mb-4">
-        <div className="card-body py-3">
-          <div className="d-flex flex-wrap gap-2">
-            <button
-              type="button"
-              className={`btn ${statusFilter === 'ALL' ? 'btn-dark' : 'btn-outline-dark'}`}
-              onClick={() => setStatusFilter('ALL')}
-            >
-              <i className="bi bi-list me-2"></i>All
-            </button>
-            <button
-              type="button"
-              className={`btn ${statusFilter === 'SCHEDULED' ? 'btn-success' : 'btn-outline-success'}`}
-              onClick={() => setStatusFilter('SCHEDULED')}
-            >
-              <i className="bi bi-check-circle me-2"></i>Scheduled
-            </button>
-            <button
-              type="button"
-              className={`btn ${statusFilter === 'DRAFT' ? 'btn-warning' : 'btn-outline-warning'}`}
-              onClick={() => setStatusFilter('DRAFT')}
-            >
-              <i className="bi bi-pencil me-2"></i>Draft
-            </button>
-            <button
-              type="button"
-              className={`btn ${statusFilter === 'CANCELLED' ? 'btn-danger' : 'btn-outline-danger'}`}
-              onClick={() => setStatusFilter('CANCELLED')}
-            >
-              <i className="bi bi-x-circle me-2"></i>Cancelled
-            </button>
-          </div>
-        </div>
-      </div>
+      
 
       {error && (
         <div className="alert alert-warning border-0 shadow-sm" role="alert">

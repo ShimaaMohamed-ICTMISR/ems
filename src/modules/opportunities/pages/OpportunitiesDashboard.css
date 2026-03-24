@@ -1,0 +1,93 @@
+/* Opportunities list — compact action toolbar (single row, no wrap) */
+.opportunities-dashboard .opp-actions-cell {
+  width: 1%;
+  white-space: nowrap;
+  vertical-align: middle;
+  text-align: end;
+  padding-inline-start: 1rem !important;
+}
+
+.opportunities-dashboard .opp-actions-bar {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.125rem 0;
+}
+
+.opportunities-dashboard .opp-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  text-decoration: none !important;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    background-color 0.16s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.opportunities-dashboard .opp-action-btn i {
+  font-size: 1.05rem;
+  line-height: 1;
+}
+
+.opportunities-dashboard .opp-action-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.1);
+  color: #0f172a;
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.opportunities-dashboard .opp-action-btn:focus-visible {
+  outline: 2px solid #0891b2;
+  outline-offset: 2px;
+}
+
+.opportunities-dashboard .opp-action-btn--view:hover:not(:disabled) {
+  border-color: #94a3b8;
+  color: #1e293b;
+}
+
+.opportunities-dashboard .opp-action-btn--stage:hover:not(:disabled) {
+  border-color: rgba(8, 145, 178, 0.45);
+  color: #0e7490;
+  background: rgba(8, 145, 178, 0.06);
+}
+
+.opportunities-dashboard .opp-action-btn--assign:hover:not(:disabled) {
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #4f46e5;
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.opportunities-dashboard .opp-action-btn--close:hover:not(:disabled) {
+  border-color: rgba(5, 150, 105, 0.45);
+  color: #047857;
+  background: rgba(5, 150, 105, 0.07);
+}
+
+.opportunities-dashboard .opp-action-btn:disabled,
+.opportunities-dashboard .opp-action-btn.disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+/* Slightly tighter table rows */
+.opportunities-dashboard .table-hover tbody td {
+  padding-top: 0.65rem;
+  padding-bottom: 0.65rem;
+}
