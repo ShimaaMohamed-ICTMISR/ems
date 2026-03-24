@@ -353,7 +353,7 @@ export function ProjectDocuments() {
             className="btn btn-outline-light"
             onClick={() =>
               navigate(
-                `/portfolios/${portfolioId || project?.portfolioId || ""}/projects/${projectId}`,
+                `/dashboard/portfolios/${portfolioId || project?.portfolioId || ""}/projects/${projectId}`,
               )
             }
           >

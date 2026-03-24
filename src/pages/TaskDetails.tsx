@@ -225,9 +225,9 @@ export function TaskDetails() {
       await taskService.deleteTaskById(taskId);
       toast.success("Task deleted successfully.");
       if (portfolioId && projectId) {
-        navigate(`/portfolios/${portfolioId}/projects/${projectId}`);
+        navigate(`/dashboard/portfolios/${portfolioId}/projects/${projectId}`);
       } else {
-        navigate("/portfolios");
+        navigate("/dashboard/portfolios");
       }
     } catch (error) {
       console.error(error);
@@ -240,9 +240,9 @@ export function TaskDetails() {
 
   function goBack() {
     if (portfolioId && projectId) {
-      navigate(`/portfolios/${portfolioId}/projects/${projectId}`);
+      navigate(`/dashboard/portfolios/${portfolioId}/projects/${projectId}`);
     } else {
-      navigate("/portfolios");
+      navigate("/dashboard/portfolios");
     }
   }
 

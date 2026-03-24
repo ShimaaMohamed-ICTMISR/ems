@@ -675,7 +675,7 @@ export function ProjectDetails() {
       setSaving(true);
       await projectService.deleteProjectById(projectId);
       toast.success("Project deleted successfully.");
-      navigate("/portfolios");
+      navigate("/dashboard/portfolios");
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete project.");
@@ -963,7 +963,7 @@ export function ProjectDetails() {
     }
 
     navigate(
-      `/portfolios/${resolvedPortfolioId}/projects/${project.id}/documents`,
+      `/dashboard/portfolios/${resolvedPortfolioId}/projects/${project.id}/documents`,
     );
   }
 
@@ -1174,7 +1174,7 @@ export function ProjectDetails() {
           <button
             type="button"
             className="btn btn-info text-white"
-            onClick={() => navigate("/portfolios")}
+            onClick={() => navigate("/dashboard/portfolios")}
           >
             Back to Portfolios
           </button>
@@ -1241,7 +1241,7 @@ export function ProjectDetails() {
           <button
             type="button"
             className="btn btn-outline-light"
-            onClick={() => navigate("/portfolios")}
+            onClick={() => navigate("/dashboard/portfolios")}
           >
             <i className="bi bi-arrow-left me-2" />
             Back to Portfolios
@@ -1965,7 +1965,7 @@ export function ProjectDetails() {
                       key={t.id}
                       onClick={() =>
                         navigate(
-                          `/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
+                          `/dashboard/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
                         )
                       }
                     >

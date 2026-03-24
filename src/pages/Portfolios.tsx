@@ -314,7 +314,7 @@ export function Portfolios() {
 
   function navigateToProjectDetails(portfolioId: string, projectId: string) {
     setDetailsPortfolio(null);
-    navigate(`/portfolios/${portfolioId}/projects/${projectId}`);
+    navigate(`/dashboard/portfolios/${portfolioId}/projects/${projectId}`);
   }
 
   if (loading) {
