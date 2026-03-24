@@ -1,109 +1,179 @@
-// Opportunity Management Types
-export type LeadStatus = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'UNQUALIFIED';
-export type OpportunityStage = 'PROSPECTING' | 'QUALIFICATION' | 'PROPOSAL' | 'NEGOTIATION' | 'CLOSED_WON' | 'CLOSED_LOST';
-export type QuoteStatus = 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED';
+/**
+ * Types aligned with Opportunity Management Service OpenAPI (docs-json).
+ * Legacy uppercase enums kept where UI still references them; map at API boundary when needed.
+ */
 
-// Lead interfaces
+export type LeadSource =
+  | 'website'
+  | 'referral'
+  | 'cold_call'
+  | 'social_media'
+  | 'event'
+  | 'other';
+
+/** API may return lowercase or legacy uppercase */
+export type LeadStatus =
+  | 'NEW'
+  | 'CONTACTED'
+  | 'QUALIFIED'
+  | 'UNQUALIFIED'
+  | 'new'
+  | 'contacted'
+  | 'qualified'
+  | 'unqualified';
+
+export type OpportunityStageApi =
+  | 'prospecting'
+  | 'qualification'
+  | 'needs_analysis'
+  | 'proposal'
+  | 'negotiation'
+  | 'closed_won'
+  | 'closed_lost';
+
+/** Legacy uppercase — prefer OpportunityStageApi for new code */
+export type OpportunityStage =
+  | 'PROSPECTING'
+  | 'QUALIFICATION'
+  | 'PROPOSAL'
+  | 'NEGOTIATION'
+  | 'CLOSED_WON'
+  | 'CLOSED_LOST';
+
+export type QuoteStatus = 'DRAFT' | 'SENT' | 'APPROVED' | 'REJECTED' | string;
+
+// ─── Lead (response shape is permissive; backend may extend) ───
 export interface Lead {
   id: string;
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string;
   phone?: string;
   company?: string;
+  /** OpenAPI uses `title` for job title */
+  title?: string;
   jobTitle?: string;
   source?: string;
-  status: LeadStatus;
+  status?: LeadStatus;
   notes?: string;
   assignedTo?: string;
-  createdAt: string;
-  updatedAt: string;
+  /** OpenAPI workflow: qualified leads can convert */
+  isQualified?: boolean;
+  estimatedValue?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
+/** CreateLeadDto per OpenAPI — only firstName + lastName required */
 export interface CreateLeadDto {
   firstName: string;
   lastName: string;
-  email: string;
+  email?: string;
   phone?: string;
   company?: string;
-  jobTitle?: string;
-  source?: string;
+  title?: string;
+  source?: LeadSource | string;
+  estimatedValue?: number;
   notes?: string;
-  assignedTo?: string;
 }
 
+/** QualifyLeadDto — only optional notes in OpenAPI */
 export interface QualifyLeadDto {
-  qualified: boolean;
   notes?: string;
 }
 
+/** ConvertLeadDto per OpenAPI */
 export interface ConvertLeadDto {
-  opportunityTitle: string;
-  expectedValue: number;
+  opportunityName: string;
+  amount: number;
   expectedCloseDate: string;
-  stage?: OpportunityStage;
+  stage?: 'prospecting' | 'qualification' | 'needs_analysis' | 'proposal' | 'negotiation';
+  conversionReason?: string;
 }
 
-// Opportunity interfaces
+// ─── Opportunity ───
 export interface Opportunity {
   id: string;
-  title: string;
+  name?: string;
+  title?: string;
   description?: string;
-  expectedValue: number;
+  amount?: number;
+  expectedValue?: number;
+  /** Some APIs use alternate keys — UI reads these via opportunityDisplayAmount */
+  value?: number;
+  totalAmount?: number;
+  estimatedValue?: number;
   actualValue?: number;
-  probability: number;
-  stage: OpportunityStage;
-  expectedCloseDate: string;
+  probability?: number;
+  stage: OpportunityStageApi | OpportunityStage | string;
+  currency?: string;
+  expectedCloseDate?: string;
   actualCloseDate?: string;
+  accountId?: string;
   leadId?: string;
   assignedTo?: string;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
+  ownerId?: string;
+  /** Often returned after assign (may differ from HR employee id) */
+  userId?: string;
+  assigneeId?: string;
+  assigneeName?: string;
+  ownerName?: string;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  type?: string;
+  source?: string;
+  nextStep?: string;
+  /** Optional flags if backend exposes them for UI gating */
+  hasApprovedQuote?: boolean;
+  hasSignedContract?: boolean;
   lead?: Lead;
   quotes?: Quote[];
 }
 
+/** CreateOpportunityDto per OpenAPI */
 export interface CreateOpportunityDto {
-  title: string;
-  description?: string;
-  expectedValue: number;
-  probability?: number;
-  stage?: OpportunityStage;
+  name: string;
+  accountId?: string;
+  stage?: OpportunityStageApi;
+  amount: number;
+  currency?: string;
   expectedCloseDate: string;
-  leadId?: string;
-  assignedTo?: string;
+  type?: string;
+  source?: string;
+  description?: string;
+  nextStep?: string;
 }
 
 export interface ChangeStageDto {
-  stage: OpportunityStage;
-  notes?: string;
+  stage: OpportunityStageApi;
+  reason?: string;
 }
 
 export interface AssignOpportunityDto {
-  assignedTo: string;
+  userId: string;
+  role?: 'owner' | 'co_owner' | 'viewer';
 }
 
 export interface CloseOpportunityDto {
-  stage: 'CLOSED_WON' | 'CLOSED_LOST';
-  actualValue?: number;
-  notes?: string;
+  type: 'won' | 'lost';
+  reason?: string;
 }
 
-// Quote interfaces
+// ─── Quote ───
 export interface Quote {
   id: string;
-  opportunityId: string;
-  title: string;
+  opportunityId?: string;
+  title?: string;
   description?: string;
-  totalAmount: number;
+  totalAmount?: number;
   validUntil: string;
   status: QuoteStatus;
-  createdBy: string;
+  createdBy?: string;
   approvedBy?: string;
   approvedAt?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
   items?: QuoteItem[];
 }
 
@@ -116,20 +186,17 @@ export interface QuoteItem {
   totalPrice: number;
 }
 
+/** OpenAPI: validUntil required; totalAmount optional */
 export interface CreateQuoteDto {
-  title: string;
-  description?: string;
-  totalAmount: number;
+  totalAmount?: number;
+  currency?: string;
   validUntil: string;
-  items?: Omit<QuoteItem, 'id' | 'quoteId'>[];
 }
 
 export interface ApproveQuoteDto {
-  approved: boolean;
   notes?: string;
 }
 
-// History and Analytics
 export interface OpportunityHistory {
   id: string;
   opportunityId: string;
@@ -137,6 +204,7 @@ export interface OpportunityHistory {
   previousValue?: string;
   newValue?: string;
   notes?: string;
-  createdBy: string;
+  reason?: string;
+  createdBy?: string;
   createdAt: string;
 }

@@ -5,21 +5,37 @@ const HR_API_BASE_URL = import.meta.env.DEV
   ? '/api/hr' 
   : 'https://ems-human-resources-management-service.onrender.com/api/hr';
 
+const HR_SERVICE_TICKET =
+  import.meta.env.VITE_SERVICE_TICKET ??
+  import.meta.env.VITE_SERVICE_TICKET_KEY ??
+  import.meta.env.VITE_OPPORTUNITY_SERVICE_TICKET;
+
 export const hrApiClient = axios.create({
   baseURL: HR_API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'X-Service-Ticket': 'auH2RtYi9df5vO79WXl5XyaUck6GNwClJ54ayehPU9A=',
   },
 });
+
+// Add service ticket (same env sources as other EMS services) — never log the ticket value
+hrApiClient.interceptors.request.use(
+  (config) => {
+    config.headers = config.headers ?? {};
+    if (HR_SERVICE_TICKET) {
+      config.headers['X-Service-Ticket'] = HR_SERVICE_TICKET;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
 // Add token to requests if available
 hrApiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('authToken');
     if (token) {
+      config.headers = config.headers ?? {};
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('HR API Request to:', config.url, 'with token:', token.substring(0, 20) + '...');
     } else {
       console.warn('No auth token found in localStorage for HR API request:', config.url);
     }

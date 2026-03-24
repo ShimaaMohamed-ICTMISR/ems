@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
 import type { CreateMeetingDto, MeetingStatus } from '../../services/meetingService';
+import hrService, { type Employee } from '../../services/hrProjectManagementService';
 import './meetings.css';
 
 export function CreateMeeting() {
@@ -15,7 +16,24 @@ export function CreateMeeting() {
   });
   const [participantUserId, setParticipantUserId] = useState('');
   const [participants, setParticipants] = useState<string[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    hrService
+      .getEmployees()
+      .then((res) => {
+        // API shape:
+        // { success, data: { data: Employee[] } }
+        const innerData = res.data?.data;
+        const list = Array.isArray(innerData?.data) ? innerData.data : Array.isArray(innerData) ? innerData : [];
+        setEmployees(list);
+      })
+      .catch((err) => {
+        console.error('Failed to load employees for participants dropdown:', err);
+        setEmployees([]);
+      });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,24 +185,30 @@ export function CreateMeeting() {
                     Add Participants
                   </label>
                   <div className="input-group shadow-sm">
-                    <input
-                      type="text"
-                      className="form-control border-0"
-                      placeholder="Enter user ID"
+                    <select
+                      className="form-select border-0"
                       value={participantUserId}
                       onChange={(e) => setParticipantUserId(e.target.value)}
-                    />
+                    >
+                      <option value="">Select employee...</option>
+                      {employees.map((emp) => (
+                        <option key={emp.id} value={emp.id}>
+                          {emp.firstName} {emp.lastName} - {emp.email}
+                        </option>
+                      ))}
+                    </select>
                     <button
                       type="button"
                       className="btn btn-meetings-primary"
                       onClick={addParticipant}
+                      disabled={!participantUserId}
                     >
                       <i className="bi bi-plus-circle me-2"></i>Add
                     </button>
                   </div>
                   <small className="text-muted mt-2 d-block">
                     <i className="bi bi-info-circle me-1"></i>
-                    Enter the user ID of participants to invite
+                    Choose employees from the list to invite as participants
                   </small>
                 </div>
 
@@ -195,26 +219,32 @@ export function CreateMeeting() {
                       Participants ({participants.length})
                     </label>
                     <div className="border rounded-3 p-3 bg-light">
-                      {participants.map((userId) => (
-                        <div key={userId} className="d-flex justify-content-between align-items-center py-2 px-3 mb-2 bg-white rounded-2 shadow-sm">
-                          <div className="d-flex align-items-center">
-                            <div 
-                              className="rounded-circle d-flex align-items-center justify-content-center me-3 bg-primary"
-                              style={{ width: '32px', height: '32px' }}
-                            >
-                              <i className="bi bi-person-fill text-white"></i>
+                      {participants.map((userId) => {
+                        const emp = employees.find((e) => e.id === userId);
+                        const displayName = emp
+                          ? `${emp.firstName} ${emp.lastName} - ${emp.email}`
+                          : userId;
+                        return (
+                          <div key={userId} className="d-flex justify-content-between align-items-center py-2 px-3 mb-2 bg-white rounded-2 shadow-sm">
+                            <div className="d-flex align-items-center">
+                              <div 
+                                className="rounded-circle d-flex align-items-center justify-content-center me-3 bg-primary"
+                                style={{ width: '32px', height: '32px' }}
+                              >
+                                <i className="bi bi-person-fill text-white"></i>
+                              </div>
+                              <span className="fw-medium">{displayName}</span>
                             </div>
-                            <span className="fw-medium">{userId}</span>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => removeParticipant(userId)}
+                            >
+                              <i className="bi bi-x"></i>
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => removeParticipant(userId)}
-                          >
-                            <i className="bi bi-x"></i>
-                          </button>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
 import type { Meeting, ParticipantResponse } from '../../services/meetingService';
+import hrService, { type Employee } from '../../services/hrProjectManagementService';
 import './meetings.css';
 
 export function MeetingDetails() {
@@ -10,12 +11,33 @@ export function MeetingDetails() {
   const [meeting, setMeeting] = useState<Meeting | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
     if (id) {
       loadMeeting();
     }
   }, [id]);
+
+  useEffect(() => {
+    hrService
+      .getEmployees()
+      .then((res) => {
+        const innerData = res.data?.data;
+        const list = Array.isArray(innerData?.data) ? innerData.data : Array.isArray(innerData) ? innerData : [];
+        setEmployees(list);
+      })
+      .catch((err) => {
+        console.error('Failed to load employees for meeting details:', err);
+        setEmployees([]);
+      });
+  }, []);
+
+  const getEmployeeDisplay = (userId: string) => {
+    const emp = employees.find((e) => e.id === userId);
+    if (!emp) return userId;
+    return `${emp.firstName} ${emp.lastName} - ${emp.email}`;
+  };
 
   const loadMeeting = async () => {
     if (!id) return;
@@ -219,15 +241,12 @@ export function MeetingDetails() {
                         </div>
                         <div className="flex-grow-1">
                           <h6 className="mb-1 fw-semibold text-dark">
-                            {participant.userId}
+                            {getEmployeeDisplay(participant.userId)}
                           </h6>
                           <small className="text-muted">
                             Added {new Date(participant.createdAt).toLocaleDateString()}
                           </small>
                         </div>
-                        <span className={`badge ${getResponseBadgeClass(participant.response)}`}>
-                          {participant.response || 'Pending'}
-                        </span>
                       </div>
                     </div>
                   ))}
@@ -258,7 +277,7 @@ export function MeetingDetails() {
                         </div>
                         <div>
                           <h6 className="mb-1 fw-semibold text-dark">
-                            {organizer.userId}
+                            {getEmployeeDisplay(organizer.userId)}
                           </h6>
                           <small className="text-muted">Organizer</small>
                         </div>

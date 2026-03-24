@@ -24,12 +24,56 @@ export interface LoginResponse {
   mfaToken?: string;
 }
 
+function tryLocalDevLogin(credentials: LoginRequest): LoginResponse | null {
+  const enabled =
+    import.meta.env.DEV &&
+    String(import.meta.env.VITE_USE_LOCAL_LOGIN).toLowerCase() === 'true';
+
+  if (!enabled) return null;
+
+  const expectedUser = (import.meta.env.VITE_LOCAL_LOGIN_USERNAME ?? '').trim();
+  const expectedPass = import.meta.env.VITE_LOCAL_LOGIN_PASSWORD ?? '';
+
+  if (!expectedUser || !expectedPass) {
+    console.warn(
+      '[auth] VITE_USE_LOCAL_LOGIN is true but VITE_LOCAL_LOGIN_USERNAME or VITE_LOCAL_LOGIN_PASSWORD is missing.',
+    );
+    return null;
+  }
+
+  const id = credentials.usernameOrEmail.trim();
+  if (id !== expectedUser || credentials.password !== expectedPass) {
+    throw new Error('Invalid username or password.');
+  }
+
+  return {
+    accessToken: 'local-dev-token',
+    refreshToken: 'local-dev-refresh',
+    tokenType: 'Bearer',
+    expiresIn: 86400,
+    user: {
+      id: 'local-user',
+      email: `${expectedUser}@local.dev`,
+      username: expectedUser,
+      fullName: 'Local User',
+    },
+    mfaRequired: false,
+  };
+}
+
 export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     try {
+      const local = tryLocalDevLogin(credentials);
+      if (local) return local;
+
       const response = await apiClient.post<LoginResponse>('/Auth/login', credentials);
       return response.data;
     } catch (error: any) {
+      // Preserve messages from local dev login (no axios response)
+      if (error?.message && !error?.response) {
+        throw error instanceof Error ? error : new Error(String(error.message));
+      }
       const errorMessage =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -40,6 +84,12 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
+    const token = localStorage.getItem('authToken');
+    if (token === 'local-dev-token') {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      return;
+    }
     try {
       // Call the logout API endpoint to invalidate the token on backend
       await apiClient.post('/Auth/logout', {});

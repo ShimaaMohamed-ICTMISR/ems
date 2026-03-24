@@ -1,4 +1,14 @@
-import axios from 'axios';
+/**
+ * Opportunity Management Service — all Leads, Opportunities, Quotes API calls.
+ * Contract source: OpenAPI at /api/docs-json (verified).
+ */
+import {
+  opportunityManagementClient,
+  extractOpportunityApiError,
+  unwrapEntity,
+  unwrapList,
+  unwrapPaginated,
+} from './opportunityClient';
 import type {
   Lead,
   CreateLeadDto,
@@ -12,152 +22,217 @@ import type {
   Quote,
   CreateQuoteDto,
   ApproveQuoteDto,
-  OpportunityHistory
+  OpportunityHistory,
 } from '../types/opportunity.types';
 
-// Opportunity service API base URL
-const OPPORTUNITY_API_BASE = 'https://ems-opportunity-management-service.onrender.com/api/v1';
-
-const opportunityClient = axios.create({
-  baseURL: OPPORTUNITY_API_BASE,
-  timeout: 15000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Add request interceptor for authentication
-opportunityClient.interceptors.request.use(
-  (config) => {
-    // Add user auth token
-    const userToken = localStorage.getItem('authToken');
-    if (userToken) {
-      config.headers.Authorization = `Bearer ${userToken}`;
-    }
-    
-    console.log('Opportunity API request:', {
-      url: config.url,
-      method: config.method,
-      headers: config.headers
-    });
-    
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// Add response interceptor for error handling
-opportunityClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    console.error('Opportunity API error:', {
-      status: error.response?.status,
-      message: error.message,
-      data: error.response?.data,
-      url: error.config?.url
-    });
-    return Promise.reject(error);
+async function handle<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (e) {
+    throw new Error(extractOpportunityApiError(e));
   }
-);
+}
 
-// ============= LEAD ENDPOINTS =============
+// ─── Leads ─────────────────────────────────────────
 
-export const createLead = async (data: CreateLeadDto): Promise<Lead> => {
-  const response = await opportunityClient.post('/leads', data);
-  return response.data;
-};
+export async function createLead(data: CreateLeadDto): Promise<Lead> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.post('/leads', data);
+    return unwrapEntity<Lead>(res.data);
+  });
+}
 
-export const getLeads = async (): Promise<Lead[]> => {
-  const response = await opportunityClient.get('/leads');
-  return response.data;
-};
+export async function getLeads(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<Lead[]> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.get('/leads', { params });
+    const { items } = unwrapPaginated<Lead>(res.data, params?.limit ?? 20);
+    return items;
+  });
+}
 
-export const getLeadById = async (id: string): Promise<Lead> => {
-  const response = await opportunityClient.get(`/leads/${id}`);
-  return response.data;
-};
+export async function getLeadById(id: string): Promise<Lead> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.get(`/leads/${id}`);
+    return unwrapEntity<Lead>(res.data);
+  });
+}
 
-export const deleteLead = async (id: string): Promise<void> => {
-  await opportunityClient.delete(`/leads/${id}`);
-};
+export async function deleteLead(id: string): Promise<void> {
+  return handle(async () => {
+    await opportunityManagementClient.delete(`/leads/${id}`);
+  });
+}
 
-export const qualifyLead = async (id: string, data: QualifyLeadDto): Promise<Lead> => {
-  const response = await opportunityClient.patch(`/leads/${id}/qualify`, data);
-  return response.data;
-};
+export async function qualifyLead(id: string, data: QualifyLeadDto): Promise<Lead> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.patch(`/leads/${id}/qualify`, data);
+    return unwrapEntity<Lead>(res.data);
+  });
+}
 
-export const convertLeadToOpportunity = async (id: string, data: ConvertLeadDto): Promise<Opportunity> => {
-  const response = await opportunityClient.post(`/leads/${id}/convert`, data);
-  return response.data;
-};
+export async function convertLeadToOpportunity(
+  id: string,
+  data: ConvertLeadDto,
+): Promise<Opportunity> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.post(`/leads/${id}/convert`, data);
+    return unwrapEntity<Opportunity>(res.data);
+  });
+}
 
-// ============= OPPORTUNITY ENDPOINTS =============
+// ─── Opportunities ─────────────────────────────────
 
-export const createOpportunity = async (data: CreateOpportunityDto): Promise<Opportunity> => {
-  const response = await opportunityClient.post('/opportunities', data);
-  return response.data;
-};
+export async function createOpportunity(data: CreateOpportunityDto): Promise<Opportunity> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.post('/opportunities', data);
+    return unwrapEntity<Opportunity>(res.data);
+  });
+}
 
-export const getOpportunities = async (): Promise<Opportunity[]> => {
-  const response = await opportunityClient.get('/opportunities');
-  return response.data;
-};
+export async function getOpportunities(params?: {
+  page?: number;
+  limit?: number;
+}): Promise<{ items: Opportunity[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.get('/opportunities', { params });
+    const p = unwrapPaginated<Opportunity>(res.data, params?.limit ?? 20);
+    return {
+      items: p.items,
+      pagination: {
+        total: p.total,
+        page: p.page,
+        limit: p.limit,
+        totalPages: p.totalPages,
+      },
+    };
+  });
+}
 
-export const getOpportunityById = async (id: string): Promise<Opportunity> => {
-  const response = await opportunityClient.get(`/opportunities/${id}`);
-  return response.data;
-};
+export async function getOpportunityById(id: string): Promise<Opportunity> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.get(`/opportunities/${id}`);
+    return unwrapEntity<Opportunity>(res.data);
+  });
+}
 
-export const changeOpportunityStage = async (id: string, data: ChangeStageDto): Promise<Opportunity> => {
-  const response = await opportunityClient.patch(`/opportunities/${id}/stage`, data);
-  return response.data;
-};
+/** Backend DTO: only `stage` required; omit empty `reason` to avoid server bugs on "". */
+function buildChangeStageBody(data: ChangeStageDto): ChangeStageDto {
+  const body: ChangeStageDto = { stage: data.stage };
+  const reason = data.reason?.trim();
+  if (reason) body.reason = reason;
+  return body;
+}
 
-export const assignOpportunity = async (id: string, data: AssignOpportunityDto): Promise<Opportunity> => {
-  const response = await opportunityClient.patch(`/opportunities/${id}/assign`, data);
-  return response.data;
-};
+export async function changeOpportunityStage(
+  id: string,
+  data: ChangeStageDto,
+): Promise<Opportunity> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.patch(
+      `/opportunities/${id}/stage`,
+      buildChangeStageBody(data),
+    );
+    return unwrapEntity<Opportunity>(res.data);
+  });
+}
 
-export const closeOpportunity = async (id: string, data: CloseOpportunityDto): Promise<Opportunity> => {
-  const response = await opportunityClient.post(`/opportunities/${id}/close`, data);
-  return response.data;
-};
+export async function assignOpportunity(
+  id: string,
+  data: AssignOpportunityDto,
+): Promise<Opportunity> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.patch(`/opportunities/${id}/assign`, data);
+    return unwrapEntity<Opportunity>(res.data);
+  });
+}
 
-export const getOpportunityHistory = async (id: string): Promise<OpportunityHistory[]> => {
-  const response = await opportunityClient.get(`/opportunities/${id}/history`);
-  return response.data;
-};
+export async function closeOpportunity(
+  id: string,
+  data: CloseOpportunityDto,
+): Promise<Opportunity> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.post(`/opportunities/${id}/close`, data);
+    return unwrapEntity<Opportunity>(res.data);
+  });
+}
 
-// ============= QUOTE ENDPOINTS =============
+export async function getOpportunityHistory(id: string): Promise<OpportunityHistory[]> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.get(`/opportunities/${id}/history`);
+    return unwrapList<OpportunityHistory>(res.data);
+  });
+}
 
-export const createQuote = async (opportunityId: string, data: CreateQuoteDto): Promise<Quote> => {
-  const response = await opportunityClient.post(`/opportunities/${opportunityId}/quotes`, data);
-  return response.data;
-};
+// ─── Quotes ────────────────────────────────────────
 
-export const getQuotesForOpportunity = async (opportunityId: string): Promise<Quote[]> => {
-  const response = await opportunityClient.get(`/opportunities/${opportunityId}/quotes`);
-  return response.data;
-};
+export async function createQuote(
+  opportunityId: string,
+  data: CreateQuoteDto,
+): Promise<Quote> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.post(
+      `/opportunities/${opportunityId}/quotes`,
+      data,
+    );
+    return unwrapEntity<Quote>(res.data);
+  });
+}
 
-export const getQuoteById = async (opportunityId: string, quoteId: string): Promise<Quote> => {
-  const response = await opportunityClient.get(`/opportunities/${opportunityId}/quotes/${quoteId}`);
-  return response.data;
-};
+export async function getQuotesForOpportunity(opportunityId: string): Promise<Quote[]> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.get(
+      `/opportunities/${opportunityId}/quotes`,
+    );
+    return unwrapList<Quote>(res.data);
+  });
+}
 
-export const approveQuote = async (opportunityId: string, quoteId: string, data: ApproveQuoteDto): Promise<Quote> => {
-  const response = await opportunityClient.patch(`/opportunities/${opportunityId}/quotes/${quoteId}/approve`, data);
-  return response.data;
-};
+export async function getQuoteById(
+  opportunityId: string,
+  quoteId: string,
+): Promise<Quote> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.get(
+      `/opportunities/${opportunityId}/quotes/${quoteId}`,
+    );
+    return unwrapEntity<Quote>(res.data);
+  });
+}
 
-// ============= SYSTEM ENDPOINTS =============
+export async function approveQuote(
+  opportunityId: string,
+  quoteId: string,
+  data: ApproveQuoteDto,
+): Promise<Quote> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.patch(
+      `/opportunities/${opportunityId}/quotes/${quoteId}/approve`,
+      data,
+    );
+    return unwrapEntity<Quote>(res.data);
+  });
+}
 
-export const getApiRoutes = async () => {
-  const response = await opportunityClient.get('/system/routes');
-  return response.data;
-};
+// ─── System (optional) ───────────────────────────────
 
-export const getPermissions = async () => {
-  const response = await opportunityClient.get('/permissions');
-  return response.data;
-};
+export async function getApiRoutes(): Promise<unknown> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.get('/system/routes');
+    return res.data;
+  });
+}
+
+export async function getOpportunityServicePermissions(): Promise<string[]> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.get('/permissions');
+    const raw = unwrapEntity<unknown>(res.data);
+    if (Array.isArray(raw)) return raw as string[];
+    if (raw && typeof raw === 'object' && Array.isArray((raw as { data?: string[] }).data)) {
+      return (raw as { data: string[] }).data;
+    }
+    return [];
+  });
+}
