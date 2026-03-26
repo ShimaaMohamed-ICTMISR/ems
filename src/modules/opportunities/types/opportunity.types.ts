@@ -77,6 +77,21 @@ export interface CreateLeadDto {
   notes?: string;
 }
 
+/** UpdateLeadDto — partial update for editable fields */
+export interface UpdateLeadDto {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  company?: string;
+  title?: string;
+  source?: LeadSource | string;
+  estimatedValue?: number;
+  notes?: string;
+  status?: LeadStatus;
+  assignedTo?: string;
+}
+
 /** QualifyLeadDto — only optional notes in OpenAPI */
 export interface QualifyLeadDto {
   notes?: string;
@@ -143,6 +158,21 @@ export interface CreateOpportunityDto {
   source?: string;
   description?: string;
   nextStep?: string;
+}
+
+/** UpdateOpportunityDto — partial update for editable fields */
+export interface UpdateOpportunityDto {
+  name?: string;
+  stage?: OpportunityStageApi;
+  amount?: number;
+  currency?: string;
+  expectedCloseDate?: string;
+  actualCloseDate?: string;
+  type?: string;
+  source?: string;
+  description?: string;
+  nextStep?: string;
+  probability?: number;
 }
 
 export interface ChangeStageDto {

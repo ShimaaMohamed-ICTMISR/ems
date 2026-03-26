@@ -1,4 +1,5 @@
 import type {
+  OptionResult,
   Poll,
   PollOption,
   PollEligibility,
@@ -285,7 +286,7 @@ export async function fetchPollResults(pollId: string): Promise<PollResults> {
 
   const options: OptionResult[] = Array.isArray(rawOptions)
     ? rawOptions.map((o) => {
-        const obj = o as Record<string, unknown>;
+        const obj = o as unknown as Record<string, unknown>;
         const pollOptionId =
           (obj.pollOptionId as string | undefined) ??
           (obj.optionId as string | undefined) ??

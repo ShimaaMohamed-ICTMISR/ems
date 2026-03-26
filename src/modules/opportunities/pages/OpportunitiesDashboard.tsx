@@ -5,6 +5,7 @@ import {
   changeStage,
   closeOpportunity,
   createOpportunity,
+  deleteOpportunity,
   getOpportunities,
   type ChangeStagePayload,
   type CloseOpportunityPayload,
@@ -211,6 +212,22 @@ export function OpportunitiesDashboard() {
       await loadPage(page);
     } catch (err: any) {
       setError(err?.message ?? 'Failed to close opportunity.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteOpportunity = async (opp: Opportunity) => {
+    const confirmed = window.confirm(`Delete opportunity "${opportunityDisplayName(opp)}"?`);
+    if (!confirmed) return;
+    try {
+      setActionLoading(true);
+      setError(null);
+      await deleteOpportunity(opp.id);
+      setSuccessMessage('Opportunity deleted successfully.');
+      await loadPage(page);
+    } catch (err: any) {
+      setError(err?.message ?? 'Failed to delete opportunity.');
     } finally {
       setActionLoading(false);
     }
@@ -429,6 +446,17 @@ export function OpportunitiesDashboard() {
                           >
                             <i className="bi bi-flag" aria-hidden />
                             <span className="visually-hidden">Close</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="opp-action-btn opp-action-btn--delete"
+                            title="Delete opportunity"
+                            aria-label="Delete opportunity"
+                            disabled={actionLoading}
+                            onClick={() => handleDeleteOpportunity(opp)}
+                          >
+                            <i className="bi bi-trash3" aria-hidden />
+                            <span className="visually-hidden">Delete</span>
                           </button>
                         </div>
                       </td>

@@ -83,7 +83,7 @@ export function PollsDashboard() {
           </div>
         ) : (
           <div className="row g-3">
-            {polls.map((poll, index) => (
+            {polls.map((poll) => (
               <div key={poll.id} className="col-md-6 col-lg-4">
                 <PollCard poll={poll} onStatusChange={load} />
               </div>

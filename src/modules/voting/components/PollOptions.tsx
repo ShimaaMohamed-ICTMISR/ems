@@ -111,7 +111,8 @@ export function PollOptions({
 
   const startEdit = (opt: PollOption) => {
     setEditingId(opt.id);
-    setEditTitle(asText((opt as Record<string, unknown>).optionText ?? (opt as Record<string, unknown>).title));
+    const obj = opt as unknown as Record<string, unknown>;
+    setEditTitle(asText(obj.optionText ?? obj.title));
   };
 
   return (
@@ -164,7 +165,12 @@ export function PollOptions({
               </>
             ) : (
               <>
-                <span className="flex-grow-1">{asText((opt as Record<string, unknown>).optionText ?? (opt as Record<string, unknown>).title)}</span>
+                <span className="flex-grow-1">
+                  {(() => {
+                    const obj = opt as unknown as Record<string, unknown>;
+                    return asText(obj.optionText ?? obj.title);
+                  })()}
+                </span>
                 {!readOnly && (
                   <>
                     <button
