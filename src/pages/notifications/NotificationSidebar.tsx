@@ -293,21 +293,30 @@ export default function NotificationSidebar({
                         notification.title ||
                         "Notification"}
                     </h6>
-                    <div className="notification-sidebar-item-actions" onClick={(event) => event.stopPropagation()}>
+                    <div
+                      className="notification-sidebar-item-actions"
+                      onClick={(event) => event.stopPropagation()}
+                    >
                       <button
                         type="button"
                         className="notification-item-action-btn mark"
-                        onClick={(event) => handleToggleReadStatus(event, notification)}
+                        onClick={(event) =>
+                          handleToggleReadStatus(event, notification)
+                        }
                         disabled={activeActionId === notificationId}
                         title={unread ? "Mark as read" : "Mark as unread"}
                         aria-label={unread ? "Mark as read" : "Mark as unread"}
                       >
-                        <i className={`bi ${unread ? "bi-envelope-open" : "bi-envelope"}`}></i>
+                        <i
+                          className={`bi ${unread ? "bi-envelope-open" : "bi-envelope"}`}
+                        ></i>
                       </button>
                       <button
                         type="button"
                         className="notification-item-action-btn delete"
-                        onClick={(event) => handleDeleteNotification(event, notification)}
+                        onClick={(event) =>
+                          handleDeleteNotification(event, notification)
+                        }
                         disabled={activeActionId === notificationId}
                         title="Delete notification"
                         aria-label="Delete notification"
