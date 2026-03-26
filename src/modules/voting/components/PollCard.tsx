@@ -89,9 +89,9 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
   const btnClass = 'btn btn-sm px-3';
 
   return (
-    <div className="voting-page">
-      <div className="card h-100 shadow-sm border-0">
-        <div className="card-body d-flex flex-column">
+    <div className="voting-page h-100">
+      <div className="card h-100 w-100 shadow-sm border-0">
+        <div className="card-body d-flex flex-column h-100">
           <div className="d-flex justify-content-between align-items-start mb-3 gap-2">
             <Link
               to={`/dashboard/voting/${poll.id}`}
@@ -152,10 +152,18 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
               </div>
             )}
             {statusStr.toUpperCase() === 'CLOSED' && (
-              <div className="d-flex justify-content-center">
+              <div className="d-flex flex-wrap justify-content-center gap-2">
                 <Link to={`/dashboard/voting/${poll.id}/results`} className={`${btnClass} btn-primary`}>
                   <i className="bi bi-bar-chart me-1"></i>View Results
                 </Link>
+                <button
+                  type="button"
+                  className={`${btnClass} btn-outline-danger`}
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
+                  <i className="bi bi-trash me-1"></i>{deleting ? 'Deleting...' : 'Delete'}
+                </button>
               </div>
             )}
           </div>

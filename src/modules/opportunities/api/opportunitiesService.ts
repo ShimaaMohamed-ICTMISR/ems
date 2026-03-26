@@ -10,6 +10,7 @@ import type {
   Opportunity,
   OpportunityHistory,
   OpportunityStageApi,
+  UpdateOpportunityDto,
 } from '../types/opportunity.types';
 import * as api from './opportunityApi';
 
@@ -19,6 +20,7 @@ export type ChangeStagePayload = ChangeStageDto;
 export type AssignOpportunityPayload = AssignOpportunityDto;
 export type CloseOpportunityPayload = CloseOpportunityDto;
 export type OpportunityHistoryEntry = OpportunityHistory;
+export type UpdateOpportunityPayload = UpdateOpportunityDto;
 
 export type { Opportunity };
 
@@ -53,6 +55,17 @@ export async function getOpportunities(
 
 export async function getOpportunityById(id: string): Promise<Opportunity> {
   return api.getOpportunityById(id);
+}
+
+export async function updateOpportunity(
+  id: string,
+  payload: UpdateOpportunityPayload,
+): Promise<Opportunity> {
+  return api.updateOpportunity(id, payload);
+}
+
+export async function deleteOpportunity(id: string): Promise<void> {
+  return api.deleteOpportunity(id);
 }
 
 export async function changeStage(

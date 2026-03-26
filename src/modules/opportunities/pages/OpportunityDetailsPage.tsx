@@ -5,9 +5,11 @@ import {
   changeOpportunityStage,
   closeOpportunity,
   createQuote,
+  deleteOpportunity,
   getOpportunityById,
   getOpportunityHistory,
   getQuotesForOpportunity,
+  updateOpportunity,
 } from '../api/opportunityApi';
 import type {
   ChangeStageDto,
@@ -17,6 +19,7 @@ import type {
   OpportunityHistory,
   OpportunityStageApi,
   Quote,
+  UpdateOpportunityDto,
 } from '../types/opportunity.types';
 import {
   hasApprovedQuoteFromList,
@@ -43,13 +46,7 @@ const STAGE_LABELS: Record<OpportunityStageApi, string> = {
   closed_lost: 'Closed – Lost',
 };
 
-const OPEN_STAGES: OpportunityStageApi[] = [
-  'prospecting',
-  'qualification',
-  'needs_analysis',
-  'proposal',
-  'negotiation',
-];
+// (Removed) OPEN_STAGES: was used for filtered stage list; UI now shows all stages.
 
 export function OpportunityDetailsPage() {  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -64,6 +61,7 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
   const [assignOpen, setAssignOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
   const [quoteOpen, setQuoteOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const [stageForm, setStageForm] = useState<Pick<ChangeStageDto, 'stage'>>({
     stage: 'prospecting',
@@ -78,6 +76,16 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
     validUntil: new Date().toISOString().slice(0, 10),
     totalAmount: undefined,
     currency: 'USD',
+  });
+  const [editForm, setEditForm] = useState<UpdateOpportunityDto>({
+    name: '',
+    stage: 'prospecting',
+    amount: undefined,
+    expectedCloseDate: '',
+    type: '',
+    source: '',
+    description: '',
+    nextStep: '',
   });
 
   const { employees: hrEmployees, loading: hrEmployeesLoading, loadError: hrEmployeesError } =
@@ -118,13 +126,11 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
   const approvedFromQuotes = hasApprovedQuoteFromList(quotes);
   const hasApprovedQuote = approvedFromApi || approvedFromQuotes;
   const hasSignedContract = opp?.hasSignedContract === true;
-  const eligibleCloseWon = hasApprovedQuote && hasSignedContract;  const stageOptionsForSelect = useMemo(() => {
+  const eligibleCloseWon = hasApprovedQuote && hasSignedContract;
+  const stageOptionsForSelect = useMemo(() => {
     if (closed) return [];
-    return OPEN_STAGES.filter((s) => {
-      if (s === 'negotiation' && !hasApprovedQuote) return false;
-      return true;
-    });
-  }, [closed, hasApprovedQuote]);
+    return Object.keys(STAGE_LABELS) as OpportunityStageApi[];
+  }, [closed]);
 
   const employeeOverviewLabel = useMemo(() => {
     if (!opp || !id) return '—';
@@ -155,6 +161,43 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
   };  if (!id) {
     return <div className="p-4">Invalid opportunity.</div>;
   }
+
+  const openEdit = () => {
+    if (!opp) return;
+    setEditForm({
+      name: (opp.name ?? opp.title ?? '').toString(),
+      stage: normalizeStage(String(opp.stage)),
+      amount: opportunityDisplayAmount(opp),
+      expectedCloseDate: opp.expectedCloseDate ? String(opp.expectedCloseDate).slice(0, 10) : '',
+      type: opp.type ?? '',
+      source: opp.source ?? '',
+      description: opp.description ?? '',
+      nextStep: opp.nextStep ?? '',
+    });
+    setEditOpen(true);
+  };
+
+  const buildUpdatePayload = (raw: UpdateOpportunityDto): UpdateOpportunityDto => {
+    const payload: UpdateOpportunityDto = {};
+    const name = raw.name?.toString().trim();
+    if (name) payload.name = name;
+    if (raw.stage) payload.stage = raw.stage;
+    if (raw.amount !== undefined && raw.amount !== null) {
+      const n = Number(raw.amount);
+      if (Number.isFinite(n)) payload.amount = n;
+    }
+    const expectedCloseDate = raw.expectedCloseDate?.toString().trim();
+    if (expectedCloseDate) payload.expectedCloseDate = expectedCloseDate;
+    const type = raw.type?.toString().trim();
+    if (type) payload.type = type;
+    const source = raw.source?.toString().trim();
+    if (source) payload.source = source;
+    const description = raw.description?.toString().trim();
+    if (description) payload.description = description;
+    const nextStep = raw.nextStep?.toString().trim();
+    if (nextStep) payload.nextStep = nextStep;
+    return payload;
+  };
 
   if (loading && !opp) {
     return (
@@ -241,6 +284,16 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
           </button>
           <button
             type="button"
+            className="btn btn-outline-secondary btn-sm"
+            disabled={closed || busy}
+            onClick={openEdit}
+            title="Update opportunity"
+          >
+            <i className="bi bi-pencil-square me-1" />
+            Edit
+          </button>
+          <button
+            type="button"
             className="btn btn-outline-dark btn-sm"
             disabled={closed || busy}
             onClick={() => setCloseOpen(true)}
@@ -256,6 +309,23 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
           >
             <i className="bi bi-plus-circle me-1" />
             New quote
+          </button>
+          <button
+            type="button"
+            className="btn btn-outline-danger btn-sm"
+            disabled={busy}
+            onClick={() => {
+              const confirmed = window.confirm(`Delete opportunity "${opportunityDisplayName(opp)}"?`);
+              if (!confirmed) return;
+              void run(async () => {
+                await deleteOpportunity(id);
+                navigate('/dashboard/opportunities');
+              });
+            }}
+            title="Delete opportunity"
+          >
+            <i className="bi bi-trash3 me-1" />
+            Delete
           </button>
         </div>
       </div>
@@ -884,6 +954,142 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                   </button>
                   <button type="submit" className="btn btn-primary" disabled={busy}>
                     Create
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {editOpen && (
+        <div className="modal d-block" tabIndex={-1} role="dialog">
+          <div className="modal-dialog modal-dialog-centered modal-lg">
+            <div className="modal-content" style={{
+              borderRadius: '16px',
+              border: 'none',
+              boxShadow: '0 20px 40px rgba(15, 23, 42, 0.15)',
+            }}>
+              <div className="modal-header" style={{
+                borderBottom: '2px solid #e2e8f0',
+                borderRadius: '16px 16px 0 0',
+                background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+              }}>
+                <h5 className="modal-title" style={{ color: '#0f172a', fontWeight: 600 }}>
+                  Update Opportunity
+                </h5>
+                <button type="button" className="btn-close" onClick={() => !busy && setEditOpen(false)} />
+              </div>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void run(async () => {
+                    const payload = buildUpdatePayload(editForm);
+                    await updateOpportunity(id, payload);
+                    setEditOpen(false);
+                  });
+                }}
+              >
+                <div className="modal-body">
+                  <div className="row g-3">
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Name</label>
+                      <input
+                        className="form-control"
+                        value={editForm.name ?? ''}
+                        onChange={(e) => setEditForm((p) => ({ ...p, name: e.target.value }))}
+                        placeholder="Opportunity name"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Stage</label>
+                      <select
+                        className="form-select"
+                        value={editForm.stage ?? 'prospecting'}
+                        onChange={(e) =>
+                          setEditForm((p) => ({ ...p, stage: e.target.value as OpportunityStageApi }))
+                        }
+                      >
+                        {(Object.keys(STAGE_LABELS) as OpportunityStageApi[]).map((s) => (
+                          <option key={s} value={s}>
+                            {STAGE_LABELS[s]}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label fw-semibold">Amount</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={editForm.amount ?? ''}
+                        onChange={(e) =>
+                          setEditForm((p) => ({
+                            ...p,
+                            amount: e.target.value === '' ? undefined : Number(e.target.value),
+                          }))
+                        }
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label fw-semibold">Expected Close Date</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={editForm.expectedCloseDate ?? ''}
+                        onChange={(e) => setEditForm((p) => ({ ...p, expectedCloseDate: e.target.value }))}
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label fw-semibold">Type</label>
+                      <input
+                        className="form-control"
+                        value={editForm.type ?? ''}
+                        onChange={(e) => setEditForm((p) => ({ ...p, type: e.target.value }))}
+                        placeholder="Type"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Source</label>
+                      <input
+                        className="form-control"
+                        value={editForm.source ?? ''}
+                        onChange={(e) => setEditForm((p) => ({ ...p, source: e.target.value }))}
+                        placeholder="Source"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">Next Step</label>
+                      <input
+                        className="form-control"
+                        value={editForm.nextStep ?? ''}
+                        onChange={(e) => setEditForm((p) => ({ ...p, nextStep: e.target.value }))}
+                        placeholder="Next step"
+                      />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label fw-semibold">Description</label>
+                      <textarea
+                        className="form-control"
+                        rows={3}
+                        value={editForm.description ?? ''}
+                        onChange={(e) => setEditForm((p) => ({ ...p, description: e.target.value }))}
+                        placeholder="Description"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer" style={{
+                  borderTop: '2px solid #e2e8f0',
+                  borderRadius: '0 0 16px 16px',
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
+                }}>
+                  <button type="button" className="btn btn-outline-secondary" onClick={() => setEditOpen(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary" disabled={busy}>
+                    Save
                   </button>
                 </div>
               </form>

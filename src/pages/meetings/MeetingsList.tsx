@@ -166,7 +166,7 @@ export function MeetingsList() {
             }
           </p>
         </div>
-        <button 
+        <button
           className="btn btn-meetings-primary btn-lg shadow-sm"
           onClick={() => navigate('/dashboard/meetings/create')}
         >

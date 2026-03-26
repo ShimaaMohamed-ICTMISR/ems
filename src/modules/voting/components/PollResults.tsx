@@ -32,7 +32,8 @@ export function PollResults({ results }: PollResultsProps) {
       ) : (
         <ul className="list-group list-group-flush">
           {options.map((opt) => {
-            const rawTitle = (opt as Record<string, unknown>).optionTitle ?? (opt as Record<string, unknown>).option ?? (opt as Record<string, unknown>).optionText;
+            const obj = opt as unknown as Record<string, unknown>;
+            const rawTitle = obj.optionTitle ?? obj.option ?? obj.optionText;
             const label = asText(rawTitle);
 
             return (

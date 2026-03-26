@@ -12,10 +12,12 @@ import {
 import type {
   Lead,
   CreateLeadDto,
+  UpdateLeadDto,
   QualifyLeadDto,
   ConvertLeadDto,
   Opportunity,
   CreateOpportunityDto,
+  UpdateOpportunityDto,
   ChangeStageDto,
   AssignOpportunityDto,
   CloseOpportunityDto,
@@ -63,6 +65,13 @@ export async function getLeadById(id: string): Promise<Lead> {
 export async function deleteLead(id: string): Promise<void> {
   return handle(async () => {
     await opportunityManagementClient.delete(`/leads/${id}`);
+  });
+}
+
+export async function updateLead(id: string, data: UpdateLeadDto): Promise<Lead> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.patch(`/leads/${id}`, data);
+    return unwrapEntity<Lead>(res.data);
   });
 }
 
@@ -115,6 +124,22 @@ export async function getOpportunityById(id: string): Promise<Opportunity> {
   return handle(async () => {
     const res = await opportunityManagementClient.get(`/opportunities/${id}`);
     return unwrapEntity<Opportunity>(res.data);
+  });
+}
+
+export async function updateOpportunity(
+  id: string,
+  data: UpdateOpportunityDto,
+): Promise<Opportunity> {
+  return handle(async () => {
+    const res = await opportunityManagementClient.patch(`/opportunities/${id}`, data);
+    return unwrapEntity<Opportunity>(res.data);
+  });
+}
+
+export async function deleteOpportunity(id: string): Promise<void> {
+  return handle(async () => {
+    await opportunityManagementClient.delete(`/opportunities/${id}`);
   });
 }
 

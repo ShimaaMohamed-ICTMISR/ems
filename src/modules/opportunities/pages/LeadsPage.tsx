@@ -228,9 +228,6 @@ export function LeadsPage() {
           </div>
           <div>
             <h2 className="mb-1 fw-bold text-dark">Leads</h2>
-            <p className="text-muted mb-0">
-              Qualify leads (OpenAPI: PATCH …/qualify with notes), then convert when qualified.
-            </p>
           </div>
         </div>
         <div className="d-flex gap-2">

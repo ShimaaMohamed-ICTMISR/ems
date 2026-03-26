@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
-import type { Meeting, ParticipantResponse } from '../../services/meetingService';
+import type { Meeting } from '../../services/meetingService';
 import hrService, { type Employee } from '../../services/hrProjectManagementService';
 import './meetings.css';
 
@@ -65,15 +65,6 @@ export function MeetingDetails() {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
-
-  const getResponseBadgeClass = (response?: ParticipantResponse) => {
-    switch (response) {
-      case 'ACCEPTED': return 'bg-success';
-      case 'DECLINED': return 'bg-danger';
-      case 'TENTATIVE': return 'bg-warning text-dark';
-      default: return 'bg-secondary';
-    }
   };
 
   const getStatusBadgeClass = (status: string) => {
