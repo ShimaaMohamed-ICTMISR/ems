@@ -166,27 +166,13 @@ export function MeetingsList() {
             }
           </p>
         </div>
-        <div className="d-flex align-items-center gap-2">
-          <select
-            className="form-select"
-            style={{ width: 190 }}
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as MeetingStatus | 'ALL')}
-            aria-label="Filter meetings by status"
-          >
-            <option value="ALL">All statuses</option>
-            <option value="SCHEDULED">Scheduled</option>
-            <option value="DRAFT">Draft</option>
-            <option value="CANCELLED">Cancelled</option>
-          </select>
-          <button
-            className="btn btn-meetings-primary btn-lg shadow-sm"
-            onClick={() => navigate('/dashboard/meetings/create')}
-          >
-            <i className="bi bi-plus-circle me-2"></i>
-            Create Meeting
-          </button>
-        </div>
+        <button
+          className="btn btn-meetings-primary btn-lg shadow-sm"
+          onClick={() => navigate('/dashboard/meetings/create')}
+        >
+          <i className="bi bi-plus-circle me-2"></i>
+          Create Meeting
+        </button>
       </div>
 
       

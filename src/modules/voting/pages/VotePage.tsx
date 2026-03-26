@@ -65,7 +65,7 @@ export function VotePage() {
     setSubmitting(true);
     try {
       await submitVote(pollId, { pollOptionId: selectedId });
-      navigate(`/voting/${pollId}/results`);
+      navigate(`/dashboard/voting/${pollId}/results`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Failed to submit vote';
       if (msg === 'NOT_ELIGIBLE') setError('You are not eligible to vote in this poll.');
@@ -198,7 +198,7 @@ export function VotePage() {
                   <button
                     type="button"
                     className="btn btn-outline-secondary rounded-2 px-4"
-                    onClick={() => navigate(`/voting/${pollId}`)}
+                    onClick={() => navigate(`/dashboard/voting/${pollId}`)}
                   >
                     Cancel
                   </button>
