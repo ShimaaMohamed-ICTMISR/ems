@@ -9,13 +9,41 @@ export default function CreateLeaveRequest() {
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
     const [loading, setLoading] = useState(false);
+    const [dataLoading, setDataLoading] = useState(true);
     const [form, setForm] = useState<CreateLeaveRequestRequest>({
         employeeId: '', leaveTypeId: '', startDate: '', endDate: '', reason: '', emergencyContact: '',
     });
 
     useEffect(() => {
-        hrService.getEmployees().then(r => { const d = r.data?.data || r.data; setEmployees(Array.isArray(d) ? d : []); }).catch(() => { });
-        hrService.getLeaveTypes().then(r => { const d = r.data?.data || r.data; setLeaveTypes(Array.isArray(d) ? d : []); }).catch(() => { });
+        console.log('Fetching employees and leave types...');
+        setDataLoading(true);
+        
+        Promise.all([
+            hrService.getEmployees().then(r => { 
+                console.log('Employees API response:', r.data);
+                const d = r.data;
+                const empList = d?.data?.data || d?.data || d;
+                const employees = Array.isArray(empList) ? empList : (empList?.employees || []); 
+                console.log('Parsed employees:', employees);
+                setEmployees(employees); 
+            }).catch(err => { 
+                console.error('Failed to fetch employees:', err);
+                console.error('Error response:', err.response?.data);
+            }),
+            hrService.getLeaveTypes().then(r => { 
+                console.log('Leave types API response:', r.data);
+                const d = r.data;
+                const ltList = d?.data || d;
+                const leaveTypes = Array.isArray(ltList) ? ltList : [];
+                console.log('Parsed leave types:', leaveTypes);
+                setLeaveTypes(leaveTypes); 
+            }).catch(err => { 
+                console.error('Failed to fetch leave types:', err);
+                console.error('Error response:', err.response?.data);
+            })
+        ]).finally(() => {
+            setDataLoading(false);
+        });
     }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -48,15 +76,15 @@ export default function CreateLeaveRequest() {
                 <div className="form-grid">
                     <div className="form-group">
                         <label>Employee *</label>
-                        <select className="form-control" name="employeeId" value={form.employeeId} onChange={handleChange} required>
-                            <option value="">Select employee...</option>
-                            {employees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName}</option>)}
+                        <select className="form-control" name="employeeId" value={form.employeeId} onChange={handleChange} required disabled={dataLoading}>
+                            <option value="">{dataLoading ? 'Loading employees...' : employees.length === 0 ? 'No employees found' : 'Select employee...'}</option>
+                            {employees.map(e => <option key={e.id} value={e.id}>{e.firstName} {e.lastName} ({e.employeeCode})</option>)}
                         </select>
                     </div>
                     <div className="form-group">
                         <label>Leave Type *</label>
-                        <select className="form-control" name="leaveTypeId" value={form.leaveTypeId} onChange={handleChange} required>
-                            <option value="">Select leave type...</option>
+                        <select className="form-control" name="leaveTypeId" value={form.leaveTypeId} onChange={handleChange} required disabled={dataLoading}>
+                            <option value="">{dataLoading ? 'Loading leave types...' : leaveTypes.length === 0 ? 'No leave types found' : 'Select leave type...'}</option>
                             {leaveTypes.map(lt => <option key={lt.id} value={lt.id}>{lt.name} ({lt.daysAllowed}d)</option>)}
                         </select>
                     </div>

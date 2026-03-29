@@ -17,14 +17,17 @@ export function Positions() {
       try {
         setLoading(true);
         const res = await hrService.getPositions();
+        console.log('Positions API response:', res.data);
         const list = res.data?.data || res.data || [];
+        console.log('Parsed positions:', list);
         if (mounted) {
-          setPositions(list);
+          setPositions(Array.isArray(list) ? list : []);
           setError(null);
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching positions:', err);
-        if (mounted) setError('Failed to load positions');
+        console.error('Error response:', err.response?.data);
+        if (mounted) setError(err.response?.data?.message || 'Failed to load positions');
       } finally {
         if (mounted) setLoading(false);
       }
