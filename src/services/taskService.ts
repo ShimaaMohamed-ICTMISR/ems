@@ -3,6 +3,8 @@ import projectManagementApiClient from './projectManagementApiClient';
 export interface Task {
   id: string;
   projectId?: string;
+  projectPhaseId?: string | null;
+  milestoneId?: string | null;
   title?: string | null;
   description?: string | null;
   priority?: number;
@@ -19,6 +21,8 @@ export interface Task {
 
 export interface TaskCreateDTO {
   projectId: string;
+  projectPhaseId?: string;
+  milestoneId?: string;
   title: string;
   description?: string;
   priority?: number;
@@ -34,6 +38,8 @@ export interface TaskUpdateDTO {
   id: string;
   projectId: string;
   rowVersion: string;
+  projectPhaseId?: string;
+  milestoneId?: string;
   title: string;
   description?: string;
   priority?: number;
@@ -43,6 +49,14 @@ export interface TaskUpdateDTO {
   completionPercentage?: number;
   effortEstimateHours?: number;
   assignedToMemberId?: string;
+}
+
+export interface TaskQueryParams {
+  projectId?: string;
+  projectPhaseId?: string;
+  milestoneId?: string;
+  assignedMemberId?: string;
+  status?: number;
 }
 
 function extractPayload<T>(response: { data: unknown }): T {
@@ -63,8 +77,7 @@ function extractPayload<T>(response: { data: unknown }): T {
 }
 
 export const taskService = {
-  getTasks: async (projectId?: string): Promise<Task[]> => {
-    const params = projectId ? { projectId } : {};
+  getTasks: async (params: TaskQueryParams = {}): Promise<Task[]> => {
     const response = await projectManagementApiClient.get('/Tasks', { params });
     return extractPayload<Task[]>(response) || [];
   },

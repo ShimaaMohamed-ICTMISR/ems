@@ -18,6 +18,9 @@ import {
 import projectService, { type Project } from "../services/projectService";
 import taskService, { type Task } from "../services/taskService";
 import phaseService, { type Phase } from "../services/phaseService";
+import milestoneService, {
+  type Milestone,
+} from "../services/milestoneService";
 import hrService, {
   type Employee,
 } from "../services/hrProjectManagementService";
@@ -33,6 +36,10 @@ import {
   type Resource,
   type ResourceRequestCreateDTO,
 } from "../services/resourceService";
+import riskService, {
+  type Risk,
+  type RiskEvent,
+} from "../services/riskService";
 import {
   ProjectStage,
   HealthStatus,
@@ -42,6 +49,9 @@ import {
   BudgetCategory,
   ResourceType,
   RequestStatus,
+  RiskImpact,
+  RiskProbability,
+  RiskEventStatus,
 } from "../config/enums";
 import "./styles/ProjectDetails.css";
 import "./styles/TaskDetails.css";
@@ -132,8 +142,8 @@ const initialEditForm: EditProjectFormState = {
 type ProjectDetailsTab =
   | "overview"
   | "team"
-  | "tasks"
   | "phases"
+  | "risks"
   | "resources"
   | "finance";
 
@@ -150,7 +160,6 @@ export function ProjectDetails() {
 
   // ── Task state ──
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [tasksLoaded, setTasksLoaded] = useState(false);
   const [tasksLoading, setTasksLoading] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [creatingTask, setCreatingTask] = useState(false);
@@ -178,6 +187,7 @@ export function ProjectDetails() {
   const [phases, setPhases] = useState<Phase[]>([]);
   const [phasesLoaded, setPhasesLoaded] = useState(false);
   const [phasesLoading, setPhasesLoading] = useState(false);
+  const [selectedPhaseId, setSelectedPhaseId] = useState<string | null>(null);
   const [showCreatePhase, setShowCreatePhase] = useState(false);
   const [creatingPhase, setCreatingPhase] = useState(false);
   const [newPhase, setNewPhase] = useState({
@@ -198,6 +208,37 @@ export function ProjectDetails() {
   const [confirmDeletePhaseId, setConfirmDeletePhaseId] = useState<
     string | null
   >(null);
+
+  // ── Milestone state ──
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
+  const [milestonesLoading, setMilestonesLoading] = useState(false);
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string | null>(
+    null,
+  );
+  const [showCreateMilestone, setShowCreateMilestone] = useState(false);
+  const [creatingMilestone, setCreatingMilestone] = useState(false);
+  const [newMilestone, setNewMilestone] = useState({
+    name: "",
+    targetDateUtc: "",
+    successCriteria: "",
+    isCompleted: false,
+  });
+  const [editingMilestoneId, setEditingMilestoneId] = useState<string | null>(
+    null,
+  );
+  const [editMilestoneForm, setEditMilestoneForm] = useState({
+    name: "",
+    targetDateUtc: "",
+    successCriteria: "",
+    isCompleted: false,
+  });
+  const [confirmDeleteMilestoneId, setConfirmDeleteMilestoneId] = useState<
+    string | null
+  >(null);
+  const [phaseVisualLoading, setPhaseVisualLoading] = useState(false);
+  const [phaseMilestoneTasks, setPhaseMilestoneTasks] = useState<
+    Record<string, Task[]>
+  >({});
   const [addingMember, setAddingMember] = useState(false);
   const [editingMemberId, setEditingMemberId] = useState<string | null>(null);
   const [editMemberRole, setEditMemberRole] = useState("");
@@ -252,6 +293,65 @@ export function ProjectDetails() {
     null,
   );
 
+  // ── Risks state ──
+  const [risks, setRisks] = useState<Risk[]>([]);
+  const [risksLoading, setRisksLoading] = useState(false);
+  const [risksLoaded, setRisksLoaded] = useState(false);
+  const [showCreateRisk, setShowCreateRisk] = useState(false);
+  const [creatingRisk, setCreatingRisk] = useState(false);
+  const [newRisk, setNewRisk] = useState({
+    description: "",
+    probability: "2",
+    impact: "1",
+    mitigationPlan: "",
+    ownerId: "",
+  });
+  const [editingRiskId, setEditingRiskId] = useState<string | null>(null);
+  const [editRiskForm, setEditRiskForm] = useState({
+    description: "",
+    probability: "2",
+    impact: "1",
+    mitigationPlan: "",
+    ownerId: "",
+  });
+  const [confirmDeleteRiskId, setConfirmDeleteRiskId] = useState<string | null>(
+    null,
+  );
+
+  const [expandedRiskId, setExpandedRiskId] = useState<string | null>(null);
+  const [riskEventsByRisk, setRiskEventsByRisk] = useState<
+    Record<string, RiskEvent[]>
+  >({});
+  const [riskEventsLoadingByRisk, setRiskEventsLoadingByRisk] = useState<
+    Record<string, boolean>
+  >({});
+  const [showCreateEventForRiskId, setShowCreateEventForRiskId] = useState<
+    string | null
+  >(null);
+  const [creatingRiskEvent, setCreatingRiskEvent] = useState(false);
+  const [newRiskEvent, setNewRiskEvent] = useState({
+    incidentDescription: "",
+    status: "0",
+    occurredAtUtc: "",
+  });
+  const [editingRiskEventId, setEditingRiskEventId] = useState<string | null>(
+    null,
+  );
+  const [editRiskEventForm, setEditRiskEventForm] = useState({
+    incidentDescription: "",
+    status: "0",
+    occurredAtUtc: "",
+  });
+  const [confirmDeleteRiskEventId, setConfirmDeleteRiskEventId] = useState<
+    string | null
+  >(null);
+  const [riskSeverityFilter, setRiskSeverityFilter] = useState<
+    "all" | "high" | "medium" | "low"
+  >("all");
+  const [riskSortBy, setRiskSortBy] = useState<
+    "recent" | "impact" | "probability" | "severity"
+  >("severity");
+
   const requestStatusColor: Record<number, string> = {
     0: "#3b82f6",
     1: "#f59e0b",
@@ -264,22 +364,6 @@ export function ProjectDetails() {
     1: "#f59e0b",
     2: "#8b5cf6",
     3: "#10b981",
-  };
-
-  const priorityColor: Record<number, string> = {
-    1: "#28a745",
-    2: "#ffc107",
-    3: "#fd7e14",
-    4: "#dc3545",
-  };
-  const statusColor: Record<number, string> = {
-    0: "#6c757d",
-    1: "#17a2b8",
-    2: "#007bff",
-    3: "#dc3545",
-    4: "#ffc107",
-    5: "#28a745",
-    6: "#adb5bd",
   };
 
   function setFormFromProject(data: Project) {
@@ -321,32 +405,25 @@ export function ProjectDetails() {
   }, [projectId]);
 
   useEffect(() => {
-    setTasksLoaded(false);
     setPhasesLoaded(false);
+    setSelectedPhaseId(null);
+    setMilestones([]);
+    setSelectedMilestoneId(null);
+    setTasks([]);
+    setShowCreateTask(false);
+    setShowCreateMilestone(false);
     setMembersLoaded(false);
     setEmployeesLoaded(false);
     setResourceRequestsLoaded(false);
     setBudgetsLoaded(false);
+    setRisksLoaded(false);
+    setRisks([]);
+    setExpandedRiskId(null);
+    setRiskEventsByRisk({});
+    setShowCreateRisk(false);
+    setShowCreateEventForRiskId(null);
     setActiveTab("overview");
   }, [projectId]);
-
-  // ── Fetch tasks ──
-  useEffect(() => {
-    async function fetchTasks() {
-      if (!projectId || activeTab !== "tasks" || tasksLoaded) return;
-      try {
-        setTasksLoading(true);
-        const data = await taskService.getTasks(projectId);
-        setTasks(data);
-        setTasksLoaded(true);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setTasksLoading(false);
-      }
-    }
-    fetchTasks();
-  }, [projectId, activeTab, tasksLoaded]);
 
   // ── Fetch phases ──
   useEffect(() => {
@@ -365,6 +442,98 @@ export function ProjectDetails() {
     }
     fetchPhases();
   }, [projectId, activeTab, phasesLoaded]);
+
+  // ── Fetch milestones for selected phase ──
+  useEffect(() => {
+    async function fetchMilestones() {
+      if (!projectId || activeTab !== "phases") return;
+
+      if (!selectedPhaseId) {
+        setMilestones([]);
+        return;
+      }
+
+      try {
+        setMilestonesLoading(true);
+        const data = await milestoneService.getMilestones({
+          projectId,
+          projectPhaseId: selectedPhaseId,
+        });
+        setMilestones(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setMilestonesLoading(false);
+      }
+    }
+
+    fetchMilestones();
+  }, [projectId, activeTab, selectedPhaseId]);
+
+  // ── Fetch tasks for selected milestone ──
+  useEffect(() => {
+    async function fetchTasks() {
+      if (!projectId || activeTab !== "phases") return;
+
+      if (!selectedMilestoneId) {
+        setTasks([]);
+        return;
+      }
+
+      try {
+        setTasksLoading(true);
+        const data = await taskService.getTasks({
+          projectId,
+          milestoneId: selectedMilestoneId,
+        });
+        setTasks(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setTasksLoading(false);
+      }
+    }
+
+    fetchTasks();
+  }, [projectId, activeTab, selectedMilestoneId]);
+
+  // ── Fetch tasks for all milestones in selected phase (visual summary) ──
+  useEffect(() => {
+    async function fetchPhaseVisualTasks() {
+      if (!projectId || activeTab !== "phases" || !selectedPhaseId) {
+        setPhaseMilestoneTasks({});
+        setPhaseVisualLoading(false);
+        return;
+      }
+
+      if (milestones.length === 0) {
+        setPhaseMilestoneTasks({});
+        setPhaseVisualLoading(false);
+        return;
+      }
+
+      try {
+        setPhaseVisualLoading(true);
+        const entries = await Promise.all(
+          milestones.map(async (milestone) => {
+            const milestoneTasks = await taskService.getTasks({
+              projectId,
+              milestoneId: milestone.id,
+            });
+            return [milestone.id, milestoneTasks] as const;
+          }),
+        );
+
+        setPhaseMilestoneTasks(Object.fromEntries(entries));
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setPhaseVisualLoading(false);
+      }
+    }
+
+    fetchPhaseVisualTasks();
+  }, [projectId, activeTab, selectedPhaseId, milestones]);
 
   // ── Fetch resource requests ──
   useEffect(() => {
@@ -406,6 +575,320 @@ export function ProjectDetails() {
     }
     fetchBudgets();
   }, [projectId, activeTab, budgetsLoaded]);
+
+  // ── Fetch risks ──
+  useEffect(() => {
+    async function fetchRisks() {
+      if (!projectId || activeTab !== "risks" || risksLoaded) return;
+
+      try {
+        setRisksLoading(true);
+        const data = await riskService.getRisks(projectId);
+        setRisks(data);
+        setRisksLoaded(true);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load risks.");
+      } finally {
+        setRisksLoading(false);
+      }
+    }
+
+    fetchRisks();
+  }, [projectId, activeTab, risksLoaded]);
+
+  async function refreshRisks() {
+    if (!projectId) return;
+    try {
+      setRisksLoading(true);
+      const data = await riskService.getRisks(projectId);
+      setRisks(data);
+      setRisksLoaded(true);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to refresh risks.");
+    } finally {
+      setRisksLoading(false);
+    }
+  }
+
+  function getRiskSeverityBucket(risk: Risk): "high" | "medium" | "low" {
+    const impact = risk.impact ?? 0;
+    const probability = risk.probability ?? 0;
+    const score = impact + probability;
+
+    if (impact >= 2 || probability >= 3 || score >= 5) {
+      return "high";
+    }
+
+    if (impact >= 1 || probability >= 2 || score >= 3) {
+      return "medium";
+    }
+
+    return "low";
+  }
+
+  function getRiskSeverityLabel(risk: Risk): string {
+    const bucket = getRiskSeverityBucket(risk);
+    return bucket.charAt(0).toUpperCase() + bucket.slice(1);
+  }
+
+  function getRiskSeverityColor(bucket: "high" | "medium" | "low"): string {
+    if (bucket === "high") return "#dc2626";
+    if (bucket === "medium") return "#f59e0b";
+    return "#16a34a";
+  }
+
+  async function loadRiskEvents(riskId: string, force = false) {
+    if (!force && riskEventsByRisk[riskId]) return;
+
+    try {
+      setRiskEventsLoadingByRisk((prev) => ({ ...prev, [riskId]: true }));
+      const data = await riskService.getRiskEvents(riskId);
+      setRiskEventsByRisk((prev) => ({ ...prev, [riskId]: data }));
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load risk events.");
+    } finally {
+      setRiskEventsLoadingByRisk((prev) => ({ ...prev, [riskId]: false }));
+    }
+  }
+
+  async function handleToggleRiskExpansion(riskId: string) {
+    if (expandedRiskId === riskId) {
+      setExpandedRiskId(null);
+      setShowCreateEventForRiskId(null);
+      setEditingRiskEventId(null);
+      setConfirmDeleteRiskEventId(null);
+      return;
+    }
+
+    setExpandedRiskId(riskId);
+    setShowCreateEventForRiskId(null);
+    setEditingRiskEventId(null);
+    setConfirmDeleteRiskEventId(null);
+    await loadRiskEvents(riskId);
+  }
+
+  function handleNewRiskChange(
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) {
+    const { name, value } = event.target;
+    setNewRisk((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleEditRiskChange(
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) {
+    const { name, value } = event.target;
+    setEditRiskForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleCreateRisk(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!projectId) return;
+
+    if (!newRisk.description.trim()) {
+      toast.error("Risk description is required.");
+      return;
+    }
+
+    try {
+      setCreatingRisk(true);
+      await riskService.createRisk({
+        projectId,
+        description: newRisk.description.trim(),
+        probability: safeInt(newRisk.probability),
+        impact: safeInt(newRisk.impact),
+        mitigationPlan: newRisk.mitigationPlan.trim() || undefined,
+        ownerId: newRisk.ownerId.trim() || undefined,
+      });
+
+      toast.success("Risk created successfully.");
+      setNewRisk({
+        description: "",
+        probability: "2",
+        impact: "1",
+        mitigationPlan: "",
+        ownerId: "",
+      });
+      setShowCreateRisk(false);
+      await refreshRisks();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create risk.");
+    } finally {
+      setCreatingRisk(false);
+    }
+  }
+
+  function startEditRisk(risk: Risk) {
+    setEditingRiskId(risk.id);
+    setEditRiskForm({
+      description: risk.description || "",
+      probability: String(risk.probability ?? 2),
+      impact: String(risk.impact ?? 1),
+      mitigationPlan: risk.mitigationPlan || "",
+      ownerId: risk.ownerId || "",
+    });
+  }
+
+  async function handleUpdateRisk(risk: Risk) {
+    if (!projectId) return;
+
+    if (!editRiskForm.description.trim()) {
+      toast.error("Risk description is required.");
+      return;
+    }
+
+    try {
+      const latest = await riskService.getRiskById(risk.id);
+      await riskService.updateRiskById(risk.id, {
+        id: risk.id,
+        projectId,
+        rowVersion: latest.rowVersion || risk.rowVersion || "",
+        description: editRiskForm.description.trim(),
+        probability: safeInt(editRiskForm.probability),
+        impact: safeInt(editRiskForm.impact),
+        mitigationPlan: editRiskForm.mitigationPlan.trim() || undefined,
+        ownerId: editRiskForm.ownerId.trim() || undefined,
+      });
+
+      toast.success("Risk updated.");
+      setEditingRiskId(null);
+      await refreshRisks();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update risk.");
+    }
+  }
+
+  async function handleDeleteRisk(riskId: string) {
+    try {
+      await riskService.deleteRiskById(riskId);
+      toast.success("Risk deleted.");
+      setRisks((prev) => prev.filter((risk) => risk.id !== riskId));
+      setRiskEventsByRisk((prev) => {
+        const next = { ...prev };
+        delete next[riskId];
+        return next;
+      });
+      if (expandedRiskId === riskId) {
+        setExpandedRiskId(null);
+        setShowCreateEventForRiskId(null);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete risk.");
+    } finally {
+      setConfirmDeleteRiskId(null);
+    }
+  }
+
+  function handleNewRiskEventChange(
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) {
+    const { name, value } = event.target;
+    setNewRiskEvent((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleEditRiskEventChange(
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+  ) {
+    const { name, value } = event.target;
+    setEditRiskEventForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleCreateRiskEvent(
+    event: FormEvent<HTMLFormElement>,
+    riskId: string,
+  ) {
+    event.preventDefault();
+
+    if (!newRiskEvent.incidentDescription.trim()) {
+      toast.error("Event incident description is required.");
+      return;
+    }
+
+    try {
+      setCreatingRiskEvent(true);
+      await riskService.createRiskEvent({
+        projectRiskId: riskId,
+        incidentDescription: newRiskEvent.incidentDescription.trim(),
+        status: safeInt(newRiskEvent.status),
+        occurredAtUtc: newRiskEvent.occurredAtUtc
+          ? new Date(newRiskEvent.occurredAtUtc).toISOString()
+          : undefined,
+      });
+
+      toast.success("Risk event created.");
+      setNewRiskEvent({
+        incidentDescription: "",
+        status: "0",
+        occurredAtUtc: "",
+      });
+      setShowCreateEventForRiskId(null);
+      await loadRiskEvents(riskId, true);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create risk event.");
+    } finally {
+      setCreatingRiskEvent(false);
+    }
+  }
+
+  function startEditRiskEvent(eventItem: RiskEvent) {
+    setEditingRiskEventId(eventItem.id);
+    setEditRiskEventForm({
+      incidentDescription: eventItem.incidentDescription || "",
+      status: String(eventItem.status ?? 0),
+      occurredAtUtc: toDateInputValue(eventItem.occurredAtUtc),
+    });
+  }
+
+  async function handleUpdateRiskEvent(eventItem: RiskEvent) {
+    const riskId = eventItem.projectRiskId;
+    if (!riskId) return;
+
+    if (!editRiskEventForm.incidentDescription.trim()) {
+      toast.error("Event incident description is required.");
+      return;
+    }
+
+    try {
+      const latest = await riskService.getRiskEventById(eventItem.id);
+      await riskService.updateRiskEventById(eventItem.id, {
+        id: eventItem.id,
+        projectRiskId: riskId,
+        rowVersion: latest.rowVersion || eventItem.rowVersion || "",
+        incidentDescription: editRiskEventForm.incidentDescription.trim(),
+        status: safeInt(editRiskEventForm.status),
+        occurredAtUtc: editRiskEventForm.occurredAtUtc
+          ? new Date(editRiskEventForm.occurredAtUtc).toISOString()
+          : undefined,
+      });
+
+      toast.success("Risk event updated.");
+      setEditingRiskEventId(null);
+      await loadRiskEvents(riskId, true);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update risk event.");
+    }
+  }
+
+  async function handleDeleteRiskEvent(eventId: string, riskId: string) {
+    try {
+      await riskService.deleteRiskEventById(eventId);
+      toast.success("Risk event deleted.");
+      await loadRiskEvents(riskId, true);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete risk event.");
+    } finally {
+      setConfirmDeleteRiskEventId(null);
+    }
+  }
 
   // ── Fetch employees (for adding to project) ──
   useEffect(() => {
@@ -698,6 +1181,10 @@ export function ProjectDetails() {
   async function handleCreateTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!projectId) return;
+    if (!selectedMilestoneId) {
+      toast.error("Select a milestone before creating a task.");
+      return;
+    }
     if (!newTask.title.trim()) {
       toast.error("Task title is required.");
       return;
@@ -707,6 +1194,7 @@ export function ProjectDetails() {
 
       await taskService.createTask({
         projectId,
+        milestoneId: selectedMilestoneId,
         title: newTask.title.trim(),
         description: newTask.description.trim() || undefined,
         priority: safeInt(newTask.priority, 1),
@@ -734,9 +1222,11 @@ export function ProjectDetails() {
         assignedToMemberId: "",
       });
       setShowCreateTask(false);
-      const refreshed = await taskService.getTasks(projectId);
+      const refreshed = await taskService.getTasks({
+        projectId,
+        milestoneId: selectedMilestoneId,
+      });
       setTasks(refreshed);
-      setTasksLoaded(true);
     } catch (error) {
       console.error(error);
       toast.error("Failed to create task.");
@@ -876,11 +1366,152 @@ export function ProjectDetails() {
       await phaseService.deletePhase(phaseId);
       toast.success("Phase deleted.");
       setPhases((prev) => prev.filter((p) => p.id !== phaseId));
+      if (selectedPhaseId === phaseId) {
+        setSelectedPhaseId(null);
+        setSelectedMilestoneId(null);
+        setMilestones([]);
+        setTasks([]);
+      }
     } catch (error) {
       console.error(error);
       toast.error("Failed to delete phase.");
     } finally {
       setConfirmDeletePhaseId(null);
+    }
+  }
+
+  function handleNewMilestoneChange(
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) {
+    const { name, value, type } = event.target;
+    if (type === "checkbox") {
+      setNewMilestone((prev) => ({
+        ...prev,
+        [name]: (event.target as HTMLInputElement).checked,
+      }));
+      return;
+    }
+
+    setNewMilestone((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleCreateMilestone(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!projectId || !selectedPhaseId) return;
+    if (!newMilestone.name.trim()) {
+      toast.error("Milestone name is required.");
+      return;
+    }
+
+    try {
+      setCreatingMilestone(true);
+      await milestoneService.createMilestone({
+        projectId,
+        projectPhaseId: selectedPhaseId,
+        name: newMilestone.name.trim(),
+        targetDateUtc: newMilestone.targetDateUtc
+          ? new Date(newMilestone.targetDateUtc).toISOString()
+          : undefined,
+        successCriteria: newMilestone.successCriteria.trim() || undefined,
+        isCompleted: newMilestone.isCompleted,
+      });
+
+      toast.success("Milestone created successfully.");
+      setNewMilestone({
+        name: "",
+        targetDateUtc: "",
+        successCriteria: "",
+        isCompleted: false,
+      });
+      setShowCreateMilestone(false);
+
+      const refreshed = await milestoneService.getMilestones({
+        projectId,
+        projectPhaseId: selectedPhaseId,
+      });
+      setMilestones(refreshed);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to create milestone.");
+    } finally {
+      setCreatingMilestone(false);
+    }
+  }
+
+  function startEditMilestone(milestone: Milestone) {
+    setEditingMilestoneId(milestone.id);
+    setEditMilestoneForm({
+      name: milestone.name || "",
+      targetDateUtc: toDateInputValue(milestone.targetDateUtc),
+      successCriteria: milestone.successCriteria || "",
+      isCompleted: milestone.isCompleted ?? false,
+    });
+  }
+
+  function handleEditMilestoneChange(
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) {
+    const { name, value, type } = event.target;
+    if (type === "checkbox") {
+      setEditMilestoneForm((prev) => ({
+        ...prev,
+        [name]: (event.target as HTMLInputElement).checked,
+      }));
+      return;
+    }
+
+    setEditMilestoneForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function handleUpdateMilestone(milestone: Milestone) {
+    if (!projectId || !selectedPhaseId || !editMilestoneForm.name.trim()) {
+      toast.error("Milestone name is required.");
+      return;
+    }
+
+    try {
+      const full = await milestoneService.getMilestoneById(milestone.id);
+      await milestoneService.updateMilestoneById(milestone.id, {
+        id: milestone.id,
+        projectId,
+        projectPhaseId: selectedPhaseId,
+        rowVersion: full.rowVersion || milestone.rowVersion || "",
+        name: editMilestoneForm.name.trim(),
+        targetDateUtc: editMilestoneForm.targetDateUtc
+          ? new Date(editMilestoneForm.targetDateUtc).toISOString()
+          : undefined,
+        actualDateUtc: full.actualDateUtc || undefined,
+        successCriteria: editMilestoneForm.successCriteria.trim() || undefined,
+        isCompleted: editMilestoneForm.isCompleted,
+      });
+
+      toast.success("Milestone updated.");
+      setEditingMilestoneId(null);
+      const refreshed = await milestoneService.getMilestones({
+        projectId,
+        projectPhaseId: selectedPhaseId,
+      });
+      setMilestones(refreshed);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update milestone.");
+    }
+  }
+
+  async function handleDeleteMilestone(milestoneId: string) {
+    try {
+      await milestoneService.deleteMilestoneById(milestoneId);
+      toast.success("Milestone deleted.");
+      setMilestones((prev) => prev.filter((m) => m.id !== milestoneId));
+      if (selectedMilestoneId === milestoneId) {
+        setSelectedMilestoneId(null);
+        setTasks([]);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete milestone.");
+    } finally {
+      setConfirmDeleteMilestoneId(null);
     }
   }
 
@@ -1154,6 +1785,163 @@ export function ProjectDetails() {
     "#e76f51",
   ];
 
+  const selectedPhase =
+    phases.find((phase) => phase.id === selectedPhaseId) || null;
+  const selectedMilestone =
+    milestones.find((milestone) => milestone.id === selectedMilestoneId) ||
+    null;
+
+  const phaseMilestoneVisualRows = useMemo(
+    () =>
+      milestones.map((milestone) => {
+        const milestoneTasks = phaseMilestoneTasks[milestone.id] || [];
+        const completedTasks = milestoneTasks.filter(
+          (task) => task.status === 5 || (task.completionPercentage ?? 0) >= 100,
+        ).length;
+        const inProgressTasks = milestoneTasks.filter((task) => {
+          const status = task.status ?? 0;
+          return [1, 2, 3, 4].includes(status);
+        }).length;
+        const notStartedTasks = Math.max(
+          0,
+          milestoneTasks.length - completedTasks - inProgressTasks,
+        );
+        const completionPercent =
+          milestoneTasks.length > 0
+            ? Math.round((completedTasks / milestoneTasks.length) * 100)
+            : 0;
+
+        const milestoneStatus = milestone.isCompleted
+          ? "Completed"
+          : inProgressTasks > 0 || completedTasks > 0
+            ? "In Progress"
+            : "Not Started";
+
+        return {
+          id: milestone.id,
+          name: milestone.name || "Unnamed Milestone",
+          milestoneStatus,
+          completionPercent,
+          totalTasks: milestoneTasks.length,
+          completedTasks,
+          inProgressTasks,
+          notStartedTasks,
+        };
+      }),
+    [milestones, phaseMilestoneTasks],
+  );
+
+  const phaseVisualSummary = useMemo(() => {
+    const totalMilestones = milestones.length;
+    const completedMilestones = milestones.filter((milestone) => milestone.isCompleted)
+      .length;
+    const milestoneProgressPercent =
+      totalMilestones > 0
+        ? Math.round((completedMilestones / totalMilestones) * 100)
+        : 0;
+
+    const taskTotals = phaseMilestoneVisualRows.reduce(
+      (acc, row) => {
+        acc.total += row.totalTasks;
+        acc.completed += row.completedTasks;
+        acc.inProgress += row.inProgressTasks;
+        acc.notStarted += row.notStartedTasks;
+        return acc;
+      },
+      {
+        total: 0,
+        completed: 0,
+        inProgress: 0,
+        notStarted: 0,
+      },
+    );
+
+    const taskProgressPercent =
+      taskTotals.total > 0
+        ? Math.round((taskTotals.completed / taskTotals.total) * 100)
+        : 0;
+
+    return {
+      totalMilestones,
+      completedMilestones,
+      milestoneProgressPercent,
+      taskTotals,
+      taskProgressPercent,
+    };
+  }, [milestones, phaseMilestoneVisualRows]);
+
+  const riskSummaryData = useMemo(() => {
+    const counts = {
+      high: 0,
+      medium: 0,
+      low: 0,
+    };
+
+    for (const risk of risks) {
+      counts[getRiskSeverityBucket(risk)] += 1;
+    }
+
+    return [
+      {
+        name: "High",
+        key: "high",
+        value: counts.high,
+        color: getRiskSeverityColor("high"),
+      },
+      {
+        name: "Medium",
+        key: "medium",
+        value: counts.medium,
+        color: getRiskSeverityColor("medium"),
+      },
+      {
+        name: "Low",
+        key: "low",
+        value: counts.low,
+        color: getRiskSeverityColor("low"),
+      },
+    ];
+  }, [risks]);
+
+  const riskEventsChartData = useMemo(
+    () =>
+      risks.map((risk) => ({
+        id: risk.id,
+        name:
+          risk.description?.slice(0, 24) ||
+          `Risk ${risk.id.slice(0, 8).toUpperCase()}`,
+        events: (riskEventsByRisk[risk.id] || []).length,
+      })),
+    [risks, riskEventsByRisk],
+  );
+
+  const displayedRisks = useMemo(() => {
+    const filtered = risks.filter((risk) => {
+      if (riskSeverityFilter === "all") return true;
+      return getRiskSeverityBucket(risk) === riskSeverityFilter;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (riskSortBy === "impact") {
+        return (b.impact ?? 0) - (a.impact ?? 0);
+      }
+
+      if (riskSortBy === "probability") {
+        return (b.probability ?? 0) - (a.probability ?? 0);
+      }
+
+      if (riskSortBy === "severity") {
+        const scoreA = (a.impact ?? 0) + (a.probability ?? 0);
+        const scoreB = (b.impact ?? 0) + (b.probability ?? 0);
+        return scoreB - scoreA;
+      }
+
+      const dateA = new Date(a.createdDateUtc || 0).getTime();
+      const dateB = new Date(b.createdDateUtc || 0).getTime();
+      return dateB - dateA;
+    });
+  }, [risks, riskSeverityFilter, riskSortBy]);
+
   if (loading) {
     return (
       <div className="project-details-loading d-flex justify-content-center align-items-center">
@@ -1272,19 +2060,19 @@ export function ProjectDetails() {
         </button>
         <button
           type="button"
-          className={`project-tab-btn ${activeTab === "tasks" ? "active" : ""}`}
-          onClick={() => setActiveTab("tasks")}
-        >
-          <i className="bi bi-check2-square me-2" />
-          Tasks
-        </button>
-        <button
-          type="button"
           className={`project-tab-btn ${activeTab === "phases" ? "active" : ""}`}
           onClick={() => setActiveTab("phases")}
         >
           <i className="bi bi-layers me-2" />
           Phases
+        </button>
+        <button
+          type="button"
+          className={`project-tab-btn ${activeTab === "risks" ? "active" : ""}`}
+          onClick={() => setActiveTab("risks")}
+        >
+          <i className="bi bi-shield-exclamation me-2" />
+          Risks
         </button>
         <button
           type="button"
@@ -1700,575 +2488,216 @@ export function ProjectDetails() {
         </section>
       )}
 
-      {/* ── Tasks Section ── */}
-      {activeTab === "tasks" && (
-        <section className="tasks-section">
-          <div className="tasks-section-header">
-            <h2>
-              <i className="bi bi-check2-square me-2" />
-              Tasks
-            </h2>
-            <button
-              type="button"
-              className="btn btn-info text-white btn-sm"
-              onClick={() => setShowCreateTask((prev) => !prev)}
-            >
-              <i
-                className={`bi ${showCreateTask ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-              />
-              {showCreateTask ? "Cancel" : "New Task"}
-            </button>
-          </div>
-
-          {showCreateTask && (
-            <div className="task-create-card">
-              <h3 className="h6 mb-3">Create Task</h3>
-              <form className="row g-3" onSubmit={handleCreateTask}>
-                <div className="col-12 col-lg-6">
-                  <label className="form-label">Title *</label>
-                  <input
-                    className="form-control"
-                    name="title"
-                    value={newTask.title}
-                    onChange={handleNewTaskChange}
-                    maxLength={180}
-                    required
-                  />
-                </div>
-                <div className="col-12 col-lg-3">
-                  <label className="form-label">Priority</label>
-                  <select
-                    className="form-select"
-                    name="priority"
-                    value={newTask.priority}
-                    onChange={handleNewTaskChange}
-                  >
-                    {Object.entries(PriorityLevel).map(([v, l]) => (
-                      <option key={v} value={v}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12 col-lg-3">
-                  <label className="form-label">Status</label>
-                  <select
-                    className="form-select"
-                    name="status"
-                    value={newTask.status}
-                    onChange={handleNewTaskChange}
-                  >
-                    {Object.entries(TaskStatusEnum).map(([v, l]) => (
-                      <option key={v} value={v}>
-                        {l}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12 col-lg-4">
-                  <label className="form-label">Start Date</label>
-                  <input
-                    className="form-control"
-                    type="date"
-                    name="startDateUtc"
-                    value={newTask.startDateUtc}
-                    onChange={handleNewTaskChange}
-                  />
-                </div>
-                <div className="col-12 col-lg-4">
-                  <label className="form-label">Due Date</label>
-                  <input
-                    className="form-control"
-                    type="date"
-                    name="dueDateUtc"
-                    value={newTask.dueDateUtc}
-                    onChange={handleNewTaskChange}
-                  />
-                </div>
-                <div className="col-12 col-lg-4">
-                  <label className="form-label">Completion %</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    min="0"
-                    max="100"
-                    name="completionPercentage"
-                    value={newTask.completionPercentage}
-                    onChange={handleNewTaskChange}
-                  />
-                </div>
-                <div className="col-12 col-lg-6">
-                  <label className="form-label">Effort (Hours)</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    name="effortEstimateHours"
-                    value={newTask.effortEstimateHours}
-                    onChange={handleNewTaskChange}
-                  />
-                </div>
-                <div className="col-12 col-lg-6">
-                  <label className="form-label">
-                    Assign To (Project Member)
-                  </label>
-                  <div
-                    className="employee-dropdown-wrap"
-                    ref={memberDropdownRef}
-                  >
-                    <div
-                      className="employee-selected-input"
-                      onClick={() => setShowMemberDropdown((prev) => !prev)}
-                    >
-                      {newTask.assignedToMemberId ? (
-                        <span className="employee-selected-name">
-                          <i className="bi bi-person-fill me-1" />
-                          {getMemberDisplayName(newTask.assignedToMemberId) ||
-                            newTask.assignedToMemberId}
-                          <button
-                            type="button"
-                            className="employee-clear-btn"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setNewTask((prev) => ({
-                                ...prev,
-                                assignedToMemberId: "",
-                              }));
-                            }}
-                          >
-                            <i className="bi bi-x" />
-                          </button>
-                        </span>
-                      ) : (
-                        <span className="employee-placeholder">
-                          Select a project member...
-                        </span>
-                      )}
-                      <i
-                        className={`bi bi-chevron-${showMemberDropdown ? "up" : "down"} employee-chevron`}
-                      />
-                    </div>
-                    {showMemberDropdown && (
-                      <div className="employee-dropdown-list">
-                        <input
-                          className="form-control form-control-sm employee-search-input"
-                          placeholder="Search by name or role..."
-                          value={memberSearch}
-                          onChange={(e) => setMemberSearch(e.target.value)}
-                          autoFocus
-                        />
-                        <div className="employee-options">
-                          {filteredMembers.length === 0 ? (
-                            <div className="employee-option-empty">
-                              No project members found. Add members first.
-                            </div>
-                          ) : (
-                            filteredMembers.map((m) => {
-                              const emp = employees.find(
-                                (e) => resolveEmployeeUserId(e) === m.userId,
-                              );
-                              return (
-                                <div
-                                  key={m.id}
-                                  className={`employee-option ${newTask.assignedToMemberId === m.id ? "selected" : ""}`}
-                                  onClick={() => {
-                                    setNewTask((prev) => ({
-                                      ...prev,
-                                      assignedToMemberId: m.id,
-                                    }));
-                                    setShowMemberDropdown(false);
-                                    setMemberSearch("");
-                                  }}
-                                >
-                                  <div className="employee-option-avatar">
-                                    {m.fullName
-                                      .split(" ")
-                                      .map((n) => n.charAt(0))
-                                      .join("")
-                                      .slice(0, 2)}
-                                  </div>
-                                  <div className="employee-option-info">
-                                    <span className="employee-option-name">
-                                      {m.fullName}
-                                    </span>
-                                    <span className="employee-option-meta">
-                                      {m.role}{" "}
-                                      {emp?.department?.name
-                                        ? `· ${emp.department.name}`
-                                        : ""}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
-                    rows={2}
-                    name="description"
-                    value={newTask.description}
-                    onChange={handleNewTaskChange}
-                    maxLength={2000}
-                  />
-                </div>
-                <div className="col-12 d-flex justify-content-end">
-                  <button
-                    type="submit"
-                    className="btn btn-success"
-                    disabled={creatingTask}
-                  >
-                    {creatingTask ? "Creating..." : "Create Task"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {tasksLoading ? (
-            <div className="text-center py-4">
-              <div
-                className="spinner-border spinner-border-sm text-info"
-                role="status"
-              />
-            </div>
-          ) : tasks.length === 0 ? (
-            <div className="tasks-table-wrap">
-              <div className="tasks-empty-message">
-                <i className="bi bi-inbox" />
-                No tasks yet. Click "New Task" to add one.
-              </div>
-            </div>
-          ) : (
-            <div className="tasks-table-wrap">
-              <table className="tasks-table">
-                <thead>
-                  <tr>
-                    <th>Title</th>
-                    <th>Priority</th>
-                    <th>Status</th>
-                    <th>Due Date</th>
-                    <th>Progress</th>
-                    <th style={{ width: 80 }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tasks.map((t) => (
-                    <tr
-                      key={t.id}
-                      onClick={() =>
-                        navigate(
-                          `/dashboard/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
-                        )
-                      }
-                    >
-                      <td>{t.title || "Untitled"}</td>
-                      <td>
-                        <span
-                          className="task-row-badge"
-                          style={{
-                            background:
-                              priorityColor[t.priority ?? 1] || "#6c757d",
-                          }}
-                        >
-                          {PriorityLevel[t.priority ?? 1] || "N/A"}
-                        </span>
-                      </td>
-                      <td>
-                        <span
-                          className="task-row-badge"
-                          style={{
-                            background: statusColor[t.status ?? 0] || "#6c757d",
-                          }}
-                        >
-                          {TaskStatusEnum[t.status ?? 0] || "N/A"}
-                        </span>
-                      </td>
-                      <td>
-                        {t.dueDateUtc
-                          ? new Date(t.dueDateUtc).toLocaleDateString()
-                          : "—"}
-                      </td>
-                      <td>{t.completionPercentage ?? 0}%</td>
-                      <td>
-                        <div
-                          className="task-row-actions"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {confirmDeleteTaskId === t.id ? (
-                            <span className="confirm-inline confirm-inline-sm">
-                              <span className="confirm-inline-text">
-                                Delete?
-                              </span>
-                              <button
-                                type="button"
-                                className="btn btn-danger btn-sm"
-                                onClick={() => handleDeleteTask(t.id)}
-                              >
-                                Yes
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-outline-secondary btn-sm"
-                                onClick={() => setConfirmDeleteTaskId(null)}
-                              >
-                                No
-                              </button>
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => setConfirmDeleteTaskId(t.id)}
-                            >
-                              <i className="bi bi-trash" />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      )}
-
       {/* ── Phases Section ── */}
       {activeTab === "phases" && (
         <section className="tasks-section">
           <div className="tasks-section-header">
             <h2>
-              <i className="bi bi-layers me-2" />
-              Phases
+              <i className="bi bi-diagram-3 me-2" />
+              Execution Drill-Down
             </h2>
-            <button
-              type="button"
-              className="btn btn-info text-white btn-sm"
-              onClick={() => setShowCreatePhase((prev) => !prev)}
-            >
-              <i
-                className={`bi ${showCreatePhase ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-              />
-              {showCreatePhase ? "Cancel" : "New Phase"}
-            </button>
+            <div className="drilldown-breadcrumb">
+              <span>{selectedPhaseId ? "Phase selected" : "Phase"}</span>
+              <i className="bi bi-chevron-right" />
+              <span>
+                {selectedMilestoneId ? "Milestone selected" : "Milestone"}
+              </span>
+              <i className="bi bi-chevron-right" />
+              <span>Tasks</span>
+            </div>
           </div>
 
-          {showCreatePhase && (
-            <div className="task-create-card">
-              <h3 className="h6 mb-3">Create Phase</h3>
-              <form className="row g-3" onSubmit={handleCreatePhase}>
-                <div className="col-12 col-lg-6">
-                  <label className="form-label">Name *</label>
-                  <input
-                    className="form-control"
-                    name="name"
-                    value={newPhase.name}
-                    onChange={handleNewPhaseChange}
-                    maxLength={120}
-                    required
-                  />
-                </div>
-                <div className="col-12 col-lg-3">
-                  <label className="form-label">Start Date</label>
-                  <input
-                    className="form-control"
-                    type="date"
-                    name="startDateUtc"
-                    value={newPhase.startDateUtc}
-                    onChange={handleNewPhaseChange}
-                  />
-                </div>
-                <div className="col-12 col-lg-3">
-                  <label className="form-label">End Date</label>
-                  <input
-                    className="form-control"
-                    type="date"
-                    name="endDateUtc"
-                    value={newPhase.endDateUtc}
-                    onChange={handleNewPhaseChange}
-                  />
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Deliverables</label>
-                  <textarea
-                    className="form-control"
-                    rows={2}
-                    name="deliverables"
-                    value={newPhase.deliverables}
-                    onChange={handleNewPhaseChange}
-                    maxLength={1000}
-                  />
-                </div>
-                <div className="col-12 d-flex align-items-center gap-3">
-                  <div className="form-check">
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id="newPhaseGate"
-                      name="isGatePassed"
-                      checked={newPhase.isGatePassed}
-                      onChange={handleNewPhaseChange}
-                    />
-                    <label className="form-check-label" htmlFor="newPhaseGate">
-                      Gate Passed
-                    </label>
-                  </div>
-                  <div className="ms-auto">
-                    <button
-                      type="submit"
-                      className="btn btn-success"
-                      disabled={creatingPhase}
-                    >
-                      {creatingPhase ? "Creating..." : "Create Phase"}
-                    </button>
-                  </div>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {phasesLoading ? (
-            <div className="text-center py-4">
-              <div
-                className="spinner-border spinner-border-sm text-info"
-                role="status"
-              />
-            </div>
-          ) : phases.length === 0 ? (
-            <div className="tasks-table-wrap">
-              <div className="tasks-empty-message">
-                <i className="bi bi-inbox" />
-                No phases yet. Click "New Phase" to add one.
+          <div className="hierarchy-layout">
+            <div className="hierarchy-grid">
+              <article className="hierarchy-column">
+              <div className="hierarchy-column-head">
+                <h3>
+                  <i className="bi bi-layers me-1" />
+                  Phases
+                </h3>
+                <button
+                  type="button"
+                  className="btn btn-info text-white btn-sm"
+                  onClick={() => setShowCreatePhase((prev) => !prev)}
+                >
+                  {showCreatePhase ? "Cancel" : "+ Add"}
+                </button>
               </div>
-            </div>
-          ) : (
-            <div className="tasks-table-wrap">
-              <table className="tasks-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Start Date</th>
-                    <th>End Date</th>
-                    <th>Gate</th>
-                    <th>Deliverables</th>
-                    <th style={{ width: 120 }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {phases.map((p) =>
-                    editingPhaseId === p.id ? (
-                      <tr key={p.id} className="phase-edit-row">
-                        <td>
+
+              {showCreatePhase && (
+                <div className="task-create-card mb-3">
+                  <form className="row g-2" onSubmit={handleCreatePhase}>
+                    <div className="col-12">
+                      <label className="form-label mb-1">Phase Name</label>
+                      <input
+                        className="form-control"
+                        name="name"
+                        value={newPhase.name}
+                        onChange={handleNewPhaseChange}
+                        placeholder="Phase name"
+                        maxLength={120}
+                        required
+                      />
+                    </div>
+                    <div className="col-6">
+                      <label className="form-label mb-1">Start Date</label>
+                      <input
+                        className="form-control"
+                        type="date"
+                        name="startDateUtc"
+                        value={newPhase.startDateUtc}
+                        onChange={handleNewPhaseChange}
+                      />
+                    </div>
+                    <div className="col-6">
+                      <label className="form-label mb-1">End Date</label>
+                      <input
+                        className="form-control"
+                        type="date"
+                        name="endDateUtc"
+                        value={newPhase.endDateUtc}
+                        onChange={handleNewPhaseChange}
+                      />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label mb-1">Deliverables</label>
+                      <textarea
+                        className="form-control"
+                        rows={2}
+                        name="deliverables"
+                        value={newPhase.deliverables}
+                        onChange={handleNewPhaseChange}
+                        maxLength={1000}
+                      />
+                    </div>
+                    <div className="col-12 d-flex justify-content-between align-items-center">
+                      <label className="form-check-label d-flex align-items-center gap-2">
+                        <input
+                          className="form-check-input"
+                          type="checkbox"
+                          name="isGatePassed"
+                          checked={newPhase.isGatePassed}
+                          onChange={handleNewPhaseChange}
+                        />
+                        Mark as Gate Passed
+                      </label>
+                      <button
+                        type="submit"
+                        className="btn btn-success btn-sm"
+                        disabled={creatingPhase}
+                      >
+                        {creatingPhase ? "Creating..." : "Create"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {phasesLoading ? (
+                <div className="text-center py-3">
+                  <div
+                    className="spinner-border spinner-border-sm text-info"
+                    role="status"
+                  />
+                </div>
+              ) : phases.length === 0 ? (
+                <div className="tasks-empty-message">
+                  <i className="bi bi-inbox" />
+                  No phases yet.
+                </div>
+              ) : (
+                <div className="hierarchy-list">
+                  {phases.map((p) => (
+                    <div
+                      key={p.id}
+                      className={`hierarchy-item ${selectedPhaseId === p.id ? "selected" : ""}`}
+                    >
+                      {editingPhaseId === p.id ? (
+                        <div className="w-100">
                           <input
-                            className="form-control form-control-sm"
+                            className="form-control form-control-sm mb-2"
                             name="name"
                             value={editPhaseForm.name}
                             onChange={handleEditPhaseChange}
                             maxLength={120}
                             required
                           />
-                        </td>
-                        <td>
-                          <input
-                            className="form-control form-control-sm"
-                            type="date"
-                            name="startDateUtc"
-                            value={editPhaseForm.startDateUtc}
-                            onChange={handleEditPhaseChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            className="form-control form-control-sm"
-                            type="date"
-                            name="endDateUtc"
-                            value={editPhaseForm.endDateUtc}
-                            onChange={handleEditPhaseChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            name="isGatePassed"
-                            checked={editPhaseForm.isGatePassed}
-                            onChange={handleEditPhaseChange}
-                          />
-                        </td>
-                        <td>
-                          <input
-                            className="form-control form-control-sm"
+                          <div className="d-flex gap-2 mb-2">
+                            <input
+                              className="form-control form-control-sm"
+                              type="date"
+                              name="startDateUtc"
+                              value={editPhaseForm.startDateUtc}
+                              onChange={handleEditPhaseChange}
+                            />
+                            <input
+                              className="form-control form-control-sm"
+                              type="date"
+                              name="endDateUtc"
+                              value={editPhaseForm.endDateUtc}
+                              onChange={handleEditPhaseChange}
+                            />
+                          </div>
+                          <textarea
+                            className="form-control form-control-sm mb-2"
+                            rows={2}
                             name="deliverables"
                             value={editPhaseForm.deliverables}
                             onChange={handleEditPhaseChange}
                             maxLength={1000}
                           />
-                        </td>
-                        <td>
-                          <div className="task-row-actions">
-                            <button
-                              type="button"
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleUpdatePhase(p)}
-                              title="Save"
-                            >
-                              <i className="bi bi-check-lg" />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary btn-sm"
-                              onClick={() => setEditingPhaseId(null)}
-                              title="Cancel"
-                            >
-                              <i className="bi bi-x-lg" />
-                            </button>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <label className="form-check-label d-flex align-items-center gap-2">
+                              <input
+                                type="checkbox"
+                                className="form-check-input"
+                                name="isGatePassed"
+                                checked={editPhaseForm.isGatePassed}
+                                onChange={handleEditPhaseChange}
+                              />
+                              Gate passed
+                            </label>
+                            <div className="task-row-actions">
+                              <button
+                                type="button"
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleUpdatePhase(p)}
+                              >
+                                <i className="bi bi-check-lg" />
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => setEditingPhaseId(null)}
+                              >
+                                <i className="bi bi-x-lg" />
+                              </button>
+                            </div>
                           </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      <tr key={p.id}>
-                        <td>{p.name || "Unnamed"}</td>
-                        <td>
-                          {p.startDateUtc
-                            ? new Date(p.startDateUtc).toLocaleDateString()
-                            : "—"}
-                        </td>
-                        <td>
-                          {p.endDateUtc
-                            ? new Date(p.endDateUtc).toLocaleDateString()
-                            : "—"}
-                        </td>
-                        <td>
-                          <span
-                            className="task-row-badge"
-                            style={{
-                              background: p.isGatePassed
-                                ? "#28a745"
-                                : "#6c757d",
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="hierarchy-item-main"
+                            onClick={() => {
+                              setSelectedPhaseId(p.id);
+                              setSelectedMilestoneId(null);
+                              setTasks([]);
+                              setShowCreateTask(false);
+                              setShowCreateMilestone(false);
                             }}
                           >
-                            {p.isGatePassed ? "Passed" : "Pending"}
-                          </span>
-                        </td>
-                        <td className="phase-deliverables-cell">
-                          {p.deliverables || "—"}
-                        </td>
-                        <td>
+                            <strong>{p.name || "Unnamed"}</strong>
+                            <span>
+                              {p.startDateUtc
+                                ? new Date(p.startDateUtc).toLocaleDateString()
+                                : "No start date"}
+                            </span>
+                          </button>
                           <div className="task-row-actions">
                             {confirmDeletePhaseId === p.id ? (
                               <span className="confirm-inline confirm-inline-sm">
-                                <span className="confirm-inline-text">
-                                  Delete?
-                                </span>
                                 <button
                                   type="button"
                                   className="btn btn-danger btn-sm"
@@ -2290,7 +2719,6 @@ export function ProjectDetails() {
                                   type="button"
                                   className="btn btn-outline-primary btn-sm"
                                   onClick={() => startEditPhase(p)}
-                                  title="Edit"
                                 >
                                   <i className="bi bi-pencil" />
                                 </button>
@@ -2298,19 +2726,1433 @@ export function ProjectDetails() {
                                   type="button"
                                   className="btn btn-outline-danger btn-sm"
                                   onClick={() => setConfirmDeletePhaseId(p.id)}
-                                  title="Delete"
                                 >
                                   <i className="bi bi-trash" />
                                 </button>
                               </>
                             )}
                           </div>
-                        </td>
-                      </tr>
-                    ),
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              </article>
+
+              <article className="hierarchy-column">
+              <div className="hierarchy-column-head">
+                <h3>
+                  <i className="bi bi-signpost-2 me-1" />
+                  Milestones
+                </h3>
+                <button
+                  type="button"
+                  className="btn btn-info text-white btn-sm"
+                  disabled={!selectedPhaseId}
+                  onClick={() => setShowCreateMilestone((prev) => !prev)}
+                >
+                  {showCreateMilestone ? "Cancel" : "+ Add"}
+                </button>
+              </div>
+
+              {!selectedPhaseId ? (
+                <div className="tasks-empty-message">
+                  <i className="bi bi-arrow-left-circle" />
+                  Select a phase to view milestones
+                </div>
+              ) : (
+                <>
+                  {showCreateMilestone && (
+                    <div className="task-create-card mb-3">
+                      <form className="row g-2" onSubmit={handleCreateMilestone}>
+                        <div className="col-12">
+                          <label className="form-label mb-1">Milestone Name</label>
+                          <input
+                            className="form-control"
+                            name="name"
+                            value={newMilestone.name}
+                            onChange={handleNewMilestoneChange}
+                            placeholder="Milestone name"
+                            maxLength={150}
+                            required
+                          />
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label mb-1">Target Date</label>
+                          <input
+                            className="form-control"
+                            type="date"
+                            name="targetDateUtc"
+                            value={newMilestone.targetDateUtc}
+                            onChange={handleNewMilestoneChange}
+                          />
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label mb-1">Success Criteria</label>
+                          <textarea
+                            className="form-control"
+                            rows={2}
+                            name="successCriteria"
+                            value={newMilestone.successCriteria}
+                            onChange={handleNewMilestoneChange}
+                            placeholder="Success criteria"
+                            maxLength={1000}
+                          />
+                        </div>
+                        <div className="col-12 d-flex justify-content-between align-items-center">
+                          <label className="form-check-label d-flex align-items-center gap-2">
+                            <input
+                              className="form-check-input"
+                              type="checkbox"
+                              name="isCompleted"
+                              checked={newMilestone.isCompleted}
+                              onChange={handleNewMilestoneChange}
+                            />
+                            Mark as Completed
+                          </label>
+                          <button
+                            type="submit"
+                            className="btn btn-success btn-sm"
+                            disabled={creatingMilestone}
+                          >
+                            {creatingMilestone ? "Creating..." : "Create"}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
                   )}
-                </tbody>
-              </table>
+
+                  {milestonesLoading ? (
+                    <div className="text-center py-3">
+                      <div
+                        className="spinner-border spinner-border-sm text-info"
+                        role="status"
+                      />
+                    </div>
+                  ) : milestones.length === 0 ? (
+                    <div className="tasks-empty-message">
+                      <i className="bi bi-inbox" />
+                      No milestones for this phase.
+                    </div>
+                  ) : (
+                    <div className="hierarchy-list">
+                      {milestones.map((m) => (
+                        <div
+                          key={m.id}
+                          className={`hierarchy-item ${selectedMilestoneId === m.id ? "selected" : ""}`}
+                        >
+                          {editingMilestoneId === m.id ? (
+                            <div className="w-100">
+                              <input
+                                className="form-control form-control-sm mb-2"
+                                name="name"
+                                value={editMilestoneForm.name}
+                                onChange={handleEditMilestoneChange}
+                                maxLength={150}
+                                required
+                              />
+                              <input
+                                className="form-control form-control-sm mb-2"
+                                type="date"
+                                name="targetDateUtc"
+                                value={editMilestoneForm.targetDateUtc}
+                                onChange={handleEditMilestoneChange}
+                              />
+                              <textarea
+                                className="form-control form-control-sm mb-2"
+                                rows={2}
+                                name="successCriteria"
+                                value={editMilestoneForm.successCriteria}
+                                onChange={handleEditMilestoneChange}
+                                maxLength={1000}
+                              />
+                              <div className="d-flex justify-content-between align-items-center">
+                                <label className="form-check-label d-flex align-items-center gap-2">
+                                  <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    name="isCompleted"
+                                    checked={editMilestoneForm.isCompleted}
+                                    onChange={handleEditMilestoneChange}
+                                  />
+                                  Completed
+                                </label>
+                                <div className="task-row-actions">
+                                  <button
+                                    type="button"
+                                    className="btn btn-success btn-sm"
+                                    onClick={() => handleUpdateMilestone(m)}
+                                  >
+                                    <i className="bi bi-check-lg" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-secondary btn-sm"
+                                    onClick={() => setEditingMilestoneId(null)}
+                                  >
+                                    <i className="bi bi-x-lg" />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <button
+                                type="button"
+                                className="hierarchy-item-main"
+                                onClick={() => {
+                                  setSelectedMilestoneId(m.id);
+                                  setShowCreateTask(false);
+                                }}
+                              >
+                                <strong>{m.name || "Unnamed"}</strong>
+                                <span>
+                                  {m.targetDateUtc
+                                    ? new Date(m.targetDateUtc).toLocaleDateString()
+                                    : "No target date"}
+                                </span>
+                              </button>
+                              <div className="task-row-actions">
+                                {confirmDeleteMilestoneId === m.id ? (
+                                  <span className="confirm-inline confirm-inline-sm">
+                                    <button
+                                      type="button"
+                                      className="btn btn-danger btn-sm"
+                                      onClick={() => handleDeleteMilestone(m.id)}
+                                    >
+                                      Yes
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-secondary btn-sm"
+                                      onClick={() =>
+                                        setConfirmDeleteMilestoneId(null)
+                                      }
+                                    >
+                                      No
+                                    </button>
+                                  </span>
+                                ) : (
+                                  <>
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-primary btn-sm"
+                                      onClick={() => startEditMilestone(m)}
+                                    >
+                                      <i className="bi bi-pencil" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-danger btn-sm"
+                                      onClick={() =>
+                                        setConfirmDeleteMilestoneId(m.id)
+                                      }
+                                    >
+                                      <i className="bi bi-trash" />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+              </article>
+
+              <article className="hierarchy-column">
+              <div className="hierarchy-column-head">
+                <h3>
+                  <i className="bi bi-check2-square me-1" />
+                  Tasks
+                </h3>
+                <button
+                  type="button"
+                  className="btn btn-info text-white btn-sm"
+                  disabled={!selectedMilestoneId}
+                  onClick={() => setShowCreateTask((prev) => !prev)}
+                >
+                  {showCreateTask ? "Cancel" : "+ Add"}
+                </button>
+              </div>
+
+              {!selectedMilestoneId ? (
+                <div className="tasks-empty-message">
+                  <i className="bi bi-arrow-left-circle" />
+                  Select a milestone to view tasks
+                </div>
+              ) : (
+                <>
+                  {showCreateTask && (
+                    <div className="task-create-card mb-3">
+                      <form className="row g-2" onSubmit={handleCreateTask}>
+                        <div className="col-12">
+                          <label className="form-label mb-1">Task Title</label>
+                          <input
+                            className="form-control"
+                            name="title"
+                            value={newTask.title}
+                            onChange={handleNewTaskChange}
+                            placeholder="Task title"
+                            maxLength={180}
+                            required
+                          />
+                        </div>
+                        <div className="col-6">
+                          <label className="form-label mb-1">Priority</label>
+                          <select
+                            className="form-select"
+                            name="priority"
+                            value={newTask.priority}
+                            onChange={handleNewTaskChange}
+                          >
+                            {Object.entries(PriorityLevel).map(([v, l]) => (
+                              <option key={v} value={v}>
+                                {l}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-6">
+                          <label className="form-label mb-1">Status</label>
+                          <select
+                            className="form-select"
+                            name="status"
+                            value={newTask.status}
+                            onChange={handleNewTaskChange}
+                          >
+                            {Object.entries(TaskStatusEnum).map(([v, l]) => (
+                              <option key={v} value={v}>
+                                {l}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-6">
+                          <label className="form-label mb-1">Start Date</label>
+                          <input
+                            className="form-control"
+                            type="date"
+                            name="startDateUtc"
+                            value={newTask.startDateUtc}
+                            onChange={handleNewTaskChange}
+                          />
+                        </div>
+                        <div className="col-6">
+                          <label className="form-label mb-1">Due Date</label>
+                          <input
+                            className="form-control"
+                            type="date"
+                            name="dueDateUtc"
+                            value={newTask.dueDateUtc}
+                            onChange={handleNewTaskChange}
+                          />
+                        </div>
+                        <div className="col-6">
+                          <label className="form-label mb-1">Completion Percentage</label>
+                          <input
+                            className="form-control"
+                            type="number"
+                            min="0"
+                            max="100"
+                            name="completionPercentage"
+                            value={newTask.completionPercentage}
+                            onChange={handleNewTaskChange}
+                          />
+                        </div>
+                        <div className="col-6">
+                          <label className="form-label mb-1">Effort Estimate (Hours)</label>
+                          <input
+                            className="form-control"
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            name="effortEstimateHours"
+                            value={newTask.effortEstimateHours}
+                            onChange={handleNewTaskChange}
+                          />
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label mb-1">Description</label>
+                          <textarea
+                            className="form-control"
+                            rows={2}
+                            name="description"
+                            value={newTask.description}
+                            onChange={handleNewTaskChange}
+                            maxLength={2000}
+                          />
+                        </div>
+                        <div className="col-12">
+                          <label className="form-label mb-1">
+                            Assign To (Project Member)
+                          </label>
+                          <div
+                            className="employee-dropdown-wrap"
+                            ref={memberDropdownRef}
+                          >
+                            <div
+                              className="employee-selected-input"
+                              onClick={() =>
+                                setShowMemberDropdown((prev) => !prev)
+                              }
+                            >
+                              {newTask.assignedToMemberId ? (
+                                <span className="employee-selected-name">
+                                  <i className="bi bi-person-fill me-1" />
+                                  {getMemberDisplayName(
+                                    newTask.assignedToMemberId,
+                                  ) || newTask.assignedToMemberId}
+                                  <button
+                                    type="button"
+                                    className="employee-clear-btn"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setNewTask((prev) => ({
+                                        ...prev,
+                                        assignedToMemberId: "",
+                                      }));
+                                    }}
+                                  >
+                                    <i className="bi bi-x" />
+                                  </button>
+                                </span>
+                              ) : (
+                                <span className="employee-placeholder">
+                                  Select a project member...
+                                </span>
+                              )}
+                              <i
+                                className={`bi bi-chevron-${showMemberDropdown ? "up" : "down"} employee-chevron`}
+                              />
+                            </div>
+                            {showMemberDropdown && (
+                              <div className="employee-dropdown-list">
+                                <input
+                                  className="form-control form-control-sm employee-search-input"
+                                  placeholder="Search by name or role..."
+                                  value={memberSearch}
+                                  onChange={(e) =>
+                                    setMemberSearch(e.target.value)
+                                  }
+                                  autoFocus
+                                />
+                                <div className="employee-options">
+                                  {filteredMembers.length === 0 ? (
+                                    <div className="employee-option-empty">
+                                      No project members found.
+                                    </div>
+                                  ) : (
+                                    filteredMembers.map((m) => (
+                                      <div
+                                        key={m.id}
+                                        className={`employee-option ${newTask.assignedToMemberId === m.id ? "selected" : ""}`}
+                                        onClick={() => {
+                                          setNewTask((prev) => ({
+                                            ...prev,
+                                            assignedToMemberId: m.id,
+                                          }));
+                                          setShowMemberDropdown(false);
+                                          setMemberSearch("");
+                                        }}
+                                      >
+                                        <div className="employee-option-avatar">
+                                          {m.fullName
+                                            .split(" ")
+                                            .map((n) => n.charAt(0))
+                                            .join("")
+                                            .slice(0, 2)}
+                                        </div>
+                                        <div className="employee-option-info">
+                                          <span className="employee-option-name">
+                                            {m.fullName}
+                                          </span>
+                                          <span className="employee-option-meta">
+                                            {m.role}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="col-12 text-end">
+                          <button
+                            type="submit"
+                            className="btn btn-success btn-sm"
+                            disabled={creatingTask}
+                          >
+                            {creatingTask ? "Creating..." : "Create"}
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {tasksLoading ? (
+                    <div className="text-center py-3">
+                      <div
+                        className="spinner-border spinner-border-sm text-info"
+                        role="status"
+                      />
+                    </div>
+                  ) : tasks.length === 0 ? (
+                    <div className="tasks-empty-message">
+                      <i className="bi bi-inbox" />
+                      No tasks for this milestone.
+                    </div>
+                  ) : (
+                    <div className="hierarchy-list">
+                      {tasks.map((t) => (
+                        <div key={t.id} className="hierarchy-item">
+                          <button
+                            type="button"
+                            className="hierarchy-item-main"
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
+                              )
+                            }
+                          >
+                            <strong>{t.title || "Untitled"}</strong>
+                            <span>
+                              {TaskStatusEnum[t.status ?? 0] || "Unknown"} ·{" "}
+                              {t.completionPercentage ?? 0}%
+                            </span>
+                          </button>
+                          <div className="task-row-actions">
+                            {confirmDeleteTaskId === t.id ? (
+                              <span className="confirm-inline confirm-inline-sm">
+                                <button
+                                  type="button"
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => handleDeleteTask(t.id)}
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-secondary btn-sm"
+                                  onClick={() => setConfirmDeleteTaskId(null)}
+                                >
+                                  No
+                                </button>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => setConfirmDeleteTaskId(t.id)}
+                              >
+                                <i className="bi bi-trash" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+              </article>
+            </div>
+
+            <div className="details-row-grid">
+              <aside className="hierarchy-sidebar" aria-label="Selection details">
+                <div className="hierarchy-sidebar-head">
+                  <h3>
+                    <i className="bi bi-card-text me-2" />
+                    Details
+                  </h3>
+                  <span className="details-pill">Live Context</span>
+                </div>
+
+                {!selectedPhase && !selectedMilestone ? (
+                  <div className="hierarchy-sidebar-empty">
+                    <i className="bi bi-info-circle" />
+                    <p className="mb-0">
+                      Select a phase or milestone to view complete details.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {selectedPhase && (
+                      <section className="detail-card">
+                        <div className="detail-card-head">
+                          <h4>Phase Details</h4>
+                          <span
+                            className={`detail-status ${selectedPhase.isGatePassed ? "ok" : "pending"}`}
+                          >
+                            {selectedPhase.isGatePassed
+                              ? "Gate Passed"
+                              : "Pending Gate"}
+                          </span>
+                        </div>
+                        <div className="detail-row">
+                          <span>Name</span>
+                          <strong>{selectedPhase.name || "Unnamed"}</strong>
+                        </div>
+                        <div className="detail-row">
+                          <span>Start Date</span>
+                          <strong>
+                            {selectedPhase.startDateUtc
+                              ? new Date(
+                                  selectedPhase.startDateUtc,
+                                ).toLocaleDateString()
+                              : "N/A"}
+                          </strong>
+                        </div>
+                        <div className="detail-row">
+                          <span>End Date</span>
+                          <strong>
+                            {selectedPhase.endDateUtc
+                              ? new Date(
+                                  selectedPhase.endDateUtc,
+                                ).toLocaleDateString()
+                              : "N/A"}
+                          </strong>
+                        </div>
+                        <div className="detail-row">
+                          <span>Milestones</span>
+                          <strong>{milestones.length}</strong>
+                        </div>
+                        <div className="detail-row detail-block">
+                          <span>Deliverables</span>
+                          <p className="mb-0">
+                            {selectedPhase.deliverables ||
+                              "No deliverables recorded."}
+                          </p>
+                        </div>
+                        <div className="detail-row detail-id">
+                          <span>Phase ID</span>
+                          <strong>{selectedPhase.id}</strong>
+                        </div>
+                      </section>
+                    )}
+
+                    {selectedMilestone && (
+                      <section className="detail-card">
+                        <div className="detail-card-head">
+                          <h4>Milestone Details</h4>
+                          <span
+                            className={`detail-status ${selectedMilestone.isCompleted ? "ok" : "pending"}`}
+                          >
+                            {selectedMilestone.isCompleted
+                              ? "Completed"
+                              : "In Progress"}
+                          </span>
+                        </div>
+                        <div className="detail-row">
+                          <span>Name</span>
+                          <strong>{selectedMilestone.name || "Unnamed"}</strong>
+                        </div>
+                        <div className="detail-row">
+                          <span>Target Date</span>
+                          <strong>
+                            {selectedMilestone.targetDateUtc
+                              ? new Date(
+                                  selectedMilestone.targetDateUtc,
+                                ).toLocaleDateString()
+                              : "N/A"}
+                          </strong>
+                        </div>
+                        <div className="detail-row">
+                          <span>Actual Date</span>
+                          <strong>
+                            {selectedMilestone.actualDateUtc
+                              ? new Date(
+                                  selectedMilestone.actualDateUtc,
+                                ).toLocaleDateString()
+                              : "N/A"}
+                          </strong>
+                        </div>
+                        <div className="detail-row">
+                          <span>Tasks</span>
+                          <strong>{tasks.length}</strong>
+                        </div>
+                        <div className="detail-row detail-block">
+                          <span>Success Criteria</span>
+                          <p className="mb-0">
+                            {selectedMilestone.successCriteria ||
+                              "No success criteria recorded."}
+                          </p>
+                        </div>
+                        <div className="detail-row detail-id">
+                          <span>Milestone ID</span>
+                          <strong>{selectedMilestone.id}</strong>
+                        </div>
+                      </section>
+                    )}
+                  </>
+                )}
+              </aside>
+
+              <aside className="hierarchy-sidebar hierarchy-visual" aria-label="Phase visual analytics">
+                <div className="hierarchy-sidebar-head">
+                  <h3>
+                    <i className="bi bi-bar-chart-line me-2" />
+                    Visual Summary
+                  </h3>
+                  <span className="details-pill">Phase Analytics</span>
+                </div>
+
+                {!selectedPhase ? (
+                  <div className="hierarchy-sidebar-empty">
+                    <i className="bi bi-graph-up" />
+                    <p className="mb-0">
+                      Select a phase to view milestones and tasks visualization.
+                    </p>
+                  </div>
+                ) : phaseVisualLoading ? (
+                  <div className="text-center py-3">
+                    <div
+                      className="spinner-border spinner-border-sm text-info"
+                      role="status"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <section className="detail-card visual-summary-card">
+                      <h4 className="visual-heading">Phase Progress</h4>
+                      <div className="visual-kpi-row">
+                        <div className="visual-kpi">
+                          <span>Milestones</span>
+                          <strong>
+                            {phaseVisualSummary.completedMilestones}/
+                            {phaseVisualSummary.totalMilestones}
+                          </strong>
+                        </div>
+                        <div className="visual-kpi">
+                          <span>Tasks</span>
+                          <strong>
+                            {phaseVisualSummary.taskTotals.completed}/
+                            {phaseVisualSummary.taskTotals.total}
+                          </strong>
+                        </div>
+                      </div>
+
+                      <div className="visual-progress-block">
+                        <div className="visual-progress-head">
+                          <span>Milestone Completion</span>
+                          <strong>{phaseVisualSummary.milestoneProgressPercent}%</strong>
+                        </div>
+                        <div className="visual-progress-track">
+                          <span
+                            className="visual-progress-fill ok"
+                            style={{
+                              width: `${phaseVisualSummary.milestoneProgressPercent}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="visual-progress-block">
+                        <div className="visual-progress-head">
+                          <span>Task Completion</span>
+                          <strong>{phaseVisualSummary.taskProgressPercent}%</strong>
+                        </div>
+                        <div className="visual-progress-track">
+                          <span
+                            className="visual-progress-fill progress"
+                            style={{
+                              width: `${phaseVisualSummary.taskProgressPercent}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="visual-status-legend">
+                        <span className="legend-item">
+                          <i className="legend-dot ok" /> Completed
+                        </span>
+                        <span className="legend-item">
+                          <i className="legend-dot progress" /> In Progress
+                        </span>
+                        <span className="legend-item">
+                          <i className="legend-dot idle" /> Not Started
+                        </span>
+                      </div>
+                    </section>
+
+                    <section className="detail-card visual-list-card">
+                      <h4 className="visual-heading">Milestone Breakdown</h4>
+                      {phaseMilestoneVisualRows.length === 0 ? (
+                        <p className="mb-0 visual-empty-text">
+                          No milestones available for this phase.
+                        </p>
+                      ) : (
+                        <div className="visual-milestone-list">
+                          {phaseMilestoneVisualRows.map((row) => (
+                            <div key={row.id} className="visual-milestone-item">
+                              <div className="visual-milestone-head">
+                                <strong>{row.name}</strong>
+                                <span
+                                  className={`visual-badge ${
+                                    row.milestoneStatus === "Completed"
+                                      ? "ok"
+                                      : row.milestoneStatus === "In Progress"
+                                        ? "progress"
+                                        : "idle"
+                                  }`}
+                                >
+                                  {row.milestoneStatus}
+                                </span>
+                              </div>
+                              <div className="visual-progress-track small">
+                                <span
+                                  className="visual-progress-fill progress"
+                                  style={{ width: `${row.completionPercent}%` }}
+                                />
+                              </div>
+                              <div className="visual-task-stats">
+                                <span className="ok">{row.completedTasks} done</span>
+                                <span className="progress">
+                                  {row.inProgressTasks} in progress
+                                </span>
+                                <span className="idle">
+                                  {row.notStartedTasks} not started
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  </>
+                )}
+              </aside>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ── Risks Section ── */}
+      {activeTab === "risks" && (
+        <section className="tasks-section">
+          <div className="tasks-section-header">
+            <h2>
+              <i className="bi bi-shield-exclamation me-2" />
+              Risk Management
+            </h2>
+            <button
+              type="button"
+              className="btn btn-info text-white btn-sm"
+              onClick={() => setShowCreateRisk((prev) => !prev)}
+            >
+              <i
+                className={`bi ${showCreateRisk ? "bi-x-circle" : "bi-plus-lg"} me-1`}
+              />
+              {showCreateRisk ? "Cancel" : "New Risk"}
+            </button>
+          </div>
+
+          <div className="risk-charts-grid mb-3">
+            <article className="details-card risk-chart-card">
+              <div className="finance-chart-header">
+                <h3 className="h6 mb-1">Project Risk Severity Summary</h3>
+                <p className="mb-0">
+                  Distribution of risks by derived severity from impact and
+                  probability.
+                </p>
+              </div>
+              <div className="finance-chart-body">
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={riskSummaryData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      innerRadius={60}
+                    >
+                      {riskSummaryData.map((entry) => (
+                        <Cell key={entry.key} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </article>
+
+            <article className="details-card risk-chart-card">
+              <div className="finance-chart-header">
+                <h3 className="h6 mb-1">Events Per Risk</h3>
+                <p className="mb-0">
+                  Number of events linked to each risk. Expanding risks updates
+                  this chart in real time.
+                </p>
+              </div>
+              <div className="finance-chart-body">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={riskEventsChartData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e6eef5" />
+                    <XAxis
+                      dataKey="name"
+                      interval={0}
+                      angle={-12}
+                      textAnchor="end"
+                      height={58}
+                      tick={{ fontSize: 11 }}
+                    />
+                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                    <Tooltip />
+                    <Bar dataKey="events" fill="#1b4965" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </article>
+          </div>
+
+          <div className="details-card mb-3">
+            <div className="risk-controls-row">
+              <div className="risk-control-item">
+                <label className="form-label mb-1">Filter by Severity</label>
+                <select
+                  className="form-select"
+                  value={riskSeverityFilter}
+                  onChange={(event) =>
+                    setRiskSeverityFilter(
+                      event.target.value as "all" | "high" | "medium" | "low",
+                    )
+                  }
+                >
+                  <option value="all">All</option>
+                  <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+              <div className="risk-control-item">
+                <label className="form-label mb-1">Sort By</label>
+                <select
+                  className="form-select"
+                  value={riskSortBy}
+                  onChange={(event) =>
+                    setRiskSortBy(
+                      event.target.value as
+                        | "recent"
+                        | "impact"
+                        | "probability"
+                        | "severity",
+                    )
+                  }
+                >
+                  <option value="severity">Severity (Highest First)</option>
+                  <option value="impact">Impact</option>
+                  <option value="probability">Probability</option>
+                  <option value="recent">Recently Created</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {showCreateRisk && (
+            <div className="task-create-card mb-3">
+              <h3 className="h6 mb-3">Create Risk</h3>
+              <form className="row g-3" onSubmit={handleCreateRisk}>
+                <div className="col-12">
+                  <label className="form-label">Description *</label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    name="description"
+                    value={newRisk.description}
+                    onChange={handleNewRiskChange}
+                    maxLength={500}
+                    required
+                  />
+                </div>
+                <div className="col-12 col-md-6">
+                  <label className="form-label">Probability</label>
+                  <select
+                    className="form-select"
+                    name="probability"
+                    value={newRisk.probability}
+                    onChange={handleNewRiskChange}
+                  >
+                    {Object.entries(RiskProbability).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 col-md-6">
+                  <label className="form-label">Impact</label>
+                  <select
+                    className="form-select"
+                    name="impact"
+                    value={newRisk.impact}
+                    onChange={handleNewRiskChange}
+                  >
+                    {Object.entries(RiskImpact).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="col-12 col-md-6">
+                  <label className="form-label">Owner ID</label>
+                  <input
+                    className="form-control"
+                    name="ownerId"
+                    value={newRisk.ownerId}
+                    onChange={handleNewRiskChange}
+                    maxLength={100}
+                  />
+                </div>
+                <div className="col-12">
+                  <label className="form-label">Mitigation Plan</label>
+                  <textarea
+                    className="form-control"
+                    rows={2}
+                    name="mitigationPlan"
+                    value={newRisk.mitigationPlan}
+                    onChange={handleNewRiskChange}
+                    maxLength={1000}
+                  />
+                </div>
+                <div className="col-12 text-end">
+                  <button
+                    type="submit"
+                    className="btn btn-success"
+                    disabled={creatingRisk}
+                  >
+                    {creatingRisk ? "Creating..." : "Create Risk"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {risksLoading ? (
+            <div className="text-center py-4">
+              <div
+                className="spinner-border spinner-border-sm text-info"
+                role="status"
+              />
+            </div>
+          ) : displayedRisks.length === 0 ? (
+            <div className="tasks-table-wrap">
+              <div className="tasks-empty-message">
+                <i className="bi bi-inbox" />
+                No risks found for this filter.
+              </div>
+            </div>
+          ) : (
+            <div className="risk-list-wrap">
+              {displayedRisks.map((risk) => {
+                const isExpanded = expandedRiskId === risk.id;
+                const events = riskEventsByRisk[risk.id] || [];
+                const eventsLoading = riskEventsLoadingByRisk[risk.id];
+                const severityBucket = getRiskSeverityBucket(risk);
+
+                return (
+                  <article key={risk.id} className="details-card risk-item-card">
+                    {editingRiskId === risk.id ? (
+                      <div className="risk-edit-block">
+                        <div className="row g-2">
+                          <div className="col-12">
+                            <label className="form-label mb-1">Description *</label>
+                            <textarea
+                              className="form-control"
+                              rows={2}
+                              name="description"
+                              value={editRiskForm.description}
+                              onChange={handleEditRiskChange}
+                              maxLength={500}
+                              required
+                            />
+                          </div>
+                          <div className="col-12 col-md-4">
+                            <label className="form-label mb-1">Probability</label>
+                            <select
+                              className="form-select"
+                              name="probability"
+                              value={editRiskForm.probability}
+                              onChange={handleEditRiskChange}
+                            >
+                              {Object.entries(RiskProbability).map(
+                                ([key, label]) => (
+                                  <option key={key} value={key}>
+                                    {label}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                          </div>
+                          <div className="col-12 col-md-4">
+                            <label className="form-label mb-1">Impact</label>
+                            <select
+                              className="form-select"
+                              name="impact"
+                              value={editRiskForm.impact}
+                              onChange={handleEditRiskChange}
+                            >
+                              {Object.entries(RiskImpact).map(([key, label]) => (
+                                <option key={key} value={key}>
+                                  {label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="col-12 col-md-4">
+                            <label className="form-label mb-1">Owner ID</label>
+                            <input
+                              className="form-control"
+                              name="ownerId"
+                              value={editRiskForm.ownerId}
+                              onChange={handleEditRiskChange}
+                              maxLength={100}
+                            />
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label mb-1">Mitigation Plan</label>
+                            <textarea
+                              className="form-control"
+                              rows={2}
+                              name="mitigationPlan"
+                              value={editRiskForm.mitigationPlan}
+                              onChange={handleEditRiskChange}
+                              maxLength={1000}
+                            />
+                          </div>
+                        </div>
+                        <div className="task-row-actions justify-content-end mt-2">
+                          <button
+                            type="button"
+                            className="btn btn-success btn-sm"
+                            onClick={() => handleUpdateRisk(risk)}
+                          >
+                            <i className="bi bi-check-lg" />
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline-secondary btn-sm"
+                            onClick={() => setEditingRiskId(null)}
+                          >
+                            <i className="bi bi-x-lg" />
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="risk-item-head">
+                          <div className="risk-item-summary">
+                            <h3>{risk.description || "Unnamed risk"}</h3>
+                            <div className="risk-item-meta">
+                              <span
+                                className="task-row-badge"
+                                style={{
+                                  background: getRiskSeverityColor(severityBucket),
+                                }}
+                              >
+                                {getRiskSeverityLabel(risk)}
+                              </span>
+                              <span>
+                                Probability: {RiskProbability[risk.probability ?? 0]}
+                              </span>
+                              <span>Impact: {RiskImpact[risk.impact ?? 0]}</span>
+                              <span>Owner: {risk.ownerId || "N/A"}</span>
+                            </div>
+                          </div>
+                          <div className="task-row-actions">
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() => startEditRisk(risk)}
+                              title="Edit risk"
+                            >
+                              <i className="bi bi-pencil" />
+                            </button>
+                            {confirmDeleteRiskId === risk.id ? (
+                              <span className="confirm-inline confirm-inline-sm">
+                                <button
+                                  type="button"
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => handleDeleteRisk(risk.id)}
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-secondary btn-sm"
+                                  onClick={() => setConfirmDeleteRiskId(null)}
+                                >
+                                  No
+                                </button>
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => setConfirmDeleteRiskId(risk.id)}
+                                title="Delete risk"
+                              >
+                                <i className="bi bi-trash" />
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              className="btn btn-outline-info btn-sm"
+                              onClick={() => handleToggleRiskExpansion(risk.id)}
+                              title="Show events"
+                            >
+                              <i
+                                className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`}
+                              />
+                              <span className="ms-1">Events</span>
+                            </button>
+                          </div>
+                        </div>
+                        <p className="risk-mitigation-text mb-0">
+                          {risk.mitigationPlan || "No mitigation plan provided."}
+                        </p>
+                      </>
+                    )}
+
+                    {isExpanded && (
+                      <div className="risk-events-panel">
+                        <div className="risk-events-head">
+                          <h4 className="h6 mb-0">
+                            Linked Events ({events.length})
+                          </h4>
+                          <button
+                            type="button"
+                            className="btn btn-outline-info btn-sm"
+                            onClick={() =>
+                              setShowCreateEventForRiskId((prev) =>
+                                prev === risk.id ? null : risk.id,
+                              )
+                            }
+                          >
+                            {showCreateEventForRiskId === risk.id
+                              ? "Cancel"
+                              : "+ Add Event"}
+                          </button>
+                        </div>
+
+                        {showCreateEventForRiskId === risk.id && (
+                          <form
+                            className="row g-2 risk-event-create"
+                            onSubmit={(event) => handleCreateRiskEvent(event, risk.id)}
+                          >
+                            <div className="col-12">
+                              <label className="form-label mb-1">
+                                Incident Description *
+                              </label>
+                              <textarea
+                                className="form-control"
+                                rows={2}
+                                name="incidentDescription"
+                                value={newRiskEvent.incidentDescription}
+                                onChange={handleNewRiskEventChange}
+                                maxLength={1000}
+                                required
+                              />
+                            </div>
+                            <div className="col-12 col-md-4">
+                              <label className="form-label mb-1">Status</label>
+                              <select
+                                className="form-select"
+                                name="status"
+                                value={newRiskEvent.status}
+                                onChange={handleNewRiskEventChange}
+                              >
+                                {Object.entries(RiskEventStatus).map(
+                                  ([key, label]) => (
+                                    <option key={key} value={key}>
+                                      {label}
+                                    </option>
+                                  ),
+                                )}
+                              </select>
+                            </div>
+                            <div className="col-12 col-md-4">
+                              <label className="form-label mb-1">Occurred Date</label>
+                              <input
+                                className="form-control"
+                                type="date"
+                                name="occurredAtUtc"
+                                value={newRiskEvent.occurredAtUtc}
+                                onChange={handleNewRiskEventChange}
+                              />
+                            </div>
+                            <div className="col-12 col-md-4 d-flex align-items-end justify-content-end">
+                              <button
+                                type="submit"
+                                className="btn btn-success btn-sm"
+                                disabled={creatingRiskEvent}
+                              >
+                                {creatingRiskEvent ? "Creating..." : "Create Event"}
+                              </button>
+                            </div>
+                          </form>
+                        )}
+
+                        {eventsLoading ? (
+                          <div className="text-center py-3">
+                            <div
+                              className="spinner-border spinner-border-sm text-info"
+                              role="status"
+                            />
+                          </div>
+                        ) : events.length === 0 ? (
+                          <div className="tasks-empty-message py-3">
+                            No events recorded for this risk.
+                          </div>
+                        ) : (
+                          <div className="risk-events-list">
+                            {events.map((eventItem) => (
+                              <div key={eventItem.id} className="risk-event-item">
+                                {editingRiskEventId === eventItem.id ? (
+                                  <div className="row g-2 w-100">
+                                    <div className="col-12">
+                                      <label className="form-label mb-1">
+                                        Incident Description *
+                                      </label>
+                                      <textarea
+                                        className="form-control"
+                                        rows={2}
+                                        name="incidentDescription"
+                                        value={editRiskEventForm.incidentDescription}
+                                        onChange={handleEditRiskEventChange}
+                                        maxLength={1000}
+                                        required
+                                      />
+                                    </div>
+                                    <div className="col-12 col-md-4">
+                                      <label className="form-label mb-1">Status</label>
+                                      <select
+                                        className="form-select"
+                                        name="status"
+                                        value={editRiskEventForm.status}
+                                        onChange={handleEditRiskEventChange}
+                                      >
+                                        {Object.entries(RiskEventStatus).map(
+                                          ([key, label]) => (
+                                            <option key={key} value={key}>
+                                              {label}
+                                            </option>
+                                          ),
+                                        )}
+                                      </select>
+                                    </div>
+                                    <div className="col-12 col-md-4">
+                                      <label className="form-label mb-1">Occurred Date</label>
+                                      <input
+                                        className="form-control"
+                                        type="date"
+                                        name="occurredAtUtc"
+                                        value={editRiskEventForm.occurredAtUtc}
+                                        onChange={handleEditRiskEventChange}
+                                      />
+                                    </div>
+                                    <div className="col-12 col-md-4 d-flex align-items-end justify-content-end">
+                                      <div className="task-row-actions">
+                                        <button
+                                          type="button"
+                                          className="btn btn-success btn-sm"
+                                          onClick={() =>
+                                            handleUpdateRiskEvent(eventItem)
+                                          }
+                                        >
+                                          <i className="bi bi-check-lg" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-secondary btn-sm"
+                                          onClick={() => setEditingRiskEventId(null)}
+                                        >
+                                          <i className="bi bi-x-lg" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="risk-event-main">
+                                      <strong>
+                                        {eventItem.incidentDescription ||
+                                          "Incident"}
+                                      </strong>
+                                      <div className="risk-event-meta">
+                                        <span className="task-row-badge risk-event-status-badge">
+                                          {RiskEventStatus[eventItem.status ?? 0] ||
+                                            "Unknown"}
+                                        </span>
+                                        <span>
+                                          Occurred: {formatDate(eventItem.occurredAtUtc)}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div className="task-row-actions">
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline-primary btn-sm"
+                                        onClick={() => startEditRiskEvent(eventItem)}
+                                      >
+                                        <i className="bi bi-pencil" />
+                                      </button>
+                                      {confirmDeleteRiskEventId === eventItem.id ? (
+                                        <span className="confirm-inline confirm-inline-sm">
+                                          <button
+                                            type="button"
+                                            className="btn btn-danger btn-sm"
+                                            onClick={() =>
+                                              handleDeleteRiskEvent(
+                                                eventItem.id,
+                                                risk.id,
+                                              )
+                                            }
+                                          >
+                                            Yes
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="btn btn-outline-secondary btn-sm"
+                                            onClick={() =>
+                                              setConfirmDeleteRiskEventId(null)
+                                            }
+                                          >
+                                            No
+                                          </button>
+                                        </span>
+                                      ) : (
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-danger btn-sm"
+                                          onClick={() =>
+                                            setConfirmDeleteRiskEventId(eventItem.id)
+                                          }
+                                        >
+                                          <i className="bi bi-trash" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>

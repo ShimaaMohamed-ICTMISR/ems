@@ -190,6 +190,7 @@ export function TaskDetails() {
         id: taskId,
         projectId: task.projectId || projectId || "",
         rowVersion: task.rowVersion,
+        milestoneId: task.milestoneId || undefined,
         title: editForm.title.trim(),
         description: editForm.description.trim() || undefined,
         priority: safeInt(editForm.priority, 1),
