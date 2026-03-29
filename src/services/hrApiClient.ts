@@ -9,7 +9,7 @@ const HR_SERVICE_TICKET =
   import.meta.env.VITE_SERVICE_TICKET ??
   import.meta.env.VITE_SERVICE_TICKET_KEY ??
   import.meta.env.VITE_OPPORTUNITY_SERVICE_TICKET ??
-  '';
+  'TEST-SECRET-TICKET-2026';
 
 export const hrApiClient = axios.create({
   baseURL: HR_API_BASE_URL,
