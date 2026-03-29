@@ -9,7 +9,7 @@ export function MeetingsList() {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter, setStatusFilter] = useState<MeetingStatus | 'ALL'>('ALL');
+  const [statusFilter] = useState<MeetingStatus | 'ALL'>('ALL');
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
 
@@ -83,18 +83,6 @@ export function MeetingsList() {
     } catch (err) {
       console.error('Failed to delete meeting:', err);
       alert('Failed to delete meeting');
-    }
-  };
-
-  const handleCancel = async (id: string) => {
-    if (!confirm('Are you sure you want to cancel this meeting?')) return;
-    
-    try {
-      await meetingService.cancelMeeting(id);
-      loadMeetings();
-    } catch (err) {
-      console.error('Failed to cancel meeting:', err);
-      alert('Failed to cancel meeting');
     }
   };
 
@@ -229,7 +217,7 @@ export function MeetingsList() {
         {filteredMeetings.map((meeting) => (
           <div key={meeting.id} className="col-md-6 col-xl-4">
             <div className="card border-0 shadow-sm h-100 hover-card">
-              <div className="card-body p-4">
+              <div className="card-body p-4 d-flex flex-column h-100">
                 <div className="d-flex justify-content-between align-items-start mb-3">
                   <h5 className="card-title mb-0 fw-bold text-dark">
                     {meeting.title}
@@ -262,46 +250,40 @@ export function MeetingsList() {
                   )}
                 </div>
 
-                {meeting.zoomJoinUrl && (
-                  <div className="mb-3">
-                    <a 
-                      href={meeting.zoomJoinUrl} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="btn btn-primary btn-sm w-100"
-                    >
-                      <i className="bi bi-camera-video me-2"></i>
-                      Join Zoom Meeting
-                    </a>
-                  </div>
-                )}
-
-                <div className="d-flex gap-2">
-                  <button
-                    className="btn btn-sm btn-outline-primary flex-fill"
-                    onClick={() => navigate(`/dashboard/meetings/${meeting.id}`)}
-                  >
-                    <i className="bi bi-eye me-1"></i>
-                    View Details
-                  </button>
-                  {meeting.status !== 'CANCELLED' && (
-                    <>
-                      <button
-                        className="btn btn-sm btn-outline-warning"
-                        onClick={() => handleCancel(meeting.id)}
-                        title="Cancel meeting"
+                <div className="mt-auto pt-2">
+                  {meeting.zoomJoinUrl && (
+                    <div className="mb-3">
+                      <a 
+                        href={meeting.zoomJoinUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="btn btn-primary btn-sm w-100"
                       >
-                        <i className="bi bi-x-circle"></i>
-                      </button>
+                        <i className="bi bi-camera-video me-2"></i>
+                        Join Zoom Meeting
+                      </a>
+                    </div>
+                  )}
+
+                  <div className="d-flex align-items-center gap-2">
+                    <button
+                      className="btn btn-sm btn-outline-primary flex-fill"
+                      onClick={() => navigate(`/dashboard/meetings/${meeting.id}`)}
+                    >
+                      <i className="bi bi-eye me-1"></i>
+                      View Details
+                    </button>
+                    {meeting.status !== 'CANCELLED' && (
                       <button
-                        className="btn btn-sm btn-outline-danger"
+                        className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
+                        style={{ width: 40, height: 36, padding: 0 }}
                         onClick={() => handleDelete(meeting.id)}
                         title="Delete meeting"
                       >
                         <i className="bi bi-trash"></i>
                       </button>
-                    </>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

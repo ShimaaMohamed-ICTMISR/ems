@@ -35,6 +35,7 @@ import {
   getStoredAssigneeLabel,
   setStoredAssigneeDisplay,
 } from '../utils/opportunityAssigneeStorage';
+import { StageEntriesSection } from '../components/StageEntriesSection';
 
 const STAGE_LABELS: Record<OpportunityStageApi, string> = {
   prospecting: 'Prospecting',
@@ -463,6 +464,10 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="col-12">
+          <StageEntriesSection opportunityId={id} />
         </div>
 
         {/* Quotes Card - voting/meetings style */}
