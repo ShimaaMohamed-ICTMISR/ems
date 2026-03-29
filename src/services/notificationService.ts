@@ -25,7 +25,7 @@ import toast from 'react-hot-toast';
 
 const NOTIFICATION_API_BASE = 'https://ems-notification-service.onrender.com/api/notifications/v1';
 
-const SERVICE_TICKET = 'auH2RtYi9df5vO79WXl5XyaUck6GNwClJ54ayehPU9A=';
+const SERVICE_TICKET = 'TEST-SECRET-TICKET-2026';
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (axios.isAxiosError(error)) {

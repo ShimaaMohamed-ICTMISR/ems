@@ -13,7 +13,7 @@ export interface Employee {
 
 const HR_EMPLOYEES_URL =
   'https://ems-human-resources-management-service.onrender.com/api/hr/v1/employees';
-const HR_SERVICE_TICKET = 'auH2RtYi9df5vO79WXl5XyaUck6GNwClJ54ayehPU9A=';
+const HR_SERVICE_TICKET = 'TEST-SECRET-TICKET-2026';
 
 export async function fetchEmployees(): Promise<Employee[]> {
   try {
