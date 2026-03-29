@@ -20,7 +20,7 @@ export default function NotificationDetails({
 }: Props) {
   const selectedNotif = useSelector(
     (state: RootState) => state.notification.notifications,
-  ).find((n) => n.id === notificationId);
+  ).find((n) => n.id === notificationId || n._id === notificationId);
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
