@@ -10,16 +10,32 @@ export function Departments() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [employees, setEmployees] = useState<any[]>([]);
 
   useEffect(() => {
     fetchDepartments();
+    fetchEmployees();
   }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await hrService.getEmployees();
+      const empData = response.data?.data?.data || response.data?.data || response.data;
+      const empList = Array.isArray(empData) ? empData : [];
+      setEmployees(empList);
+    } catch (err) {
+      console.error('Error fetching employees:', err);
+    }
+  };
 
   const fetchDepartments = async () => {
     try {
       setLoading(true);
       const response = await hrService.getDepartments();
-      setDepartments(response.data.data || response.data);
+      console.log('Departments API response:', response.data);
+      const deptData = response.data.data || response.data;
+      console.log('Parsed departments:', deptData);
+      setDepartments(deptData);
       setError(null);
     } catch (err) {
       console.error('Error fetching departments:', err);
@@ -60,6 +76,20 @@ export function Departments() {
     dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     dept.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Helper function to get employee name by ID
+  const getEmployeeName = (empId: string | undefined) => {
+    if (!empId) return null;
+    const emp = employees.find(e => e.id === empId);
+    return emp ? `${emp.firstName} ${emp.lastName}` : null;
+  };
+
+  // Helper function to get department name by ID
+  const getDepartmentName = (deptId: string | undefined) => {
+    if (!deptId) return null;
+    const dept = departments.find(d => d.id === deptId);
+    return dept ? dept.name : null;
+  };
 
   if (loading) {
     return (
@@ -151,13 +181,22 @@ export function Departments() {
                       <label>
                         <i className="bi bi-person"></i> Head
                         </label>
-                        <p>{dept.headId || 'N/A'}</p>
+                        <p>
+                          {dept.head 
+                            ? `${dept.head.firstName} ${dept.head.lastName}` 
+                            : getEmployeeName(dept.headId)
+                            || (dept.headId ? dept.headId.substring(0, 8) + '...' : <span style={{color: '#95a5a6', fontStyle: 'italic'}}>Not assigned</span>)}
+                        </p>
                     </div>
                     <div className="info-item">
                       <label>
                         <i className="bi bi-diagram-3"></i> Parent
                       </label>
-                      <p>{dept.parentId || 'N/A'}</p>
+                      <p>
+                        {dept.parent?.name 
+                          || getDepartmentName(dept.parentId)
+                          || (dept.parentId ? dept.parentId.substring(0, 8) + '...' : <span style={{color: '#95a5a6', fontStyle: 'italic'}}>Root Department</span>)}
+                      </p>
                     </div>
                     <div className="info-item">
                       <label>

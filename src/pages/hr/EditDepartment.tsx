@@ -36,7 +36,9 @@ export function EditDepartment() {
     try {
       setIsLoading(true);
       if (id) {
-        await hrService.updateDepartment(id, data);
+        // Filter out fields that can't be updated (code is immutable)
+        const { code, ...updateData } = data;
+        await hrService.updateDepartment(id, updateData);
       }
       alert('Department updated successfully!');
       navigate('/hr/departments');

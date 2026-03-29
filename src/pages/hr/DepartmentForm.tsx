@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { Department } from '../../services/hrService';
+import hrService from '../../services/hrService';
 import '../styles/DepartmentForm.css';
 
 const departmentSchema = z.object({
@@ -12,7 +13,7 @@ const departmentSchema = z.object({
   description: z.string().optional(),
   headId: z.string().optional(),
   parentId: z.string().optional(),
-  costCenter: z.string().min(1, 'Cost center is required'),
+  costCenter: z.string().optional(),
 });
 
 type DepartmentFormData = z.infer<typeof departmentSchema>;
@@ -27,6 +28,9 @@ interface DepartmentFormProps {
 export function DepartmentForm({ initialData, onSubmit, isLoading = false }: DepartmentFormProps) {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
 
   const {
     register,
@@ -37,6 +41,33 @@ export function DepartmentForm({ initialData, onSubmit, isLoading = false }: Dep
     resolver: zodResolver(departmentSchema),
     defaultValues: initialData || {},
   });
+
+  // Fetch employees and departments for dropdowns
+  useEffect(() => {
+    const fetchData = async () => {
+      setDataLoading(true);
+      try {
+        const [empRes, deptRes] = await Promise.all([
+          hrService.getEmployees(),
+          hrService.getDepartments()
+        ]);
+        
+        const empData = empRes.data?.data?.data || empRes.data?.data || empRes.data;
+        const empList = Array.isArray(empData) ? empData : [];
+        setEmployees(empList);
+        
+        const deptData = deptRes.data?.data || deptRes.data;
+        const deptList = Array.isArray(deptData) ? deptData : [];
+        setDepartments(deptList);
+      } catch (err) {
+        console.error('Error fetching dropdown data:', err);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
 
   // Update form when initialData changes (e.g., when editing an existing department)
   useEffect(() => {
@@ -100,13 +131,15 @@ export function DepartmentForm({ initialData, onSubmit, isLoading = false }: Dep
             <div className="col-md-6">
               <label className="form-label fw-semibold">
                 <i className="bi bi-barcode me-2 text-primary"></i>
-                Department Code *
+                Department Code {initialData ? '' : '*'}
               </label>
               <input
                 type="text"
                 className={`form-control ${errors.code ? 'is-invalid' : ''}`}
                 placeholder="e.g., ENG-001"
                 {...register('code')}
+                disabled={!!initialData}
+                title={initialData ? 'Department code cannot be changed' : ''}
               />
               {errors.code && (
                 <div className="invalid-feedback d-block">{errors.code.message}</div>
@@ -117,7 +150,7 @@ export function DepartmentForm({ initialData, onSubmit, isLoading = false }: Dep
             <div className="col-md-6">
               <label className="form-label fw-semibold">
                 <i className="bi bi-cash-stack me-2 text-primary"></i>
-                Cost Center *
+                Cost Center
               </label>
               <input
                 type="text"
@@ -139,8 +172,14 @@ export function DepartmentForm({ initialData, onSubmit, isLoading = false }: Dep
               <select
                 className={`form-select ${errors.headId ? 'is-invalid' : ''}`}
                 {...register('headId')}
+                disabled={dataLoading}
               >
-                <option value="">Select a head</option>
+                <option value="">{dataLoading ? 'Loading...' : 'Select a head'}</option>
+                {employees.map(emp => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.firstName} {emp.lastName} ({emp.employeeCode})
+                  </option>
+                ))}
               </select>
               {errors.headId && (
                 <div className="invalid-feedback d-block">{errors.headId.message}</div>
@@ -156,8 +195,14 @@ export function DepartmentForm({ initialData, onSubmit, isLoading = false }: Dep
               <select
                 className={`form-select ${errors.parentId ? 'is-invalid' : ''}`}
                 {...register('parentId')}
+                disabled={dataLoading}
               >
-                <option value="">None (Root Department)</option>
+                <option value="">{dataLoading ? 'Loading...' : 'None (Root Department)'}</option>
+                {departments.filter(d => !initialData || d.id !== initialData.id).map(dept => (
+                  <option key={dept.id} value={dept.id}>
+                    {dept.name} ({dept.code})
+                  </option>
+                ))}
               </select>
               {errors.parentId && (
                 <div className="invalid-feedback d-block">{errors.parentId.message}</div>
