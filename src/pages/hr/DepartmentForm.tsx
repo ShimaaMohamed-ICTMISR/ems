@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { Department } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Department } from '../../services/hrProjectManagementService.ts';
+import hrService from '../../services/hrProjectManagementService.ts';
 import '../styles/DepartmentForm.css';
 
 const departmentSchema = z.object({
