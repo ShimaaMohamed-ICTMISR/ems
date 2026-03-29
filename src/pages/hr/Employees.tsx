@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Employee } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Employee } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/Employees.css';
 
 export default function Employees() {
@@ -66,7 +66,7 @@ export default function Employees() {
                     <h1 className="page-title"><i className="bi bi-people me-3"></i>Employees</h1>
                     <p className="page-subtitle">Manage employee records and profiles</p>
                 </div>
-                <button className="btn btn-primary btn-lg" onClick={() => navigate('/hr/employees/create')}>
+                <button className="btn btn-primary btn-lg" onClick={() => navigate('/dashboard/hr/employees/create')}>
                     <i className="bi bi-plus-circle me-2"></i>New Employee
                 </button>
             </div>
@@ -112,7 +112,7 @@ export default function Employees() {
                                 <td>{new Date(emp.hireDate).toLocaleDateString()}</td>
                                 <td>
                                     <div className="action-btns">
-                                        <button className="btn btn-sm btn-outline-primary" onClick={() => navigate(`/hr/employees/${emp.id}/edit`)}><i className="bi bi-pencil"></i></button>
+                                        <button className="btn btn-sm btn-outline-primary" onClick={() => navigate(`/dashboard/hr/employees/${emp.id}/edit`)}><i className="bi bi-pencil"></i></button>
                                         <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(emp.id)}><i className="bi bi-trash"></i></button>
                                     </div>
                                 </td>
@@ -131,3 +131,4 @@ export default function Employees() {
         </div>
     );
 }
+

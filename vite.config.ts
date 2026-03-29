@@ -6,10 +6,30 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      // Voting service proxy
+      '/api/voting': {
+        target: 'https://ems-voting-service.onrender.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api\/voting/, ''),
+      },
+      // Notifications service proxy
+      '/api/notifications': {
+        target: 'https://ems-notification-service.onrender.com',
+        changeOrigin: true,
+        secure: true,
+      },
+      // HR service proxy
       '/api/hr': {
         target: 'https://ems-human-resources-management-service.onrender.com',
         changeOrigin: true,
+        secure: true,
         rewrite: (path) => path.replace(/^\/api\/hr/, '/api/hr'),
+      },
+      '/api/project-management': {
+        target: 'http://projectmanagmentservices.runasp.net',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/project-management/, '/api'),
       },
       '/api': {
         target: 'http://iamauth.runasp.net',

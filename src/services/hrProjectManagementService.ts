@@ -10,7 +10,6 @@ export interface Department {
   parentId: string;
   costCenter: string;
 }
-
 export interface CreateDepartmentRequest {
   name: string;
   code: string;

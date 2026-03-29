@@ -24,7 +24,22 @@ import type { Notification } from '../store/notificationSlice';
 import toast from 'react-hot-toast';
 
 const NOTIFICATION_API_BASE = 'https://ems-notification-service.onrender.com/api/notifications/v1';
+
 const SERVICE_TICKET = 'auH2RtYi9df5vO79WXl5XyaUck6GNwClJ54ayehPU9A=';
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (axios.isAxiosError(error)) {
+    if (error.code === 'ERR_NETWORK') {
+      return navigator.onLine
+        ? 'Notification service is currently unreachable. Please try again in a moment.'
+        : 'No internet connection. Please reconnect and try again.';
+    }
+
+    return error.response?.data?.message || error.message || fallback;
+  }
+
+  return error instanceof Error ? error.message : fallback;
+};
 
 // Create axios instance for notification API
 const notificationClient = axios.create({
@@ -40,15 +55,36 @@ export const notificationService = {
    * Get all notifications or a specific notification by ID
    * @param notificationId - Optional notification ID to get a single notification
    * @param limit - Number of notifications to fetch
-   * @param skip - Number of notifications to skip (for pagination)
+   * @param page - Page number (1-indexed)
+   * @param filters - Optional filters (userId, priority, category, etc.)
    */
-  getNotifications: async (notificationId?: string, limit: number = 50, skip: number = 0) => {
+  getNotifications: async (
+    notificationId?: string, 
+    limit: number = 5, 
+    page: number = 1,
+    filters?: {
+      userId?: string;
+      priority?: string;
+      category?: string;
+      channel?: string;
+      status?: string;
+      isRead?: boolean;
+    }
+  ) => {
     try {
       store.dispatch(fetchNotificationsStart());
 
       const params = new URLSearchParams();
-      if (limit) params.append('limit', limit.toString());
-      if (skip) params.append('skip', skip.toString());
+      params.append('limit', limit.toString());
+      params.append('page', page.toString());
+      
+      // Add filters if provided
+      if (filters?.userId) params.append('userId', filters.userId);
+      if (filters?.priority) params.append('priority', filters.priority);
+      if (filters?.category) params.append('category', filters.category);
+      if (filters?.channel) params.append('channel', filters.channel);
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.isRead !== undefined) params.append('isRead', filters.isRead.toString());
 
       const endpoint = notificationId ? `/notifications/${notificationId}` : '/notifications';
       const url = notificationId ? endpoint : `${endpoint}?${params.toString()}`;
@@ -56,22 +92,54 @@ export const notificationService = {
       const response = await notificationClient.get(url);
 
       let notifications: Notification[] = [];
+      let paginationData: any = {};
 
       // Handle both single notification and array of notifications
-      if (Array.isArray(response.data)) {
-        notifications = response.data;
-      } else if (response.data?.data) {
-        notifications = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
-      } else if (response.data?.notifications) {
-        notifications = response.data.notifications;
-      } else {
-        notifications = [response.data];
+      const responseData = response.data;
+      
+      // console.log('API Response:', responseData);
+
+      // Extract data - try multiple possible structures
+      const rawData = responseData?.data?.data || responseData?.data || responseData;
+
+      if (Array.isArray(rawData)) {
+        notifications = rawData;
+      } else if (rawData?.notifications) {
+        notifications = rawData.notifications;
+      } else if (rawData && typeof rawData === 'object' && !Array.isArray(rawData)) {
+        notifications = [rawData];
       }
 
+      // Extract pagination metadata - try multiple possible structures
+      if (responseData?.data?.pagination) {
+        paginationData = responseData.data.pagination;
+      } else if (responseData?.pagination) {
+        paginationData = responseData.pagination;
+      } else if (responseData?.data?.total !== undefined) {
+        // If pagination is at data level
+        paginationData = {
+          total: responseData.data.total,
+          page: responseData.data.page || page,
+          limit: responseData.data.limit || limit,
+          totalPages: responseData.data.totalPages || Math.ceil((responseData.data.total || 0) / limit)
+        };
+      }
+
+      // console.log('Extracted pagination:', paginationData);
+      // console.log('Extracted notifications count:', notifications.length);
+
       store.dispatch(fetchNotificationsSuccess(notifications));
-      return notifications;
+      
+      // Return both notifications and pagination data
+      return {
+        notifications,
+        total: paginationData.total || paginationData.totalItems || notifications.length,
+        page: paginationData.page || paginationData.currentPage || page,
+        limit: paginationData.limit || paginationData.pageSize || limit,
+        totalPages: paginationData.totalPages || Math.ceil((paginationData.total || notifications.length) / limit)
+      };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch notifications';
+      const errorMessage = getErrorMessage(error, 'Failed to fetch notifications');
       store.dispatch(fetchNotificationsFailure(errorMessage));
       toast.error(errorMessage);
       throw error;
@@ -104,7 +172,7 @@ export const notificationService = {
       store.dispatch(fetchUnreadCountSuccess(unreadCount));
       return unreadCount;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch unread count';
+      const errorMessage = getErrorMessage(error, 'Failed to fetch unread count');
       store.dispatch(fetchUnreadCountFailure(errorMessage));
       // Don't show error toast for unread count as it's fetched frequently
       throw error;
@@ -125,7 +193,7 @@ export const notificationService = {
       toast.success('Notification marked as read');
       return response.data;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to mark as read';
+      const errorMessage = getErrorMessage(error, 'Failed to mark as read');
       store.dispatch(markAsReadFailure(errorMessage));
       toast.error(errorMessage);
       throw error;
@@ -146,7 +214,7 @@ export const notificationService = {
       toast.success('Notification marked as unread');
       return response.data;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to mark as unread';
+      const errorMessage = getErrorMessage(error, 'Failed to mark as unread');
       store.dispatch(markAsUnreadFailure(errorMessage));
       toast.error(errorMessage);
       throw error;
@@ -163,11 +231,16 @@ export const notificationService = {
 
       const response = await notificationClient.post(`/notifications/users/${userId}/read-all`);
 
+      // Immediately update the local state to show all as read
       store.dispatch(markAllAsReadSuccess());
+
+      // Also refresh the unread count
+      await notificationService.getUnreadCount(userId);
+
       toast.success('All notifications marked as read');
       return response.data;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to mark all as read';
+      const errorMessage = getErrorMessage(error, 'Failed to mark all as read');
       store.dispatch(markAllAsReadFailure(errorMessage));
       toast.error(errorMessage);
       throw error;
@@ -204,30 +277,17 @@ export const notificationService = {
           onOpen?.();
         });
 
-        eventSource.addEventListener('notification', (event) => {
+        eventSource.addEventListener('notification.created', (event) => {
           try {
-            const notification = JSON.parse(event.data) as Notification;
+            const rawData = JSON.parse(event.data);
+            // Handle both flat notification and nested data structure
+            const notification = rawData?.data || rawData;
+
+            console.log('Processed stream notification:', notification);
             store.dispatch(addNotification(notification));
             onMessage?.(notification);
           } catch (error) {
             console.error('Error parsing notification:', error);
-          }
-        });
-
-        eventSource.addEventListener('error', (event) => {
-          console.error('SSE Error:', event);
-          store.dispatch(setStreamConnected(false));
-
-          if (eventSource?.readyState === EventSource.CLOSED) {
-            onClose?.();
-            // Try to reconnect after 5 seconds, “If the stream connection closes, wait 5 seconds, then try to reconnect.”
-            setTimeout(() => {
-              console.log('Attempting to reconnect to notification stream...');
-              connect();
-            }, 5000);
-          } else {
-            const error = new Error('Stream connection error');
-            onError?.(error);
           }
         });
 
@@ -261,6 +321,79 @@ export const notificationService = {
     };
   },
 
+
+
+  //   /**
+  //  * Subscribe to real-time notifications via Server-Sent Events
+  //  * @param onMessage - Callback function when new notification arrives
+  //  * @param onError - Callback function on error
+  //  * @param onOpen - Callback function when connection opens
+  //  * @param onClose - Callback function when connection closes
+  //  */
+  // streamAllNotificationsForAdmin: (
+  //   onMessage?: (notification: Notification) => void,
+  //   onError?: (error: Error) => void,
+  //   onOpen?: () => void,
+  //   onClose?: () => void
+  // ): (() => void) => {
+  //   let eventSource: EventSource | null = null;
+
+  //   const connect = () => {
+  //     try {
+  //       const url = new URL(`${NOTIFICATION_API_BASE}/notifications/stream/all`);
+  //       url.searchParams.append('ticket', SERVICE_TICKET);
+
+  //       eventSource = new EventSource(url.toString());
+
+  //       eventSource.addEventListener('open', () => {
+  //         store.dispatch(setStreamConnected(true));
+  //         onOpen?.();
+  //       });
+
+  //       eventSource.addEventListener('notification.created', (event) => {
+  //         try {
+  //           const rawData = JSON.parse(event.data);
+  //           // Handle both flat notification and nested data structure
+  //           const notification = rawData?.data || rawData;
+
+  //           console.log('Processed all stream notification:', notification);
+  //           store.dispatch(addNotification(notification));
+  //           onMessage?.(notification);
+  //         } catch (error) {
+  //           console.error('Error parsing notification:', error);
+  //         }
+  //       });
+
+  //       eventSource.onerror = () => {
+  //         store.dispatch(setStreamConnected(false));
+  //         if (eventSource?.readyState === EventSource.CLOSED) {
+  //           onClose?.();
+  //           // Try to reconnect after 5 seconds
+  //           setTimeout(() => {
+  //             console.log('Attempting to reconnect to notification stream...');
+  //             connect();
+  //           }, 5000);
+  //         }
+  //       };
+  //     } catch (error) {
+  //       const err = error instanceof Error ? error : new Error('Failed to connect to stream');
+  //       store.dispatch(setStreamConnected(false));
+  //       onError?.(err);
+  //     }
+  //   };
+
+  //   connect();
+
+  //   // Return cleanup function
+  //   return () => {
+  //     if (eventSource) {
+  //       eventSource.close();
+  //       store.dispatch(setStreamConnected(false));
+  //       onClose?.();
+  //     }
+  //   };
+  // },
+
   /**
    * Delete a notification
    * @param notificationId - Notification ID
@@ -268,10 +401,16 @@ export const notificationService = {
   deleteNotification: async (notificationId: string) => {
     try {
       const response = await notificationClient.delete(`/notifications/${notificationId}`);
+
+      // Update store after deletion if it was successful
+      store.dispatch(fetchNotificationsSuccess(
+        store.getState().notification.notifications.filter(n => (n._id || n.id) !== notificationId)
+      ));
+
       toast.success('Notification deleted');
       return response.data;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to delete notification';
+      const errorMessage = getErrorMessage(error, 'Failed to delete notification');
       toast.error(errorMessage);
       throw error;
     }
@@ -288,7 +427,7 @@ export const notificationService = {
       toast.success('Notification updated');
       return response.data;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update notification';
+      const errorMessage = getErrorMessage(error, 'Failed to update notification');
       toast.error(errorMessage);
       throw error;
     }

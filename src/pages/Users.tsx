@@ -290,13 +290,17 @@ const Users = () => {
   return (
     <div className="users-container">
       <div className="users-header">
-        <h1>User Management</h1>
+        <h1>
+          <i className="bi bi-people-fill me-2"></i>
+          User Management
+        </h1>
         <button
           className="btn btn-create"
           onClick={() => setShowCreateModal(true)}
           title="Create a new user"
         >
-          ➕ Add User
+          <i className="bi bi-person-plus-fill me-2"></i>
+          Add User
         </button>
       </div>
 
@@ -395,28 +399,28 @@ const Users = () => {
                       onClick={() => handleViewUser(user)}
                       title="View details"
                     >
-                      👁
+                      <i className="bi bi-eye"></i>
                     </button>
                     <button
                       className="btn btn-sm btn-edit"
                       onClick={() => handleEditUser(user)}
                       title="Edit user"
                     >
-                      ✏️
+                      <i className="bi bi-pencil-square"></i>
                     </button>
                     <button
                       className="btn btn-sm btn-roles"
                       onClick={() => handleManageRoles(user)}
                       title="Manage roles"
                     >
-                      🔐
+                      <i className="bi bi-shield-lock"></i>
                     </button>
                     <button
                       className="btn btn-sm btn-sessions"
                       onClick={() => handleViewSessions(user)}
                       title="View sessions"
                     >
-                      🖥️
+                      <i className="bi bi-display"></i>
                     </button>
                     {!user.isActive && (
                       <button
@@ -424,7 +428,7 @@ const Users = () => {
                         onClick={() => handleReactivateUser(user.id)}
                         title="Reactivate user"
                       >
-                        ↻
+                        <i className="bi bi-arrow-clockwise"></i>
                       </button>
                     )}
                     <button
@@ -432,7 +436,7 @@ const Users = () => {
                       onClick={() => handleDeleteUser(user)}
                       title="Delete user"
                     >
-                      🗑️
+                      <i className="bi bi-trash"></i>
                     </button>
                   </div>
                 </td>

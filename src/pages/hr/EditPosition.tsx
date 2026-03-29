@@ -37,8 +37,8 @@ export default function EditPosition() {
           </div>
 
           <div className="form-actions mt-5">
-            <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/hr/positions')}>Cancel</button>
-            <button type="button" className="btn btn-primary ms-2" onClick={() => navigate('/hr/positions')}>Update Position</button>
+            <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/hr/positions')}>Cancel</button>
+            <button type="button" className="btn btn-primary ms-2" onClick={() => navigate('/dashboard/hr/positions')}>Update Position</button>
           </div>
         </form>
       </div>

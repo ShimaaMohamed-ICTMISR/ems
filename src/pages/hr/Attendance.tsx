@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import type { Employee } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Employee } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/Attendance.css';
 
 export default function Attendance() {
@@ -160,3 +160,4 @@ export default function Attendance() {
         </div>
     );
 }
+

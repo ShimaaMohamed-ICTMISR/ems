@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Employee, LeaveType, CreateLeaveRequestRequest } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Employee, LeaveType, CreateLeaveRequestRequest } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/LeaveRequests.css';
 
 export default function CreateLeaveRequest() {
@@ -56,7 +56,7 @@ export default function CreateLeaveRequest() {
         try {
             await hrService.createLeaveRequest(form);
             alert('Leave request created successfully!');
-            navigate('/hr/leave-requests');
+            navigate('/dashboard/hr/leave-requests');
         } catch (err: any) { alert(err.response?.data?.message || 'Failed to create leave request'); }
         finally { setLoading(false); }
     };
@@ -68,7 +68,7 @@ export default function CreateLeaveRequest() {
                     <h1 className="page-title"><i className="bi bi-envelope-plus me-3"></i>New Leave Request</h1>
                     <p className="page-subtitle">Submit a new leave request</p>
                 </div>
-                <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate('/hr/leave-requests')}>
+                <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate('/dashboard/hr/leave-requests')}>
                     <i className="bi bi-arrow-left me-2"></i>Back
                 </button>
             </div>
@@ -94,10 +94,11 @@ export default function CreateLeaveRequest() {
                     <div className="form-group full-width"><label>Emergency Contact</label><input className="form-control" name="emergencyContact" value={form.emergencyContact} onChange={handleChange} placeholder="Contact during leave" /></div>
                 </div>
                 <div className="form-actions">
-                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/hr/leave-requests')}>Cancel</button>
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/hr/leave-requests')}>Cancel</button>
                     <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Submitting...' : 'Submit Request'}</button>
                 </div>
             </form>
         </div>
     );
 }
+

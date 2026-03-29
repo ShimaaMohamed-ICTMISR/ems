@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import DepartmentForm from './DepartmentForm';
-import type { Department } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Department } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 
 
 export function EditDepartment() {
@@ -41,7 +41,7 @@ export function EditDepartment() {
         await hrService.updateDepartment(id, updateData);
       }
       alert('Department updated successfully!');
-      navigate('/hr/departments');
+      navigate('/dashboard/hr/departments');
     } catch (error) {
       console.error('Error updating department:', error);
       throw error;

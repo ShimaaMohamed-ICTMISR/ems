@@ -1,7 +1,7 @@
   import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Position } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Position } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/Departments.css';
 
 export function Positions() {
@@ -38,8 +38,8 @@ export function Positions() {
     };
   }, []);
 
-  const handleCreatePosition = () => navigate('/hr/positions/create');
-  const handleEditPosition = (id: string) => navigate(`/hr/positions/${id}/edit`);
+  const handleCreatePosition = () => navigate('/dashboard/hr/positions/create');
+  const handleEditPosition = (id: string) => navigate(`/dashboard/hr/positions/${id}/edit`);
   const handleDeletePosition = async (id: string) => {
     try {
       await hrService.deletePosition(id);
@@ -197,3 +197,4 @@ export function Positions() {
 }
 
 export default Positions;
+

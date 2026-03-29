@@ -30,7 +30,7 @@ body {
   --primary-color: #06b6d4;
   --primary-dark: #0891b2;
   --primary-light: #22d3ee;
-  --secondary-color: #8b5cf6;
+  --secondary-color: #1b132c;
   --accent-color: #f97316;
   --success-color: #10b981;
   --danger-color: #ef4444;
@@ -253,6 +253,24 @@ small { font-size: 0.75rem; }
 /* Navbar animation */
 .navbar {
   animation: slideDown 0.5s ease-out;
+}
+
+@media (max-width: 991.98px) {
+  .mobile-sidebar-toggle {
+    position: fixed !important;
+    left: 10px !important;
+    top: 10px !important;
+    z-index: 1200 !important;
+    width: 40px;
+    height: 40px;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px !important;
+    background: rgba(15, 23, 42, 0.9) !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 16px rgba(2, 6, 23, 0.3) !important;
+  }
 }
 
 @keyframes slideDown {

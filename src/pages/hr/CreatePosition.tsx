@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import type { Department } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Department } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/Departments.css';
 
 export default function CreatePosition() {
@@ -63,7 +63,7 @@ export default function CreatePosition() {
         description,
       });
       alert('Position created successfully!');
-      navigate('/hr/positions');
+      navigate('/dashboard/hr/positions');
     } catch (err) {
       console.error('Error creating position:', err);
       setSubmitError('Failed to create position');
@@ -80,21 +80,42 @@ export default function CreatePosition() {
           <p className="form-subtitle">Add a new job position</p>
         </div>
 
-        <form>
+        {submitError && <div className="alert alert-danger mb-3">{submitError}</div>}
+        <form onSubmit={handleSubmit}>
           <div className="row g-4">
             <div className="col-md-6">
               <label className="form-label fw-semibold">Title *</label>
-              <input type="text" className="form-control" placeholder="e.g., Senior Developer" />
+              <input
+                type="text"
+                className="form-control"
+                placeholder="e.g., Senior Developer"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
             </div>
 
             <div className="col-md-6">
               <label className="form-label fw-semibold">Code *</label>
-              <input type="text" className="form-control" placeholder="e.g., POS-001" />
+              <input
+                type="text"
+                className="form-control"
+                placeholder="e.g., POS-001"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                required
+              />
             </div>
 
             <div className="col-md-6">
               <label className="form-label fw-semibold">Department Id *</label>
-              <select className="form-select" required disabled={loadingDeps}>
+              <select
+                className="form-select"
+                required
+                disabled={loadingDeps || isSubmitting}
+                value={departmentId}
+                onChange={(e) => setDepartmentId(e.target.value)}
+              >
                 <option value="">{loadingDeps ? 'Loading departments...' : 'Select department'}</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>{d.name} ({d.code})</option>
@@ -105,7 +126,12 @@ export default function CreatePosition() {
 
             <div className="col-md-6">
               <label className="form-label fw-semibold">Grade Level</label>
-              <select className="form-select">
+              <select
+                className="form-select"
+                value={gradeLevel}
+                onChange={(e) => setGradeLevel(e.target.value)}
+                disabled={isSubmitting}
+              >
                 <option value="">Select grade level</option>
                 <option value="Entry">Entry</option>
                 <option value="Junior">Junior</option>
@@ -117,27 +143,49 @@ export default function CreatePosition() {
 
             <div className="col-md-6">
               <label className="form-label fw-semibold">Salary Band Min</label>
-              <input type="number" className="form-control" defaultValue={80000} />
+              <input
+                type="number"
+                className="form-control"
+                value={salaryBandMin}
+                onChange={(e) => setSalaryBandMin(Number(e.target.value))}
+                disabled={isSubmitting}
+              />
             </div>
 
             <div className="col-md-6">
               <label className="form-label fw-semibold">Salary Band Max</label>
-              <input type="number" className="form-control" defaultValue={120000} />
+              <input
+                type="number"
+                className="form-control"
+                value={salaryBandMax}
+                onChange={(e) => setSalaryBandMax(Number(e.target.value))}
+                disabled={isSubmitting}
+              />
             </div>
 
             <div className="col-12">
               <label className="form-label fw-semibold">Description</label>
-              <textarea className="form-control" rows={4} placeholder="Position description..." />
+              <textarea
+                className="form-control"
+                rows={4}
+                placeholder="Position description..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                disabled={isSubmitting}
+              />
             </div>
           </div>
 
           <div className="form-actions mt-5">
-            <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/hr/positions')}>Cancel</button>
-            <button type="button" className="btn btn-primary ms-2" onClick={() => navigate('/hr/positions')}>Create Position</button>
+            <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/hr/positions')}>Cancel</button>
+            <button type="submit" className="btn btn-primary ms-2" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create Position'}
+            </button>
           </div>
         </form>
       </div>
     </div>
   );
 }
+
 

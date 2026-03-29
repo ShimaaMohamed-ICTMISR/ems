@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import type { Department, Position, UpdateEmployeeRequest } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Department, Position, UpdateEmployeeRequest } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/Employees.css';
 
 export default function EditEmployee() {
@@ -62,7 +62,7 @@ export default function EditEmployee() {
         try {
             await hrService.updateEmployee(id!, form);
             alert('Employee updated successfully!');
-            navigate('/hr/employees');
+            navigate('/dashboard/hr/employees');
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to update employee');
         } finally { setSaving(false); }
@@ -84,7 +84,7 @@ export default function EditEmployee() {
                     <h1 className="page-title"><i className="bi bi-pencil-square me-3"></i>Edit Employee</h1>
                     <p className="page-subtitle">Update employee information</p>
                 </div>
-                <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate('/hr/employees')}>
+                <button className="btn btn-outline-secondary btn-lg" onClick={() => navigate('/dashboard/hr/employees')}>
                     <i className="bi bi-arrow-left me-2"></i>Back
                 </button>
             </div>
@@ -131,10 +131,11 @@ export default function EditEmployee() {
                     <div className="form-group"><label>Emergency Contact</label><input className="form-control" name="emergencyContact" value={form.emergencyContact} onChange={handleChange} /></div>
                 </div>
                 <div className="form-actions">
-                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/hr/employees')}>Cancel</button>
+                    <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/hr/employees')}>Cancel</button>
                     <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
                 </div>
             </form>
         </div>
     );
 }
+

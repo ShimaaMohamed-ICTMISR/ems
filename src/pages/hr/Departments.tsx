@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Department } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { Department } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/Departments.css';
 
 export function Departments() {
@@ -46,11 +46,11 @@ export function Departments() {
   };
 
   const handleCreateDepartment = () => {
-    navigate('/hr/departments/create');
+    navigate('/dashboard/hr/departments/create');
   };
 
   const handleEditDepartment = (id: string) => {
-    navigate(`/hr/departments/${id}/edit`);
+    navigate(`/dashboard/hr/departments/${id}/edit`);
   };
 
   const handleDeleteDepartment = async (id: string) => {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { LeaveRequest } from '../../services/hrService';
-import hrService from '../../services/hrService';
+import type { LeaveRequest } from '../../services/hrProjectManagementService';
+import hrService from '../../services/hrProjectManagementService';
 import '../styles/LeaveRequests.css';
 
 export default function LeaveRequests() {
@@ -60,7 +60,7 @@ export default function LeaveRequests() {
                     <h1 className="page-title"><i className="bi bi-envelope-paper me-3"></i>Leave Requests</h1>
                     <p className="page-subtitle">Review and manage leave requests</p>
                 </div>
-                <button className="btn btn-primary btn-lg" onClick={() => navigate('/hr/leave-requests/create')}>
+                <button className="btn btn-primary btn-lg" onClick={() => navigate('/dashboard/hr/leave-requests/create')}>
                     <i className="bi bi-plus-circle me-2"></i>New Request
                 </button>
             </div>
@@ -117,3 +117,4 @@ export default function LeaveRequests() {
         </div>
     );
 }
+

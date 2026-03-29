@@ -1,0 +1,349 @@
+/* Meetings Pages Styles - Using Voting/Polls Colors */
+
+/* FORCE white backgrounds for all headers - override everything */
+.meetings-page .card-header,
+.meetings-page .card-header.bg-white,
+.meetings-page .section-header,
+.meetings-page .meeting-info-header {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  background: #ffffff !important;
+  border: none !important;
+  border-radius: 12px 12px 0 0 !important;
+  padding: 1rem 1.5rem !important;
+}
+
+/* Different colored left borders - using voting green colors */
+.meetings-page .card-header,
+.meetings-page .section-header {
+  border-left: 4px solid #07748a !important;
+}
+
+.meetings-page .meeting-info-header {
+  border-left: 4px solid #07748a !important;
+}
+
+/* Force dark text for all headers */
+.meetings-page .card-header h5,
+.meetings-page .card-header h6,
+.meetings-page .section-header h5,
+.meetings-page .section-header h6,
+.meetings-page .meeting-info-header h5,
+.meetings-page .meeting-info-header h6,
+.meetings-page .card-header .text-dark,
+.meetings-page .section-header .text-dark,
+.meetings-page .meeting-info-header .text-dark {
+  color: #0f172a !important;
+  font-weight: 700;
+}
+
+/* Force green icons for headers */
+.meetings-page .card-header i,
+.meetings-page .section-header i,
+.meetings-page .card-header .text-dark i,
+.meetings-page .section-header .text-dark i {
+  color: #07748a !important;
+}
+
+.meetings-page .meeting-info-header i,
+.meetings-page .meeting-info-header .text-dark i {
+  color: #07748a !important;
+}
+
+/* Page header */
+.meetings-page h2,
+.meetings-page h2.text-dark {
+  color: #0f172a !important;
+  font-weight: 700;
+}
+
+.meetings-page h2 i,
+.meetings-page h2 .text-dark {
+  color: #07748a !important;
+}
+
+/* Form labels */
+.meetings-page .form-label,
+.meetings-page .form-label.fw-semibold {
+  color: #0f172a !important;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.meetings-page .form-label i,
+.meetings-page .form-label .text-dark {
+  color: #07748a !important;
+}
+
+/* Primary meetings button with enhanced styling */
+.meetings-page .btn-meetings-primary {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
+  transition: all 0.3s ease !important;
+}
+
+.meetings-page .btn-meetings-primary:hover {
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.35) !important;
+  color: #ffffff !important;
+}
+
+/* Time circles - light green background like Dashboard voting card */
+.meetings-page .time-circle {
+  background-color: #d1fae5 !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+}
+
+.meetings-page .time-circle i {
+  color: #07748a !important;
+}
+
+/* Participant circles - light green background */
+.meetings-page .participant-circle {
+  background-color: #d1fae5 !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+}
+
+/* Organizer circles - darker green background */
+.meetings-page .organizer-circle {
+  background-color: #a7f3d0 !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+}
+
+/* Agenda numbers - green background */
+.meetings-page .agenda-number {
+  background-color: #07748a !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  font-weight: 700;
+}
+
+/* Action circles - success green background */
+.meetings-page .action-circle {
+  background-color: #07748a !important;
+  border-radius: 8px !important;
+  padding: 8px !important;
+}
+
+/* Zoom section - light green background */
+.meetings-page .bg-secondary.bg-opacity-10 {
+  background-color: #f0fdf4 !important;
+  border: 1px solid #bbf7d0 !important;
+  border-radius: 8px !important;
+  border-left: 4px solid #07748a !important;
+}
+
+/* Background sections - white like Dashboard cards */
+.meetings-page .bg-light {
+  background-color: #ffffff !important;
+  border-radius: 8px !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Form controls */
+.meetings-page .form-control,
+.meetings-page .form-select {
+  border-radius: 8px !important;
+  border: 1px solid #d1d5db !important;
+  font-size: 0.875rem;
+}
+
+.meetings-page .form-control:focus,
+.meetings-page .form-select:focus {
+  border-color: #07748a !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
+}
+
+.meetings-page .form-control.border-0 {
+  border: 1px solid #d1d5db !important;
+}
+
+.meetings-page .form-control.border-0:focus {
+  border-color: #07748a !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
+}
+
+/* Cards - exactly like Dashboard */
+.meetings-page .card {
+  background-color: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+  border: none !important;
+}
+
+/* Buttons - Enhanced with smooth gradients and sidebar color harmony */
+.meetings-page .btn-primary {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  font-weight: 500;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
+  transition: all 0.3s ease !important;
+}
+
+.meetings-page .btn-primary:hover {
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.meetings-page .btn-success {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
+  transition: all 0.3s ease !important;
+}
+
+.meetings-page .btn-success:hover {
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.35) !important;
+}
+
+/* Zoom meeting button - smooth gradient matching sidebar accent */
+.meetings-page .btn-dark {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500;
+}
+
+.meetings-page .btn-dark:hover {
+  background: linear-gradient(135deg, #0e7490 0%, #155e75 100%) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(8, 145, 178, 0.35) !important;
+  color: #ffffff !important;
+}
+
+.meetings-page .btn-outline-secondary {
+  border: 2px solid #cbd5e1 !important;
+  color: #475569 !important;
+  border-radius: 10px !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500;
+}
+
+.meetings-page .btn-outline-secondary:hover {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%) !important;
+  border-color: #94a3b8 !important;
+  color: #334155 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(71, 85, 105, 0.15) !important;
+}
+
+/* Text colors - exactly like Dashboard */
+.meetings-page .text-muted {
+  color: #6b7280 !important;
+}
+
+.meetings-page .text-dark {
+  color: #0f172a !important;
+}
+
+.meetings-page .text-primary {
+  color: #07748a !important;
+}
+
+/* Badges - using voting colors */
+.meetings-page .badge {
+  border-radius: 6px !important;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem !important;
+}
+
+.meetings-page .badge.bg-success {
+  background-color: #07748a !important;
+}
+
+.meetings-page .badge.bg-warning {
+  background-color: #d97706 !important;
+}
+
+.meetings-page .badge.bg-danger {
+  background-color: #dc2626 !important;
+}
+
+.meetings-page .badge.bg-secondary {
+  background-color: #6b7280 !important;
+}
+
+/* Code elements */
+.meetings-page code {
+  background-color: #f0fdf4 !important;
+  color: #047857 !important;
+  padding: 0.25rem 0.5rem !important;
+  border-radius: 4px !important;
+  font-weight: 500;
+}
+
+/* Loading spinner */
+.meetings-page .spinner-border {
+  color: #07748a !important;
+}
+
+/* Override any Bootstrap dark backgrounds */
+.meetings-page .bg-dark,
+.meetings-page .bg-secondary {
+  background-color: #ffffff !important;
+}
+
+/* Force green icons on participant circles */
+.meetings-page .participant-circle i,
+.meetings-page .organizer-circle i {
+  color: #07748a !important;
+}
+
+.meetings-page .participant-circle .text-white,
+.meetings-page .organizer-circle .text-white {
+  color: #07748a !important;
+}
+
+/* Enhanced outline primary buttons matching sidebar accent */
+.meetings-page .btn-outline-primary {
+  border: 2px solid #0891b2 !important;
+  color: #0891b2 !important;
+  border-radius: 10px !important;
+  background: rgba(8, 145, 178, 0.05) !important;
+  backdrop-filter: blur(10px) !important;
+  transition: all 0.3s ease !important;
+  font-weight: 500;
+}
+
+.meetings-page .btn-outline-primary:hover {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
+  border-color: #0891b2 !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25) !important;
+}
+
+/* Enhanced small buttons */
+.meetings-page .btn-sm {
+  padding: 0.5rem 1rem !important;
+  font-size: 0.875rem !important;
+  border-radius: 8px !important;
+}
+
+/* Enhanced large buttons */
+.meetings-page .btn-lg {
+  padding: 0.75rem 1.5rem !important;
+  font-size: 1rem !important;
+  border-radius: 12px !important;
+}
