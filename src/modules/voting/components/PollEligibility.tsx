@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { PollEligibility } from '../types/voting.types';
-import { createEligibility, deleteEligibility } from '../api/votingApi';
+import { createEligibility } from '../api/votingApi';
 import { fetchEmployees, type Employee } from '../services/employeeService';
 
 interface PollEligibilityProps {
@@ -12,10 +12,11 @@ interface PollEligibilityProps {
 
 export function PollEligibilityComponent({
   pollId,
-  eligibility,
+  eligibility: _eligibility,
   onEligibilityChange,
   readOnly = false,
 }: PollEligibilityProps) {
+  void _eligibility;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -57,38 +58,6 @@ export function PollEligibilityComponent({
       onEligibilityChange();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to add eligibility');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const asText = (eligibility: PollEligibility): { type: string; value: string } => {
-    // Handle new format (userId, departmentId, role)
-    if (eligibility.userId) {
-      return { type: 'User', value: eligibility.userId };
-    }
-    if (eligibility.departmentId) {
-      return { type: 'Department', value: eligibility.departmentId };
-    }
-    if (eligibility.role) {
-      return { type: 'Role', value: eligibility.role };
-    }
-    // Handle legacy format (type/value)
-    if (eligibility.type && eligibility.value) {
-      return { type: eligibility.type, value: eligibility.value };
-    }
-    return { type: 'Unknown', value: 'N/A' };
-  };
-
-  const handleDelete = async (eligibilityId: string) => {
-    if (!confirm('Remove this eligibility rule?')) return;
-    setError(null);
-    setLoading(true);
-    try {
-      await deleteEligibility(pollId, eligibilityId);
-      onEligibilityChange();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to delete');
     } finally {
       setLoading(false);
     }

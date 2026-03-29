@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
-import type { CreateMeetingDto, MeetingStatus } from '../../services/meetingService';
+import type { CreateMeetingDto } from '../../services/meetingService';
 import hrService, { type Employee } from '../../services/hrProjectManagementService';
 import './meetings.css';
 
@@ -162,21 +162,6 @@ export function CreateMeeting() {
                       required
                     />
                   </div>
-                </div>
-
-                <div className="mb-4">
-                  <label className="form-label fw-semibold">
-                    <i className="bi bi-flag me-2 text-dark"></i>
-                    Status
-                  </label>
-                  <select
-                    className="form-select border-0 shadow-sm"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value as MeetingStatus })}
-                  >
-                    <option value="DRAFT">Draft - Save for later</option>
-                    <option value="SCHEDULED">Scheduled - Ready to send invites</option>
-                  </select>
                 </div>
 
                 <div className="mb-4">

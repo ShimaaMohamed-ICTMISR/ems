@@ -4,14 +4,48 @@
  */
 import axios, { type AxiosError, type AxiosInstance } from 'axios';
 
-const BASE_URL =
-  import.meta.env.VITE_OPPORTUNITY_API_BASE_URL ??
-  'https://ems-opportunity-management-service.onrender.com/api/v1';
+/**
+ * Resolves Opportunity Management API base (must end with /api/v1).
+ *
+ * IMPORTANT: Do not reuse `VITE_API_BASE_URL` here — many apps set it to another microservice
+ * (e.g. voting/IAM), which would send opportunity calls to the wrong host and break auth.
+ * Use `VITE_OPPORTUNITY_API_BASE_URL` (or `NEXT_PUBLIC_OPPORTUNITY_API_BASE_URL`) for this service only.
+ */
+function resolveOpportunityManagementBaseUrl(): string {
+  const explicit =
+    import.meta.env.VITE_OPPORTUNITY_API_BASE_URL ?? import.meta.env.NEXT_PUBLIC_OPPORTUNITY_API_BASE_URL;
+  if (explicit && String(explicit).trim()) return normalizeApiV1Base(String(explicit).trim());
 
-const SERVICE_TICKET =
-  import.meta.env.VITE_OPPORTUNITY_SERVICE_TICKET ??
-  import.meta.env.VITE_SERVICE_TICKET ??
-  import.meta.env.VITE_SERVICE_TICKET_KEY;
+  return 'https://ems-opportunity-management-service.onrender.com/api/v1';
+}
+
+function normalizeApiV1Base(raw: string): string {
+  let u = raw.replace(/\/+$/, '');
+  if (u.endsWith('/api')) return `${u}/v1`;
+  if (/\/api\/v1$/i.test(u)) return u;
+  if (u.endsWith('/v1')) return u;
+  if (!u.includes('/api')) return `${u}/api/v1`;
+  return u;
+}
+
+const BASE_URL = resolveOpportunityManagementBaseUrl();
+
+/** Service ticket for Opportunity Management API only (header: X-Service-Ticket). */
+function resolveOpportunityServiceTicket(): string {
+  const candidates = [
+    import.meta.env.VITE_OPPORTUNITY_SERVICE_TICKET,
+    import.meta.env.VITE_SERVICE_TICKET,
+    import.meta.env.VITE_SERVICE_TICKET_KEY,
+  ];
+  for (const raw of candidates) {
+    const s = raw == null ? '' : String(raw).trim();
+    if (s) return s;
+  }
+  return '';
+}
+
+const TENANT_ID =
+  import.meta.env.VITE_TENANT_ID ?? import.meta.env.VITE_X_TENANT_ID ?? '';
 
 export const opportunityManagementClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -23,8 +57,12 @@ export const opportunityManagementClient: AxiosInstance = axios.create({
 
 opportunityManagementClient.interceptors.request.use((config) => {
   config.headers = config.headers ?? {};
-  if (SERVICE_TICKET) {
-    config.headers['x-service-ticket'] = SERVICE_TICKET;
+  const ticket = resolveOpportunityServiceTicket();
+  if (ticket) {
+    config.headers['X-Service-Ticket'] = ticket;
+  }
+  if (TENANT_ID) {
+    config.headers['X-Tenant-Id'] = TENANT_ID;
   }
   const token = localStorage.getItem('authToken');
   if (token) {

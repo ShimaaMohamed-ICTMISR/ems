@@ -238,3 +238,38 @@ export interface OpportunityHistory {
   createdBy?: string;
   createdAt: string;
 }
+
+/** User-added activity rows per opportunity (not pipeline stage). OpenAPI: Opportunity stage entries */
+export interface OpportunityStageEntry {
+  id: string;
+  opportunityId: string;
+  meetingAt: string | null;
+  people: string | null;
+  feedback: string | null;
+  nextStep: string | null;
+  documentUrl: string | null;
+  documentName: string | null;
+  actions: string | null;
+  notes: string | null;
+  sortOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+  version?: number;
+}
+
+/** POST body — OpenAPI CreateOpportunityStageEntryDto (all fields optional) */
+export interface CreateOpportunityStageEntryDto {
+  meetingAt?: string;
+  people?: string;
+  feedback?: string;
+  nextStep?: string;
+  documentUrl?: string;
+  documentName?: string;
+  actions?: string;
+  notes?: string;
+  sortOrder?: number;
+}
+
+export type UpdateOpportunityStageEntryDto = Partial<CreateOpportunityStageEntryDto>;
