@@ -18,9 +18,7 @@ import {
 import projectService, { type Project } from "../services/projectService";
 import taskService, { type Task } from "../services/taskService";
 import phaseService, { type Phase } from "../services/phaseService";
-import milestoneService, {
-  type Milestone,
-} from "../services/milestoneService";
+import milestoneService, { type Milestone } from "../services/milestoneService";
 import hrService, {
   type Employee,
 } from "../services/hrProjectManagementService";
@@ -671,14 +669,18 @@ export function ProjectDetails() {
   }
 
   function handleNewRiskChange(
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) {
     const { name, value } = event.target;
     setNewRisk((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleEditRiskChange(
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) {
     const { name, value } = event.target;
     setEditRiskForm((prev) => ({ ...prev, [name]: value }));
@@ -786,14 +788,18 @@ export function ProjectDetails() {
   }
 
   function handleNewRiskEventChange(
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) {
     const { name, value } = event.target;
     setNewRiskEvent((prev) => ({ ...prev, [name]: value }));
   }
 
   function handleEditRiskEventChange(
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
   ) {
     const { name, value } = event.target;
     setEditRiskEventForm((prev) => ({ ...prev, [name]: value }));
@@ -1796,7 +1802,8 @@ export function ProjectDetails() {
       milestones.map((milestone) => {
         const milestoneTasks = phaseMilestoneTasks[milestone.id] || [];
         const completedTasks = milestoneTasks.filter(
-          (task) => task.status === 5 || (task.completionPercentage ?? 0) >= 100,
+          (task) =>
+            task.status === 5 || (task.completionPercentage ?? 0) >= 100,
         ).length;
         const inProgressTasks = milestoneTasks.filter((task) => {
           const status = task.status ?? 0;
@@ -1833,8 +1840,9 @@ export function ProjectDetails() {
 
   const phaseVisualSummary = useMemo(() => {
     const totalMilestones = milestones.length;
-    const completedMilestones = milestones.filter((milestone) => milestone.isCompleted)
-      .length;
+    const completedMilestones = milestones.filter(
+      (milestone) => milestone.isCompleted,
+    ).length;
     const milestoneProgressPercent =
       totalMilestones > 0
         ? Math.round((completedMilestones / totalMilestones) * 100)
@@ -2510,762 +2518,796 @@ export function ProjectDetails() {
           <div className="hierarchy-layout">
             <div className="hierarchy-grid">
               <article className="hierarchy-column">
-              <div className="hierarchy-column-head">
-                <h3>
-                  <i className="bi bi-layers me-1" />
-                  Phases
-                </h3>
-                <button
-                  type="button"
-                  className="btn btn-info text-white btn-sm"
-                  onClick={() => setShowCreatePhase((prev) => !prev)}
-                >
-                  {showCreatePhase ? "Cancel" : "+ Add"}
-                </button>
-              </div>
+                <div className="hierarchy-column-head">
+                  <h3>
+                    <i className="bi bi-layers me-1" />
+                    Phases
+                  </h3>
+                  <button
+                    type="button"
+                    className="btn btn-info text-white btn-sm"
+                    onClick={() => setShowCreatePhase((prev) => !prev)}
+                  >
+                    {showCreatePhase ? "Cancel" : "+ Add"}
+                  </button>
+                </div>
 
-              {showCreatePhase && (
-                <div className="task-create-card mb-3">
-                  <form className="row g-2" onSubmit={handleCreatePhase}>
-                    <div className="col-12">
-                      <label className="form-label mb-1">Phase Name</label>
-                      <input
-                        className="form-control"
-                        name="name"
-                        value={newPhase.name}
-                        onChange={handleNewPhaseChange}
-                        placeholder="Phase name"
-                        maxLength={120}
-                        required
-                      />
-                    </div>
-                    <div className="col-6">
-                      <label className="form-label mb-1">Start Date</label>
-                      <input
-                        className="form-control"
-                        type="date"
-                        name="startDateUtc"
-                        value={newPhase.startDateUtc}
-                        onChange={handleNewPhaseChange}
-                      />
-                    </div>
-                    <div className="col-6">
-                      <label className="form-label mb-1">End Date</label>
-                      <input
-                        className="form-control"
-                        type="date"
-                        name="endDateUtc"
-                        value={newPhase.endDateUtc}
-                        onChange={handleNewPhaseChange}
-                      />
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label mb-1">Deliverables</label>
-                      <textarea
-                        className="form-control"
-                        rows={2}
-                        name="deliverables"
-                        value={newPhase.deliverables}
-                        onChange={handleNewPhaseChange}
-                        maxLength={1000}
-                      />
-                    </div>
-                    <div className="col-12 d-flex justify-content-between align-items-center">
-                      <label className="form-check-label d-flex align-items-center gap-2">
+                {showCreatePhase && (
+                  <div className="task-create-card mb-3">
+                    <form className="row g-2" onSubmit={handleCreatePhase}>
+                      <div className="col-12">
+                        <label className="form-label mb-1">Phase Name</label>
                         <input
-                          className="form-check-input"
-                          type="checkbox"
-                          name="isGatePassed"
-                          checked={newPhase.isGatePassed}
+                          className="form-control"
+                          name="name"
+                          value={newPhase.name}
+                          onChange={handleNewPhaseChange}
+                          placeholder="Phase name"
+                          maxLength={120}
+                          required
+                        />
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label mb-1">Start Date</label>
+                        <input
+                          className="form-control"
+                          type="date"
+                          name="startDateUtc"
+                          value={newPhase.startDateUtc}
                           onChange={handleNewPhaseChange}
                         />
-                        Mark as Gate Passed
-                      </label>
-                      <button
-                        type="submit"
-                        className="btn btn-success btn-sm"
-                        disabled={creatingPhase}
-                      >
-                        {creatingPhase ? "Creating..." : "Create"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              {phasesLoading ? (
-                <div className="text-center py-3">
-                  <div
-                    className="spinner-border spinner-border-sm text-info"
-                    role="status"
-                  />
-                </div>
-              ) : phases.length === 0 ? (
-                <div className="tasks-empty-message">
-                  <i className="bi bi-inbox" />
-                  No phases yet.
-                </div>
-              ) : (
-                <div className="hierarchy-list">
-                  {phases.map((p) => (
-                    <div
-                      key={p.id}
-                      className={`hierarchy-item ${selectedPhaseId === p.id ? "selected" : ""}`}
-                    >
-                      {editingPhaseId === p.id ? (
-                        <div className="w-100">
+                      </div>
+                      <div className="col-6">
+                        <label className="form-label mb-1">End Date</label>
+                        <input
+                          className="form-control"
+                          type="date"
+                          name="endDateUtc"
+                          value={newPhase.endDateUtc}
+                          onChange={handleNewPhaseChange}
+                        />
+                      </div>
+                      <div className="col-12">
+                        <label className="form-label mb-1">Deliverables</label>
+                        <textarea
+                          className="form-control"
+                          rows={2}
+                          name="deliverables"
+                          value={newPhase.deliverables}
+                          onChange={handleNewPhaseChange}
+                          maxLength={1000}
+                        />
+                      </div>
+                      <div className="col-12 d-flex justify-content-between align-items-center">
+                        <label className="form-check-label d-flex align-items-center gap-2">
                           <input
-                            className="form-control form-control-sm mb-2"
-                            name="name"
-                            value={editPhaseForm.name}
-                            onChange={handleEditPhaseChange}
-                            maxLength={120}
-                            required
+                            className="form-check-input"
+                            type="checkbox"
+                            name="isGatePassed"
+                            checked={newPhase.isGatePassed}
+                            onChange={handleNewPhaseChange}
                           />
-                          <div className="d-flex gap-2 mb-2">
+                          Mark as Gate Passed
+                        </label>
+                        <button
+                          type="submit"
+                          className="btn btn-success btn-sm"
+                          disabled={creatingPhase}
+                        >
+                          {creatingPhase ? "Creating..." : "Create"}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+
+                {phasesLoading ? (
+                  <div className="text-center py-3">
+                    <div
+                      className="spinner-border spinner-border-sm text-info"
+                      role="status"
+                    />
+                  </div>
+                ) : phases.length === 0 ? (
+                  <div className="tasks-empty-message">
+                    <i className="bi bi-inbox" />
+                    No phases yet.
+                  </div>
+                ) : (
+                  <div className="hierarchy-list">
+                    {phases.map((p) => (
+                      <div
+                        key={p.id}
+                        className={`hierarchy-item ${selectedPhaseId === p.id ? "selected" : ""}`}
+                      >
+                        {editingPhaseId === p.id ? (
+                          <div className="w-100">
                             <input
-                              className="form-control form-control-sm"
-                              type="date"
-                              name="startDateUtc"
-                              value={editPhaseForm.startDateUtc}
+                              className="form-control form-control-sm mb-2"
+                              name="name"
+                              value={editPhaseForm.name}
                               onChange={handleEditPhaseChange}
+                              maxLength={120}
+                              required
                             />
-                            <input
-                              className="form-control form-control-sm"
-                              type="date"
-                              name="endDateUtc"
-                              value={editPhaseForm.endDateUtc}
-                              onChange={handleEditPhaseChange}
-                            />
-                          </div>
-                          <textarea
-                            className="form-control form-control-sm mb-2"
-                            rows={2}
-                            name="deliverables"
-                            value={editPhaseForm.deliverables}
-                            onChange={handleEditPhaseChange}
-                            maxLength={1000}
-                          />
-                          <div className="d-flex justify-content-between align-items-center">
-                            <label className="form-check-label d-flex align-items-center gap-2">
+                            <div className="d-flex gap-2 mb-2">
                               <input
-                                type="checkbox"
-                                className="form-check-input"
-                                name="isGatePassed"
-                                checked={editPhaseForm.isGatePassed}
+                                className="form-control form-control-sm"
+                                type="date"
+                                name="startDateUtc"
+                                value={editPhaseForm.startDateUtc}
                                 onChange={handleEditPhaseChange}
                               />
-                              Gate passed
-                            </label>
-                            <div className="task-row-actions">
-                              <button
-                                type="button"
-                                className="btn btn-success btn-sm"
-                                onClick={() => handleUpdatePhase(p)}
-                              >
-                                <i className="bi bi-check-lg" />
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-outline-secondary btn-sm"
-                                onClick={() => setEditingPhaseId(null)}
-                              >
-                                <i className="bi bi-x-lg" />
-                              </button>
+                              <input
+                                className="form-control form-control-sm"
+                                type="date"
+                                name="endDateUtc"
+                                value={editPhaseForm.endDateUtc}
+                                onChange={handleEditPhaseChange}
+                              />
                             </div>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            className="hierarchy-item-main"
-                            onClick={() => {
-                              setSelectedPhaseId(p.id);
-                              setSelectedMilestoneId(null);
-                              setTasks([]);
-                              setShowCreateTask(false);
-                              setShowCreateMilestone(false);
-                            }}
-                          >
-                            <strong>{p.name || "Unnamed"}</strong>
-                            <span>
-                              {p.startDateUtc
-                                ? new Date(p.startDateUtc).toLocaleDateString()
-                                : "No start date"}
-                            </span>
-                          </button>
-                          <div className="task-row-actions">
-                            {confirmDeletePhaseId === p.id ? (
-                              <span className="confirm-inline confirm-inline-sm">
+                            <textarea
+                              className="form-control form-control-sm mb-2"
+                              rows={2}
+                              name="deliverables"
+                              value={editPhaseForm.deliverables}
+                              onChange={handleEditPhaseChange}
+                              maxLength={1000}
+                            />
+                            <div className="d-flex justify-content-between align-items-center">
+                              <label className="form-check-label d-flex align-items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  className="form-check-input"
+                                  name="isGatePassed"
+                                  checked={editPhaseForm.isGatePassed}
+                                  onChange={handleEditPhaseChange}
+                                />
+                                Gate passed
+                              </label>
+                              <div className="task-row-actions">
                                 <button
                                   type="button"
-                                  className="btn btn-danger btn-sm"
-                                  onClick={() => handleDeletePhase(p.id)}
+                                  className="btn btn-success btn-sm"
+                                  onClick={() => handleUpdatePhase(p)}
                                 >
-                                  Yes
+                                  <i className="bi bi-check-lg" />
                                 </button>
                                 <button
                                   type="button"
                                   className="btn btn-outline-secondary btn-sm"
-                                  onClick={() => setConfirmDeletePhaseId(null)}
+                                  onClick={() => setEditingPhaseId(null)}
                                 >
-                                  No
+                                  <i className="bi bi-x-lg" />
                                 </button>
-                              </span>
-                            ) : (
-                              <>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-primary btn-sm"
-                                  onClick={() => startEditPhase(p)}
-                                >
-                                  <i className="bi bi-pencil" />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-danger btn-sm"
-                                  onClick={() => setConfirmDeletePhaseId(p.id)}
-                                >
-                                  <i className="bi bi-trash" />
-                                </button>
-                              </>
-                            )}
+                              </div>
+                            </div>
                           </div>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-              </article>
-
-              <article className="hierarchy-column">
-              <div className="hierarchy-column-head">
-                <h3>
-                  <i className="bi bi-signpost-2 me-1" />
-                  Milestones
-                </h3>
-                <button
-                  type="button"
-                  className="btn btn-info text-white btn-sm"
-                  disabled={!selectedPhaseId}
-                  onClick={() => setShowCreateMilestone((prev) => !prev)}
-                >
-                  {showCreateMilestone ? "Cancel" : "+ Add"}
-                </button>
-              </div>
-
-              {!selectedPhaseId ? (
-                <div className="tasks-empty-message">
-                  <i className="bi bi-arrow-left-circle" />
-                  Select a phase to view milestones
-                </div>
-              ) : (
-                <>
-                  {showCreateMilestone && (
-                    <div className="task-create-card mb-3">
-                      <form className="row g-2" onSubmit={handleCreateMilestone}>
-                        <div className="col-12">
-                          <label className="form-label mb-1">Milestone Name</label>
-                          <input
-                            className="form-control"
-                            name="name"
-                            value={newMilestone.name}
-                            onChange={handleNewMilestoneChange}
-                            placeholder="Milestone name"
-                            maxLength={150}
-                            required
-                          />
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label mb-1">Target Date</label>
-                          <input
-                            className="form-control"
-                            type="date"
-                            name="targetDateUtc"
-                            value={newMilestone.targetDateUtc}
-                            onChange={handleNewMilestoneChange}
-                          />
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label mb-1">Success Criteria</label>
-                          <textarea
-                            className="form-control"
-                            rows={2}
-                            name="successCriteria"
-                            value={newMilestone.successCriteria}
-                            onChange={handleNewMilestoneChange}
-                            placeholder="Success criteria"
-                            maxLength={1000}
-                          />
-                        </div>
-                        <div className="col-12 d-flex justify-content-between align-items-center">
-                          <label className="form-check-label d-flex align-items-center gap-2">
-                            <input
-                              className="form-check-input"
-                              type="checkbox"
-                              name="isCompleted"
-                              checked={newMilestone.isCompleted}
-                              onChange={handleNewMilestoneChange}
-                            />
-                            Mark as Completed
-                          </label>
-                          <button
-                            type="submit"
-                            className="btn btn-success btn-sm"
-                            disabled={creatingMilestone}
-                          >
-                            {creatingMilestone ? "Creating..." : "Create"}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-
-                  {milestonesLoading ? (
-                    <div className="text-center py-3">
-                      <div
-                        className="spinner-border spinner-border-sm text-info"
-                        role="status"
-                      />
-                    </div>
-                  ) : milestones.length === 0 ? (
-                    <div className="tasks-empty-message">
-                      <i className="bi bi-inbox" />
-                      No milestones for this phase.
-                    </div>
-                  ) : (
-                    <div className="hierarchy-list">
-                      {milestones.map((m) => (
-                        <div
-                          key={m.id}
-                          className={`hierarchy-item ${selectedMilestoneId === m.id ? "selected" : ""}`}
-                        >
-                          {editingMilestoneId === m.id ? (
-                            <div className="w-100">
-                              <input
-                                className="form-control form-control-sm mb-2"
-                                name="name"
-                                value={editMilestoneForm.name}
-                                onChange={handleEditMilestoneChange}
-                                maxLength={150}
-                                required
-                              />
-                              <input
-                                className="form-control form-control-sm mb-2"
-                                type="date"
-                                name="targetDateUtc"
-                                value={editMilestoneForm.targetDateUtc}
-                                onChange={handleEditMilestoneChange}
-                              />
-                              <textarea
-                                className="form-control form-control-sm mb-2"
-                                rows={2}
-                                name="successCriteria"
-                                value={editMilestoneForm.successCriteria}
-                                onChange={handleEditMilestoneChange}
-                                maxLength={1000}
-                              />
-                              <div className="d-flex justify-content-between align-items-center">
-                                <label className="form-check-label d-flex align-items-center gap-2">
-                                  <input
-                                    className="form-check-input"
-                                    type="checkbox"
-                                    name="isCompleted"
-                                    checked={editMilestoneForm.isCompleted}
-                                    onChange={handleEditMilestoneChange}
-                                  />
-                                  Completed
-                                </label>
-                                <div className="task-row-actions">
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="hierarchy-item-main"
+                              onClick={() => {
+                                setSelectedPhaseId(p.id);
+                                setSelectedMilestoneId(null);
+                                setTasks([]);
+                                setShowCreateTask(false);
+                                setShowCreateMilestone(false);
+                              }}
+                            >
+                              <strong>{p.name || "Unnamed"}</strong>
+                              <span>
+                                {p.startDateUtc
+                                  ? new Date(
+                                      p.startDateUtc,
+                                    ).toLocaleDateString()
+                                  : "No start date"}
+                              </span>
+                            </button>
+                            <div className="task-row-actions">
+                              {confirmDeletePhaseId === p.id ? (
+                                <span className="confirm-inline confirm-inline-sm">
                                   <button
                                     type="button"
-                                    className="btn btn-success btn-sm"
-                                    onClick={() => handleUpdateMilestone(m)}
+                                    className="btn btn-danger btn-sm"
+                                    onClick={() => handleDeletePhase(p.id)}
                                   >
-                                    <i className="bi bi-check-lg" />
+                                    Yes
                                   </button>
                                   <button
                                     type="button"
                                     className="btn btn-outline-secondary btn-sm"
-                                    onClick={() => setEditingMilestoneId(null)}
+                                    onClick={() =>
+                                      setConfirmDeletePhaseId(null)
+                                    }
                                   >
-                                    <i className="bi bi-x-lg" />
+                                    No
                                   </button>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            <>
-                              <button
-                                type="button"
-                                className="hierarchy-item-main"
-                                onClick={() => {
-                                  setSelectedMilestoneId(m.id);
-                                  setShowCreateTask(false);
-                                }}
-                              >
-                                <strong>{m.name || "Unnamed"}</strong>
-                                <span>
-                                  {m.targetDateUtc
-                                    ? new Date(m.targetDateUtc).toLocaleDateString()
-                                    : "No target date"}
                                 </span>
-                              </button>
-                              <div className="task-row-actions">
-                                {confirmDeleteMilestoneId === m.id ? (
-                                  <span className="confirm-inline confirm-inline-sm">
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => startEditPhase(p)}
+                                  >
+                                    <i className="bi bi-pencil" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() =>
+                                      setConfirmDeletePhaseId(p.id)
+                                    }
+                                  >
+                                    <i className="bi bi-trash" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </article>
+
+              <article className="hierarchy-column">
+                <div className="hierarchy-column-head">
+                  <h3>
+                    <i className="bi bi-signpost-2 me-1" />
+                    Milestones
+                  </h3>
+                  <button
+                    type="button"
+                    className="btn btn-info text-white btn-sm"
+                    disabled={!selectedPhaseId}
+                    onClick={() => setShowCreateMilestone((prev) => !prev)}
+                  >
+                    {showCreateMilestone ? "Cancel" : "+ Add"}
+                  </button>
+                </div>
+
+                {!selectedPhaseId ? (
+                  <div className="tasks-empty-message">
+                    <i className="bi bi-arrow-left-circle" />
+                    Select a phase to view milestones
+                  </div>
+                ) : (
+                  <>
+                    {showCreateMilestone && (
+                      <div className="task-create-card mb-3">
+                        <form
+                          className="row g-2"
+                          onSubmit={handleCreateMilestone}
+                        >
+                          <div className="col-12">
+                            <label className="form-label mb-1">
+                              Milestone Name
+                            </label>
+                            <input
+                              className="form-control"
+                              name="name"
+                              value={newMilestone.name}
+                              onChange={handleNewMilestoneChange}
+                              placeholder="Milestone name"
+                              maxLength={150}
+                              required
+                            />
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label mb-1">
+                              Target Date
+                            </label>
+                            <input
+                              className="form-control"
+                              type="date"
+                              name="targetDateUtc"
+                              value={newMilestone.targetDateUtc}
+                              onChange={handleNewMilestoneChange}
+                            />
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label mb-1">
+                              Success Criteria
+                            </label>
+                            <textarea
+                              className="form-control"
+                              rows={2}
+                              name="successCriteria"
+                              value={newMilestone.successCriteria}
+                              onChange={handleNewMilestoneChange}
+                              placeholder="Success criteria"
+                              maxLength={1000}
+                            />
+                          </div>
+                          <div className="col-12 d-flex justify-content-between align-items-center">
+                            <label className="form-check-label d-flex align-items-center gap-2">
+                              <input
+                                className="form-check-input"
+                                type="checkbox"
+                                name="isCompleted"
+                                checked={newMilestone.isCompleted}
+                                onChange={handleNewMilestoneChange}
+                              />
+                              Mark as Completed
+                            </label>
+                            <button
+                              type="submit"
+                              className="btn btn-success btn-sm"
+                              disabled={creatingMilestone}
+                            >
+                              {creatingMilestone ? "Creating..." : "Create"}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+
+                    {milestonesLoading ? (
+                      <div className="text-center py-3">
+                        <div
+                          className="spinner-border spinner-border-sm text-info"
+                          role="status"
+                        />
+                      </div>
+                    ) : milestones.length === 0 ? (
+                      <div className="tasks-empty-message">
+                        <i className="bi bi-inbox" />
+                        No milestones for this phase.
+                      </div>
+                    ) : (
+                      <div className="hierarchy-list">
+                        {milestones.map((m) => (
+                          <div
+                            key={m.id}
+                            className={`hierarchy-item ${selectedMilestoneId === m.id ? "selected" : ""}`}
+                          >
+                            {editingMilestoneId === m.id ? (
+                              <div className="w-100">
+                                <input
+                                  className="form-control form-control-sm mb-2"
+                                  name="name"
+                                  value={editMilestoneForm.name}
+                                  onChange={handleEditMilestoneChange}
+                                  maxLength={150}
+                                  required
+                                />
+                                <input
+                                  className="form-control form-control-sm mb-2"
+                                  type="date"
+                                  name="targetDateUtc"
+                                  value={editMilestoneForm.targetDateUtc}
+                                  onChange={handleEditMilestoneChange}
+                                />
+                                <textarea
+                                  className="form-control form-control-sm mb-2"
+                                  rows={2}
+                                  name="successCriteria"
+                                  value={editMilestoneForm.successCriteria}
+                                  onChange={handleEditMilestoneChange}
+                                  maxLength={1000}
+                                />
+                                <div className="d-flex justify-content-between align-items-center">
+                                  <label className="form-check-label d-flex align-items-center gap-2">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      name="isCompleted"
+                                      checked={editMilestoneForm.isCompleted}
+                                      onChange={handleEditMilestoneChange}
+                                    />
+                                    Completed
+                                  </label>
+                                  <div className="task-row-actions">
                                     <button
                                       type="button"
-                                      className="btn btn-danger btn-sm"
-                                      onClick={() => handleDeleteMilestone(m.id)}
+                                      className="btn btn-success btn-sm"
+                                      onClick={() => handleUpdateMilestone(m)}
                                     >
-                                      Yes
+                                      <i className="bi bi-check-lg" />
                                     </button>
                                     <button
                                       type="button"
                                       className="btn btn-outline-secondary btn-sm"
                                       onClick={() =>
-                                        setConfirmDeleteMilestoneId(null)
+                                        setEditingMilestoneId(null)
                                       }
                                     >
-                                      No
+                                      <i className="bi bi-x-lg" />
                                     </button>
-                                  </span>
-                                ) : (
-                                  <>
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-primary btn-sm"
-                                      onClick={() => startEditMilestone(m)}
-                                    >
-                                      <i className="bi bi-pencil" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-danger btn-sm"
-                                      onClick={() =>
-                                        setConfirmDeleteMilestoneId(m.id)
-                                      }
-                                    >
-                                      <i className="bi bi-trash" />
-                                    </button>
-                                  </>
-                                )}
+                                  </div>
+                                </div>
                               </div>
-                            </>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  className="hierarchy-item-main"
+                                  onClick={() => {
+                                    setSelectedMilestoneId(m.id);
+                                    setShowCreateTask(false);
+                                  }}
+                                >
+                                  <strong>{m.name || "Unnamed"}</strong>
+                                  <span>
+                                    {m.targetDateUtc
+                                      ? new Date(
+                                          m.targetDateUtc,
+                                        ).toLocaleDateString()
+                                      : "No target date"}
+                                  </span>
+                                </button>
+                                <div className="task-row-actions">
+                                  {confirmDeleteMilestoneId === m.id ? (
+                                    <span className="confirm-inline confirm-inline-sm">
+                                      <button
+                                        type="button"
+                                        className="btn btn-danger btn-sm"
+                                        onClick={() =>
+                                          handleDeleteMilestone(m.id)
+                                        }
+                                      >
+                                        Yes
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline-secondary btn-sm"
+                                        onClick={() =>
+                                          setConfirmDeleteMilestoneId(null)
+                                        }
+                                      >
+                                        No
+                                      </button>
+                                    </span>
+                                  ) : (
+                                    <>
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline-primary btn-sm"
+                                        onClick={() => startEditMilestone(m)}
+                                      >
+                                        <i className="bi bi-pencil" />
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline-danger btn-sm"
+                                        onClick={() =>
+                                          setConfirmDeleteMilestoneId(m.id)
+                                        }
+                                      >
+                                        <i className="bi bi-trash" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
               </article>
 
               <article className="hierarchy-column">
-              <div className="hierarchy-column-head">
-                <h3>
-                  <i className="bi bi-check2-square me-1" />
-                  Tasks
-                </h3>
-                <button
-                  type="button"
-                  className="btn btn-info text-white btn-sm"
-                  disabled={!selectedMilestoneId}
-                  onClick={() => setShowCreateTask((prev) => !prev)}
-                >
-                  {showCreateTask ? "Cancel" : "+ Add"}
-                </button>
-              </div>
-
-              {!selectedMilestoneId ? (
-                <div className="tasks-empty-message">
-                  <i className="bi bi-arrow-left-circle" />
-                  Select a milestone to view tasks
+                <div className="hierarchy-column-head">
+                  <h3>
+                    <i className="bi bi-check2-square me-1" />
+                    Tasks
+                  </h3>
+                  <button
+                    type="button"
+                    className="btn btn-info text-white btn-sm"
+                    disabled={!selectedMilestoneId}
+                    onClick={() => setShowCreateTask((prev) => !prev)}
+                  >
+                    {showCreateTask ? "Cancel" : "+ Add"}
+                  </button>
                 </div>
-              ) : (
-                <>
-                  {showCreateTask && (
-                    <div className="task-create-card mb-3">
-                      <form className="row g-2" onSubmit={handleCreateTask}>
-                        <div className="col-12">
-                          <label className="form-label mb-1">Task Title</label>
-                          <input
-                            className="form-control"
-                            name="title"
-                            value={newTask.title}
-                            onChange={handleNewTaskChange}
-                            placeholder="Task title"
-                            maxLength={180}
-                            required
-                          />
-                        </div>
-                        <div className="col-6">
-                          <label className="form-label mb-1">Priority</label>
-                          <select
-                            className="form-select"
-                            name="priority"
-                            value={newTask.priority}
-                            onChange={handleNewTaskChange}
-                          >
-                            {Object.entries(PriorityLevel).map(([v, l]) => (
-                              <option key={v} value={v}>
-                                {l}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="col-6">
-                          <label className="form-label mb-1">Status</label>
-                          <select
-                            className="form-select"
-                            name="status"
-                            value={newTask.status}
-                            onChange={handleNewTaskChange}
-                          >
-                            {Object.entries(TaskStatusEnum).map(([v, l]) => (
-                              <option key={v} value={v}>
-                                {l}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="col-6">
-                          <label className="form-label mb-1">Start Date</label>
-                          <input
-                            className="form-control"
-                            type="date"
-                            name="startDateUtc"
-                            value={newTask.startDateUtc}
-                            onChange={handleNewTaskChange}
-                          />
-                        </div>
-                        <div className="col-6">
-                          <label className="form-label mb-1">Due Date</label>
-                          <input
-                            className="form-control"
-                            type="date"
-                            name="dueDateUtc"
-                            value={newTask.dueDateUtc}
-                            onChange={handleNewTaskChange}
-                          />
-                        </div>
-                        <div className="col-6">
-                          <label className="form-label mb-1">Completion Percentage</label>
-                          <input
-                            className="form-control"
-                            type="number"
-                            min="0"
-                            max="100"
-                            name="completionPercentage"
-                            value={newTask.completionPercentage}
-                            onChange={handleNewTaskChange}
-                          />
-                        </div>
-                        <div className="col-6">
-                          <label className="form-label mb-1">Effort Estimate (Hours)</label>
-                          <input
-                            className="form-control"
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            name="effortEstimateHours"
-                            value={newTask.effortEstimateHours}
-                            onChange={handleNewTaskChange}
-                          />
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label mb-1">Description</label>
-                          <textarea
-                            className="form-control"
-                            rows={2}
-                            name="description"
-                            value={newTask.description}
-                            onChange={handleNewTaskChange}
-                            maxLength={2000}
-                          />
-                        </div>
-                        <div className="col-12">
-                          <label className="form-label mb-1">
-                            Assign To (Project Member)
-                          </label>
-                          <div
-                            className="employee-dropdown-wrap"
-                            ref={memberDropdownRef}
-                          >
+
+                {!selectedMilestoneId ? (
+                  <div className="tasks-empty-message">
+                    <i className="bi bi-arrow-left-circle" />
+                    Select a milestone to view tasks
+                  </div>
+                ) : (
+                  <>
+                    {showCreateTask && (
+                      <div className="task-create-card mb-3">
+                        <form className="row g-2" onSubmit={handleCreateTask}>
+                          <div className="col-12">
+                            <label className="form-label mb-1">
+                              Task Title
+                            </label>
+                            <input
+                              className="form-control"
+                              name="title"
+                              value={newTask.title}
+                              onChange={handleNewTaskChange}
+                              placeholder="Task title"
+                              maxLength={180}
+                              required
+                            />
+                          </div>
+                          <div className="col-6">
+                            <label className="form-label mb-1">Priority</label>
+                            <select
+                              className="form-select"
+                              name="priority"
+                              value={newTask.priority}
+                              onChange={handleNewTaskChange}
+                            >
+                              {Object.entries(PriorityLevel).map(([v, l]) => (
+                                <option key={v} value={v}>
+                                  {l}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="col-6">
+                            <label className="form-label mb-1">Status</label>
+                            <select
+                              className="form-select"
+                              name="status"
+                              value={newTask.status}
+                              onChange={handleNewTaskChange}
+                            >
+                              {Object.entries(TaskStatusEnum).map(([v, l]) => (
+                                <option key={v} value={v}>
+                                  {l}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="col-6">
+                            <label className="form-label mb-1">
+                              Start Date
+                            </label>
+                            <input
+                              className="form-control"
+                              type="date"
+                              name="startDateUtc"
+                              value={newTask.startDateUtc}
+                              onChange={handleNewTaskChange}
+                            />
+                          </div>
+                          <div className="col-6">
+                            <label className="form-label mb-1">Due Date</label>
+                            <input
+                              className="form-control"
+                              type="date"
+                              name="dueDateUtc"
+                              value={newTask.dueDateUtc}
+                              onChange={handleNewTaskChange}
+                            />
+                          </div>
+                          <div className="col-6">
+                            <label className="form-label mb-1">
+                              Completion Percentage
+                            </label>
+                            <input
+                              className="form-control"
+                              type="number"
+                              min="0"
+                              max="100"
+                              name="completionPercentage"
+                              value={newTask.completionPercentage}
+                              onChange={handleNewTaskChange}
+                            />
+                          </div>
+                          <div className="col-6">
+                            <label className="form-label mb-1">
+                              Effort Estimate (Hours)
+                            </label>
+                            <input
+                              className="form-control"
+                              type="number"
+                              min="0"
+                              step="0.5"
+                              name="effortEstimateHours"
+                              value={newTask.effortEstimateHours}
+                              onChange={handleNewTaskChange}
+                            />
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label mb-1">
+                              Description
+                            </label>
+                            <textarea
+                              className="form-control"
+                              rows={2}
+                              name="description"
+                              value={newTask.description}
+                              onChange={handleNewTaskChange}
+                              maxLength={2000}
+                            />
+                          </div>
+                          <div className="col-12">
+                            <label className="form-label mb-1">
+                              Assign To (Project Member)
+                            </label>
                             <div
-                              className="employee-selected-input"
+                              className="employee-dropdown-wrap"
+                              ref={memberDropdownRef}
+                            >
+                              <div
+                                className="employee-selected-input"
+                                onClick={() =>
+                                  setShowMemberDropdown((prev) => !prev)
+                                }
+                              >
+                                {newTask.assignedToMemberId ? (
+                                  <span className="employee-selected-name">
+                                    <i className="bi bi-person-fill me-1" />
+                                    {getMemberDisplayName(
+                                      newTask.assignedToMemberId,
+                                    ) || newTask.assignedToMemberId}
+                                    <button
+                                      type="button"
+                                      className="employee-clear-btn"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setNewTask((prev) => ({
+                                          ...prev,
+                                          assignedToMemberId: "",
+                                        }));
+                                      }}
+                                    >
+                                      <i className="bi bi-x" />
+                                    </button>
+                                  </span>
+                                ) : (
+                                  <span className="employee-placeholder">
+                                    Select a project member...
+                                  </span>
+                                )}
+                                <i
+                                  className={`bi bi-chevron-${showMemberDropdown ? "up" : "down"} employee-chevron`}
+                                />
+                              </div>
+                              {showMemberDropdown && (
+                                <div className="employee-dropdown-list">
+                                  <input
+                                    className="form-control form-control-sm employee-search-input"
+                                    placeholder="Search by name or role..."
+                                    value={memberSearch}
+                                    onChange={(e) =>
+                                      setMemberSearch(e.target.value)
+                                    }
+                                    autoFocus
+                                  />
+                                  <div className="employee-options">
+                                    {filteredMembers.length === 0 ? (
+                                      <div className="employee-option-empty">
+                                        No project members found.
+                                      </div>
+                                    ) : (
+                                      filteredMembers.map((m) => (
+                                        <div
+                                          key={m.id}
+                                          className={`employee-option ${newTask.assignedToMemberId === m.id ? "selected" : ""}`}
+                                          onClick={() => {
+                                            setNewTask((prev) => ({
+                                              ...prev,
+                                              assignedToMemberId: m.id,
+                                            }));
+                                            setShowMemberDropdown(false);
+                                            setMemberSearch("");
+                                          }}
+                                        >
+                                          <div className="employee-option-avatar">
+                                            {m.fullName
+                                              .split(" ")
+                                              .map((n) => n.charAt(0))
+                                              .join("")
+                                              .slice(0, 2)}
+                                          </div>
+                                          <div className="employee-option-info">
+                                            <span className="employee-option-name">
+                                              {m.fullName}
+                                            </span>
+                                            <span className="employee-option-meta">
+                                              {m.role}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      ))
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="col-12 text-end">
+                            <button
+                              type="submit"
+                              className="btn btn-success btn-sm"
+                              disabled={creatingTask}
+                            >
+                              {creatingTask ? "Creating..." : "Create"}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+
+                    {tasksLoading ? (
+                      <div className="text-center py-3">
+                        <div
+                          className="spinner-border spinner-border-sm text-info"
+                          role="status"
+                        />
+                      </div>
+                    ) : tasks.length === 0 ? (
+                      <div className="tasks-empty-message">
+                        <i className="bi bi-inbox" />
+                        No tasks for this milestone.
+                      </div>
+                    ) : (
+                      <div className="hierarchy-list">
+                        {tasks.map((t) => (
+                          <div key={t.id} className="hierarchy-item">
+                            <button
+                              type="button"
+                              className="hierarchy-item-main"
                               onClick={() =>
-                                setShowMemberDropdown((prev) => !prev)
+                                navigate(
+                                  `/dashboard/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
+                                )
                               }
                             >
-                              {newTask.assignedToMemberId ? (
-                                <span className="employee-selected-name">
-                                  <i className="bi bi-person-fill me-1" />
-                                  {getMemberDisplayName(
-                                    newTask.assignedToMemberId,
-                                  ) || newTask.assignedToMemberId}
+                              <strong>{t.title || "Untitled"}</strong>
+                              <span>
+                                {TaskStatusEnum[t.status ?? 0] || "Unknown"} ·{" "}
+                                {t.completionPercentage ?? 0}%
+                              </span>
+                            </button>
+                            <div className="task-row-actions">
+                              {confirmDeleteTaskId === t.id ? (
+                                <span className="confirm-inline confirm-inline-sm">
                                   <button
                                     type="button"
-                                    className="employee-clear-btn"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setNewTask((prev) => ({
-                                        ...prev,
-                                        assignedToMemberId: "",
-                                      }));
-                                    }}
+                                    className="btn btn-danger btn-sm"
+                                    onClick={() => handleDeleteTask(t.id)}
                                   >
-                                    <i className="bi bi-x" />
+                                    Yes
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-secondary btn-sm"
+                                    onClick={() => setConfirmDeleteTaskId(null)}
+                                  >
+                                    No
                                   </button>
                                 </span>
                               ) : (
-                                <span className="employee-placeholder">
-                                  Select a project member...
-                                </span>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-danger btn-sm"
+                                  onClick={() => setConfirmDeleteTaskId(t.id)}
+                                >
+                                  <i className="bi bi-trash" />
+                                </button>
                               )}
-                              <i
-                                className={`bi bi-chevron-${showMemberDropdown ? "up" : "down"} employee-chevron`}
-                              />
                             </div>
-                            {showMemberDropdown && (
-                              <div className="employee-dropdown-list">
-                                <input
-                                  className="form-control form-control-sm employee-search-input"
-                                  placeholder="Search by name or role..."
-                                  value={memberSearch}
-                                  onChange={(e) =>
-                                    setMemberSearch(e.target.value)
-                                  }
-                                  autoFocus
-                                />
-                                <div className="employee-options">
-                                  {filteredMembers.length === 0 ? (
-                                    <div className="employee-option-empty">
-                                      No project members found.
-                                    </div>
-                                  ) : (
-                                    filteredMembers.map((m) => (
-                                      <div
-                                        key={m.id}
-                                        className={`employee-option ${newTask.assignedToMemberId === m.id ? "selected" : ""}`}
-                                        onClick={() => {
-                                          setNewTask((prev) => ({
-                                            ...prev,
-                                            assignedToMemberId: m.id,
-                                          }));
-                                          setShowMemberDropdown(false);
-                                          setMemberSearch("");
-                                        }}
-                                      >
-                                        <div className="employee-option-avatar">
-                                          {m.fullName
-                                            .split(" ")
-                                            .map((n) => n.charAt(0))
-                                            .join("")
-                                            .slice(0, 2)}
-                                        </div>
-                                        <div className="employee-option-info">
-                                          <span className="employee-option-name">
-                                            {m.fullName}
-                                          </span>
-                                          <span className="employee-option-meta">
-                                            {m.role}
-                                          </span>
-                                        </div>
-                                      </div>
-                                    ))
-                                  )}
-                                </div>
-                              </div>
-                            )}
                           </div>
-                        </div>
-                        <div className="col-12 text-end">
-                          <button
-                            type="submit"
-                            className="btn btn-success btn-sm"
-                            disabled={creatingTask}
-                          >
-                            {creatingTask ? "Creating..." : "Create"}
-                          </button>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-
-                  {tasksLoading ? (
-                    <div className="text-center py-3">
-                      <div
-                        className="spinner-border spinner-border-sm text-info"
-                        role="status"
-                      />
-                    </div>
-                  ) : tasks.length === 0 ? (
-                    <div className="tasks-empty-message">
-                      <i className="bi bi-inbox" />
-                      No tasks for this milestone.
-                    </div>
-                  ) : (
-                    <div className="hierarchy-list">
-                      {tasks.map((t) => (
-                        <div key={t.id} className="hierarchy-item">
-                          <button
-                            type="button"
-                            className="hierarchy-item-main"
-                            onClick={() =>
-                              navigate(
-                                `/dashboard/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
-                              )
-                            }
-                          >
-                            <strong>{t.title || "Untitled"}</strong>
-                            <span>
-                              {TaskStatusEnum[t.status ?? 0] || "Unknown"} ·{" "}
-                              {t.completionPercentage ?? 0}%
-                            </span>
-                          </button>
-                          <div className="task-row-actions">
-                            {confirmDeleteTaskId === t.id ? (
-                              <span className="confirm-inline confirm-inline-sm">
-                                <button
-                                  type="button"
-                                  className="btn btn-danger btn-sm"
-                                  onClick={() => handleDeleteTask(t.id)}
-                                >
-                                  Yes
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-secondary btn-sm"
-                                  onClick={() => setConfirmDeleteTaskId(null)}
-                                >
-                                  No
-                                </button>
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                className="btn btn-outline-danger btn-sm"
-                                onClick={() => setConfirmDeleteTaskId(t.id)}
-                              >
-                                <i className="bi bi-trash" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
               </article>
             </div>
 
             <div className="details-row-grid">
-              <aside className="hierarchy-sidebar" aria-label="Selection details">
+              <aside
+                className="hierarchy-sidebar"
+                aria-label="Selection details"
+              >
                 <div className="hierarchy-sidebar-head">
                   <h3>
                     <i className="bi bi-card-text me-2" />
@@ -3394,7 +3436,10 @@ export function ProjectDetails() {
                 )}
               </aside>
 
-              <aside className="hierarchy-sidebar hierarchy-visual" aria-label="Phase visual analytics">
+              <aside
+                className="hierarchy-sidebar hierarchy-visual"
+                aria-label="Phase visual analytics"
+              >
                 <div className="hierarchy-sidebar-head">
                   <h3>
                     <i className="bi bi-bar-chart-line me-2" />
@@ -3441,7 +3486,9 @@ export function ProjectDetails() {
                       <div className="visual-progress-block">
                         <div className="visual-progress-head">
                           <span>Milestone Completion</span>
-                          <strong>{phaseVisualSummary.milestoneProgressPercent}%</strong>
+                          <strong>
+                            {phaseVisualSummary.milestoneProgressPercent}%
+                          </strong>
                         </div>
                         <div className="visual-progress-track">
                           <span
@@ -3456,7 +3503,9 @@ export function ProjectDetails() {
                       <div className="visual-progress-block">
                         <div className="visual-progress-head">
                           <span>Task Completion</span>
-                          <strong>{phaseVisualSummary.taskProgressPercent}%</strong>
+                          <strong>
+                            {phaseVisualSummary.taskProgressPercent}%
+                          </strong>
                         </div>
                         <div className="visual-progress-track">
                           <span
@@ -3512,7 +3561,9 @@ export function ProjectDetails() {
                                 />
                               </div>
                               <div className="visual-task-stats">
-                                <span className="ok">{row.completedTasks} done</span>
+                                <span className="ok">
+                                  {row.completedTasks} done
+                                </span>
                                 <span className="progress">
                                   {row.inProgressTasks} in progress
                                 </span>
@@ -3607,7 +3658,11 @@ export function ProjectDetails() {
                     />
                     <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                     <Tooltip />
-                    <Bar dataKey="events" fill="#1b4965" radius={[6, 6, 0, 0]} />
+                    <Bar
+                      dataKey="events"
+                      fill="#1b4965"
+                      radius={[6, 6, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -3760,12 +3815,17 @@ export function ProjectDetails() {
                 const severityBucket = getRiskSeverityBucket(risk);
 
                 return (
-                  <article key={risk.id} className="details-card risk-item-card">
+                  <article
+                    key={risk.id}
+                    className="details-card risk-item-card"
+                  >
                     {editingRiskId === risk.id ? (
                       <div className="risk-edit-block">
                         <div className="row g-2">
                           <div className="col-12">
-                            <label className="form-label mb-1">Description *</label>
+                            <label className="form-label mb-1">
+                              Description *
+                            </label>
                             <textarea
                               className="form-control"
                               rows={2}
@@ -3777,7 +3837,9 @@ export function ProjectDetails() {
                             />
                           </div>
                           <div className="col-12 col-md-4">
-                            <label className="form-label mb-1">Probability</label>
+                            <label className="form-label mb-1">
+                              Probability
+                            </label>
                             <select
                               className="form-select"
                               name="probability"
@@ -3801,11 +3863,13 @@ export function ProjectDetails() {
                               value={editRiskForm.impact}
                               onChange={handleEditRiskChange}
                             >
-                              {Object.entries(RiskImpact).map(([key, label]) => (
-                                <option key={key} value={key}>
-                                  {label}
-                                </option>
-                              ))}
+                              {Object.entries(RiskImpact).map(
+                                ([key, label]) => (
+                                  <option key={key} value={key}>
+                                    {label}
+                                  </option>
+                                ),
+                              )}
                             </select>
                           </div>
                           <div className="col-12 col-md-4">
@@ -3819,7 +3883,9 @@ export function ProjectDetails() {
                             />
                           </div>
                           <div className="col-12">
-                            <label className="form-label mb-1">Mitigation Plan</label>
+                            <label className="form-label mb-1">
+                              Mitigation Plan
+                            </label>
                             <textarea
                               className="form-control"
                               rows={2}
@@ -3856,15 +3922,19 @@ export function ProjectDetails() {
                               <span
                                 className="task-row-badge"
                                 style={{
-                                  background: getRiskSeverityColor(severityBucket),
+                                  background:
+                                    getRiskSeverityColor(severityBucket),
                                 }}
                               >
                                 {getRiskSeverityLabel(risk)}
                               </span>
                               <span>
-                                Probability: {RiskProbability[risk.probability ?? 0]}
+                                Probability:{" "}
+                                {RiskProbability[risk.probability ?? 0]}
                               </span>
-                              <span>Impact: {RiskImpact[risk.impact ?? 0]}</span>
+                              <span>
+                                Impact: {RiskImpact[risk.impact ?? 0]}
+                              </span>
                               <span>Owner: {risk.ownerId || "N/A"}</span>
                             </div>
                           </div>
@@ -3918,7 +3988,8 @@ export function ProjectDetails() {
                           </div>
                         </div>
                         <p className="risk-mitigation-text mb-0">
-                          {risk.mitigationPlan || "No mitigation plan provided."}
+                          {risk.mitigationPlan ||
+                            "No mitigation plan provided."}
                         </p>
                       </>
                     )}
@@ -3947,7 +4018,9 @@ export function ProjectDetails() {
                         {showCreateEventForRiskId === risk.id && (
                           <form
                             className="row g-2 risk-event-create"
-                            onSubmit={(event) => handleCreateRiskEvent(event, risk.id)}
+                            onSubmit={(event) =>
+                              handleCreateRiskEvent(event, risk.id)
+                            }
                           >
                             <div className="col-12">
                               <label className="form-label mb-1">
@@ -3981,7 +4054,9 @@ export function ProjectDetails() {
                               </select>
                             </div>
                             <div className="col-12 col-md-4">
-                              <label className="form-label mb-1">Occurred Date</label>
+                              <label className="form-label mb-1">
+                                Occurred Date
+                              </label>
                               <input
                                 className="form-control"
                                 type="date"
@@ -3996,7 +4071,9 @@ export function ProjectDetails() {
                                 className="btn btn-success btn-sm"
                                 disabled={creatingRiskEvent}
                               >
-                                {creatingRiskEvent ? "Creating..." : "Create Event"}
+                                {creatingRiskEvent
+                                  ? "Creating..."
+                                  : "Create Event"}
                               </button>
                             </div>
                           </form>
@@ -4016,7 +4093,10 @@ export function ProjectDetails() {
                         ) : (
                           <div className="risk-events-list">
                             {events.map((eventItem) => (
-                              <div key={eventItem.id} className="risk-event-item">
+                              <div
+                                key={eventItem.id}
+                                className="risk-event-item"
+                              >
                                 {editingRiskEventId === eventItem.id ? (
                                   <div className="row g-2 w-100">
                                     <div className="col-12">
@@ -4027,14 +4107,18 @@ export function ProjectDetails() {
                                         className="form-control"
                                         rows={2}
                                         name="incidentDescription"
-                                        value={editRiskEventForm.incidentDescription}
+                                        value={
+                                          editRiskEventForm.incidentDescription
+                                        }
                                         onChange={handleEditRiskEventChange}
                                         maxLength={1000}
                                         required
                                       />
                                     </div>
                                     <div className="col-12 col-md-4">
-                                      <label className="form-label mb-1">Status</label>
+                                      <label className="form-label mb-1">
+                                        Status
+                                      </label>
                                       <select
                                         className="form-select"
                                         name="status"
@@ -4051,7 +4135,9 @@ export function ProjectDetails() {
                                       </select>
                                     </div>
                                     <div className="col-12 col-md-4">
-                                      <label className="form-label mb-1">Occurred Date</label>
+                                      <label className="form-label mb-1">
+                                        Occurred Date
+                                      </label>
                                       <input
                                         className="form-control"
                                         type="date"
@@ -4074,7 +4160,9 @@ export function ProjectDetails() {
                                         <button
                                           type="button"
                                           className="btn btn-outline-secondary btn-sm"
-                                          onClick={() => setEditingRiskEventId(null)}
+                                          onClick={() =>
+                                            setEditingRiskEventId(null)
+                                          }
                                         >
                                           <i className="bi bi-x-lg" />
                                         </button>
@@ -4090,11 +4178,13 @@ export function ProjectDetails() {
                                       </strong>
                                       <div className="risk-event-meta">
                                         <span className="task-row-badge risk-event-status-badge">
-                                          {RiskEventStatus[eventItem.status ?? 0] ||
-                                            "Unknown"}
+                                          {RiskEventStatus[
+                                            eventItem.status ?? 0
+                                          ] || "Unknown"}
                                         </span>
                                         <span>
-                                          Occurred: {formatDate(eventItem.occurredAtUtc)}
+                                          Occurred:{" "}
+                                          {formatDate(eventItem.occurredAtUtc)}
                                         </span>
                                       </div>
                                     </div>
@@ -4102,11 +4192,14 @@ export function ProjectDetails() {
                                       <button
                                         type="button"
                                         className="btn btn-outline-primary btn-sm"
-                                        onClick={() => startEditRiskEvent(eventItem)}
+                                        onClick={() =>
+                                          startEditRiskEvent(eventItem)
+                                        }
                                       >
                                         <i className="bi bi-pencil" />
                                       </button>
-                                      {confirmDeleteRiskEventId === eventItem.id ? (
+                                      {confirmDeleteRiskEventId ===
+                                      eventItem.id ? (
                                         <span className="confirm-inline confirm-inline-sm">
                                           <button
                                             type="button"
@@ -4135,7 +4228,9 @@ export function ProjectDetails() {
                                           type="button"
                                           className="btn btn-outline-danger btn-sm"
                                           onClick={() =>
-                                            setConfirmDeleteRiskEventId(eventItem.id)
+                                            setConfirmDeleteRiskEventId(
+                                              eventItem.id,
+                                            )
                                           }
                                         >
                                           <i className="bi bi-trash" />
