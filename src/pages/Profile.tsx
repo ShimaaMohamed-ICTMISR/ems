@@ -2,7 +2,10 @@ import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { profileService, type UserProfile } from '../services/profileService';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store/store';
+import { profileService, type UserProfile, type TaskStats, type TaskStatusBreakdown } from '../services/profileService';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import './Profile.css';
 
 const profileSchema = z.object({
@@ -14,12 +17,16 @@ const profileSchema = z.object({
 type ProfileFormData = z.infer<typeof profileSchema>;
 
 export function Profile() {
-  // const user = useSelector((state: RootState) => state.auth.user);
+  const user = useSelector((state: RootState) => state.auth.user);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [taskStats, setTaskStats] = useState<TaskStats | null>(null);
+  const [taskBreakdown, setTaskBreakdown] = useState<TaskStatusBreakdown[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const {
     register,
@@ -54,7 +61,22 @@ export function Profile() {
       }
     };
 
+    const fetchTaskStats = async () => {
+      try {
+        const [stats, breakdown] = await Promise.all([
+          profileService.getUserTaskStats(),
+          profileService.getUserTaskBreakdown()
+        ]);
+        setTaskStats(stats);
+        setTaskBreakdown(breakdown);
+      } catch (error: any) {
+        console.error('Failed to load task statistics:', error);
+        // Don't show error for task stats, just log it
+      }
+    };
+
     fetchProfile();
+    fetchTaskStats();
   }, [reset]);
 
   const onSubmit = async (data: ProfileFormData) => {
@@ -70,6 +92,74 @@ export function Profile() {
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error: any) {
       setApiError(error.message || 'Failed to update profile');
+    }
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setApiError('Please select a valid image file.');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      setApiError('Image size must be less than 5MB.');
+      return;
+    }
+
+    try {
+      setIsUploadingImage(true);
+      setApiError('');
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e) => setImagePreview(e.target?.result as string);
+      reader.readAsDataURL(file);
+
+      // Upload image
+      const response = await profileService.uploadProfileImage(file);
+      
+      // Update profile with new image URL
+      setProfile(prev => prev ? { ...prev, profileImageUrl: response.profileImageUrl } : null);
+      setSuccessMessage('Profile image updated successfully!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error: any) {
+      setApiError(error.message || 'Failed to upload image');
+      setImagePreview(null);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleDeleteImage = async () => {
+    try {
+      setApiError('');
+      await profileService.deleteProfileImage();
+      setProfile(prev => prev ? { ...prev, profileImageUrl: undefined } : null);
+      setImagePreview(null);
+      setSuccessMessage('Profile image deleted successfully!');
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error: any) {
+      setApiError(error.message || 'Failed to delete image');
+    }
+  };
+
+  // Helper function to get status colors for charts
+  const getStatusColor = (status: number) => {
+    switch (status) {
+      case 0: return '#64748b'; // Pending - Gray
+      case 1: return '#f59e0b'; // In Progress - Orange  
+      case 2: return '#10b981'; // Completed - Green
+      case 3: return '#ef4444'; // Overdue - Red
+      default: return '#06b6d4'; // Default - Primary
     }
   };
 
@@ -113,9 +203,56 @@ export function Profile() {
               <div className="profile-card-header">
                 <div className="profile-avatar">
                   <div className="avatar-circle">
-                    <i className="bi bi-person-fill"></i>
+                    {imagePreview || profile?.profileImageUrl ? (
+                      <img 
+                        src={imagePreview || profile?.profileImageUrl} 
+                        alt="Profile" 
+                        className="avatar-image"
+                      />
+                    ) : (
+                      <i className="bi bi-person-fill"></i>
+                    )}
+                    {isUploadingImage && (
+                      <div className="avatar-loading">
+                        <div className="spinner-border spinner-border-sm text-white"></div>
+                      </div>
+                    )}
                   </div>
-                  <div className="avatar-status"></div>
+                  {user?.isActive !== undefined && (
+                    <div className={`avatar-status ${user.isActive ? 'active' : 'inactive'}`}></div>
+                  )}
+                  
+                  {/* Image Upload Controls */}
+                  <div className="avatar-controls">
+                    <input
+                      type="file"
+                      id="profileImageInput"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="d-none"
+                      disabled={isUploadingImage}
+                    />
+                    <button
+                      type="button"
+                      className="avatar-upload-btn"
+                      onClick={() => document.getElementById('profileImageInput')?.click()}
+                      disabled={isUploadingImage}
+                      title="Upload new image"
+                    >
+                      <i className="bi bi-camera"></i>
+                    </button>
+                    {(profile?.profileImageUrl || imagePreview) && (
+                      <button
+                        type="button"
+                        className="avatar-delete-btn"
+                        onClick={handleDeleteImage}
+                        disabled={isUploadingImage}
+                        title="Remove image"
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    )}
+                  </div>
                 </div>
                 <div className="profile-info">
                   <h3 className="profile-name">
@@ -154,9 +291,128 @@ export function Profile() {
                 </div>
               </div>
             </div>
+
+            {/* Task Statistics Card */}
+            {taskStats && (
+              <div className="profile-card mt-4">
+                <div className="profile-card-header">
+                  <div className="profile-info">
+                    <h4 className="profile-name">
+                      <i className="bi bi-bar-chart-fill me-2" style={{ color: 'var(--primary-color)' }}></i>
+                      Task Statistics
+                    </h4>
+                    <p className="profile-email">Completion Rate: {taskStats.completionPercentage.toFixed(1)}%</p>
+                  </div>
+                </div>
+                <div className="profile-card-body">
+                  <div className="task-stats-grid">
+                    <div className="task-stat-item">
+                      <div className="task-stat-icon total">
+                        <i className="bi bi-list-task"></i>
+                      </div>
+                      <div className="task-stat-content">
+                        <span className="task-stat-number">{taskStats.totalTasks}</span>
+                        <span className="task-stat-label">Total Tasks</span>
+                      </div>
+                    </div>
+                    
+                    <div className="task-stat-item">
+                      <div className="task-stat-icon completed">
+                        <i className="bi bi-check-circle-fill"></i>
+                      </div>
+                      <div className="task-stat-content">
+                        <span className="task-stat-number">{taskStats.completedTasks}</span>
+                        <span className="task-stat-label">Completed</span>
+                      </div>
+                    </div>
+                    
+                    <div className="task-stat-item">
+                      <div className="task-stat-icon progress">
+                        <i className="bi bi-clock-fill"></i>
+                      </div>
+                      <div className="task-stat-content">
+                        <span className="task-stat-number">{taskStats.inProgressTasks}</span>
+                        <span className="task-stat-label">In Progress</span>
+                      </div>
+                    </div>
+                    
+                    <div className="task-stat-item">
+                      <div className="task-stat-icon overdue">
+                        <i className="bi bi-exclamation-triangle-fill"></i>
+                      </div>
+                      <div className="task-stat-content">
+                        <span className="task-stat-number">{taskStats.overdueTasks}</span>
+                        <span className="task-stat-label">Overdue</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Stats Row */}
+                  <div className="task-stats-grid">
+                    <div className="task-stat-item">
+                      <div className="task-stat-icon total" style={{ background: '#8b5cf6' }}>
+                        <i className="bi bi-folder-fill"></i>
+                      </div>
+                      <div className="task-stat-content">
+                        <span className="task-stat-number">{taskStats.totalProjects}</span>
+                        <span className="task-stat-label">Total Projects</span>
+                      </div>
+                    </div>
+                    
+                    <div className="task-stat-item">
+                      <div className="task-stat-icon progress" style={{ background: '#06b6d4' }}>
+                        <i className="bi bi-play-circle-fill"></i>
+                      </div>
+                      <div className="task-stat-content">
+                        <span className="task-stat-number">{taskStats.activeProjects}</span>
+                        <span className="task-stat-label">Active Projects</span>
+                      </div>
+                    </div>
+                    
+                    {taskStats.attendanceRate !== undefined && (
+                      <div className="task-stat-item">
+                        <div className="task-stat-icon completed" style={{ background: '#10b981' }}>
+                          <i className="bi bi-calendar-check-fill"></i>
+                        </div>
+                        <div className="task-stat-content">
+                          <span className="task-stat-number">{taskStats.attendanceRate.toFixed(1)}%</span>
+                          <span className="task-stat-label">Attendance</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {taskStats.leaveBalance !== undefined && (
+                      <div className="task-stat-item">
+                        <div className="task-stat-icon" style={{ background: '#f59e0b' }}>
+                          <i className="bi bi-calendar-x-fill"></i>
+                        </div>
+                        <div className="task-stat-content">
+                          <span className="task-stat-number">{taskStats.leaveBalance}</span>
+                          <span className="task-stat-label">Leave Days</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="completion-progress">
+                    <div className="progress-header">
+                      <span>Overall Completion Rate</span>
+                      <span className="progress-percentage">{taskStats.completionPercentage.toFixed(1)}%</span>
+                    </div>
+                    <div className="progress-bar-container">
+                      <div 
+                        className="progress-bar-fill" 
+                        style={{ width: `${taskStats.completionPercentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Right Side - Profile Form */}
+          {/* Right Side - Profile Form and Charts */}
           <div className="col-lg-8">
             <div className="profile-form-card">
               <div className="form-card-header">
@@ -357,6 +613,89 @@ export function Profile() {
                 )}
               </div>
             </div>
+
+            {/* Task Charts */}
+            {taskStats && taskBreakdown.length > 0 && (
+              <div className="profile-form-card mt-4">
+                <div className="form-card-header">
+                  <div className="header-content">
+                    <h4 className="form-title">
+                      <i className="bi bi-pie-chart me-2"></i>
+                      Task Analysis
+                    </h4>
+                    <p className="form-subtitle">Task distribution by status</p>
+                  </div>
+                </div>
+                <div className="form-card-body">
+                  <div className="row g-4">
+                    {/* Pie Chart */}
+                    <div className="col-md-6">
+                      <div className="chart-container">
+                        <h5 className="chart-title">Task Distribution</h5>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <PieChart>
+                            <Pie
+                              data={taskBreakdown}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={40}
+                              outerRadius={80}
+                              paddingAngle={5}
+                              dataKey="count"
+                            >
+                              {taskBreakdown.map((entry, index) => (
+                                <Cell 
+                                  key={`cell-${index}`} 
+                                  fill={getStatusColor(entry.status)} 
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              formatter={(value, _name, props) => [
+                                `${value} tasks (${props.payload?.percentage?.toFixed(1) || 0}%)`,
+                                props.payload?.statusName || 'Unknown'
+                              ]}
+                            />
+                            <Legend 
+                              formatter={(_value, entry) => (entry.payload as any)?.statusName || 'Unknown'}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Bar Chart */}
+                    <div className="col-md-6">
+                      <div className="chart-container">
+                        <h5 className="chart-title">Detailed Statistics</h5>
+                        <ResponsiveContainer width="100%" height={250}>
+                          <BarChart data={taskBreakdown}>
+                            <CartesianGrid strokeDasharray="3 3" />
+                            <XAxis 
+                              dataKey="statusName" 
+                              tick={{ fontSize: 12 }}
+                              angle={-45}
+                              textAnchor="end"
+                              height={60}
+                            />
+                            <YAxis />
+                            <Tooltip 
+                              formatter={(value, _name) => [`${value} tasks`, 'Count']}
+                              labelFormatter={(label) => `Status: ${label}`}
+                            />
+                            <Bar 
+                              dataKey="count" 
+                              fill="var(--primary-color)"
+                              radius={[4, 4, 0, 0]}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
