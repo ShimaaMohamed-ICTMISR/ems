@@ -34,10 +34,81 @@ export interface Position {
   title: string;
   code?: string;
   departmentId?: string;
+  parentPositionId?: string;
+  inheritsParentPermissions?: boolean;
   gradeLevel?: string;
   salaryBandMin?: number;
   salaryBandMax?: number;
   description?: string;
+  isActive?: boolean;
+  department?: any;
+  subPositions?: SubPosition[];
+}
+
+export interface SubPosition {
+  id: string;
+  title: string;
+  code?: string;
+  parentPositionId?: string;
+  inheritsParentPermissions?: boolean;
+  salaryBandMin?: number;
+  salaryBandMax?: number;
+  description?: string;
+  isActive?: boolean;
+}
+
+export interface CreatePositionRequest {
+  title: string;
+  code: string;
+  departmentId: string;
+  parentPositionId?: string;
+  inheritsParentPermissions?: boolean;
+  description?: string;
+  salaryBandMin?: number;
+  salaryBandMax?: number;
+}
+
+export interface UpdatePositionRequest {
+  title?: string;
+  description?: string;
+  departmentId?: string;
+  parentPositionId?: string;
+  salaryBandMin?: number;
+  salaryBandMax?: number;
+  isActive?: boolean;
+  inheritsParentPermissions?: boolean;
+}
+
+export interface CreateSubPositionRequest {
+  title: string;
+  code: string;
+  inheritsParentPermissions?: boolean;
+  description?: string;
+  salaryBandMin?: number;
+  salaryBandMax?: number;
+}
+
+export interface UpdateSubPositionRequest {
+  title?: string;
+  description?: string;
+  salaryBandMin?: number;
+  salaryBandMax?: number;
+  isActive?: boolean;
+  inheritsParentPermissions?: boolean;
+}
+
+export interface AssignPositionPermissionRequest {
+  permissionCode: string;
+}
+
+export interface PositionPermission {
+  permissionCode: string;
+  source?: string;
+}
+
+// ─── Permission Interfaces (HR Service) ─────────────
+export interface AssignUserPermissionRequest {
+  permissionCode: string;
 }
 
 // ─── Employee Interfaces ─────────────────────────────
@@ -203,10 +274,43 @@ export const hrService = {
   getDepartmentsList: () => hrApiClient.get('/v1/departments'),
 
   // ─── Positions ───────────────────────────
-  getPositions: () => hrApiClient.get('/v1/positions'),
-  createPosition: (data: any) => hrApiClient.post('/v1/positions', data),
-  updatePosition: (id: string, data: any) => hrApiClient.patch(`/v1/positions/${id}`, data),
+  getPositions: (params?: { id?: string; departmentId?: string; parentPositionId?: string; isActive?: boolean }) =>
+    hrApiClient.get('/v1/positions', { params }),
+  getPositionById: (id: string) => hrApiClient.get('/v1/positions', { params: { id } }),
+  createPosition: (data: CreatePositionRequest) => hrApiClient.post('/v1/positions', data),
+  updatePosition: (id: string, data: UpdatePositionRequest) => hrApiClient.patch(`/v1/positions/${id}`, data),
   deletePosition: (id: string) => hrApiClient.delete(`/v1/positions/${id}`),
+
+  // ─── Sub-Positions (Mini-Positions) ────────
+  getSubPositions: (positionId: string, params?: { isActive?: boolean }) =>
+    hrApiClient.get(`/v1/positions/${positionId}/sub-positions`, { params }),
+  getSubPosition: (positionId: string, subPositionId: string) =>
+    hrApiClient.get(`/v1/positions/${positionId}/sub-positions/${subPositionId}`),
+  createSubPosition: (positionId: string, data: CreateSubPositionRequest) =>
+    hrApiClient.post(`/v1/positions/${positionId}/sub-positions`, data),
+  updateSubPosition: (positionId: string, subPositionId: string, data: UpdateSubPositionRequest) =>
+    hrApiClient.patch(`/v1/positions/${positionId}/sub-positions/${subPositionId}`, data),
+  deleteSubPosition: (positionId: string, subPositionId: string) =>
+    hrApiClient.delete(`/v1/positions/${positionId}/sub-positions/${subPositionId}`),
+
+  // ─── Position Permissions ─────────────────
+  getPositionPermissions: (positionId: string) =>
+    hrApiClient.get(`/v1/positions/${positionId}/permissions`),
+  assignPositionPermission: (positionId: string, data: AssignPositionPermissionRequest) =>
+    hrApiClient.post(`/v1/positions/${positionId}/permissions`, data),
+  removePositionPermission: (positionId: string, permissionCode: string) =>
+    hrApiClient.delete(`/v1/positions/${positionId}/permissions/${permissionCode}`),
+
+  // ─── HR Permissions ───────────────────────
+  getHrPermissions: () => hrApiClient.get('/v1/permissions'),
+  assignUserPermission: (userId: string, data: AssignUserPermissionRequest) =>
+    hrApiClient.post(`/v1/permissions/users/${userId}`, data),
+  removeUserPermission: (userId: string, permissionCode: string) =>
+    hrApiClient.delete(`/v1/permissions/users/${userId}/${permissionCode}`),
+  getUserEffectivePermissions: (userId: string, positionId: string) =>
+    hrApiClient.get(`/v1/permissions/users/${userId}/effective`, { params: { positionId } }),
+  getUserPermissionSections: (userId: string) =>
+    hrApiClient.get(`/v1/permissions/users/${userId}/sections`),
 
   // ─── Employees ───────────────────────────
   getEmployees: (params?: { page?: number; limit?: number; departmentId?: string; positionId?: string; status?: string }) =>

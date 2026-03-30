@@ -1,12 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import type { Department } from '../../services/hrProjectManagementService';
+import type { Department, Position } from '../../services/hrProjectManagementService';
 import hrService from '../../services/hrProjectManagementService';
 import '../styles/Departments.css';
 
 export default function CreatePosition() {
   const navigate = useNavigate();
   const [departments, setDepartments] = useState<Department[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [loadingDeps, setLoadingDeps] = useState(true);
   const [depsError, setDepsError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,7 +17,8 @@ export default function CreatePosition() {
   const [title, setTitle] = useState('');
   const [code, setCode] = useState('');
   const [departmentId, setDepartmentId] = useState('');
-  const [gradeLevel, setGradeLevel] = useState('');
+  const [parentPositionId, setParentPositionId] = useState('');
+  const [inheritsParentPermissions, setInheritsParentPermissions] = useState(true);
   const [salaryBandMin, setSalaryBandMin] = useState(80000);
   const [salaryBandMax, setSalaryBandMax] = useState(120000);
   const [description, setDescription] = useState('');
@@ -26,20 +28,25 @@ export default function CreatePosition() {
     const load = async () => {
       try {
         setLoadingDeps(true);
-        const res = await hrService.getDepartments();
-        const list = res.data?.data || res.data || [];
-        if (mounted) setDepartments(list);
+        const [depsRes, posRes] = await Promise.all([
+          hrService.getDepartments(),
+          hrService.getPositions(),
+        ]);
+        const depsList = depsRes.data?.data || depsRes.data || [];
+        const posList = posRes.data?.data || posRes.data || [];
+        if (mounted) {
+          setDepartments(depsList);
+          setPositions(Array.isArray(posList) ? posList : []);
+        }
       } catch (err) {
-        console.error('Error loading departments for positions form:', err);
-        if (mounted) setDepsError('Failed to load departments');
+        console.error('Error loading data for positions form:', err);
+        if (mounted) setDepsError('Failed to load form data');
       } finally {
         if (mounted) setLoadingDeps(false);
       }
     };
     load();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,16 +64,17 @@ export default function CreatePosition() {
         title,
         code,
         departmentId,
-        gradeLevel,
+        parentPositionId: parentPositionId || undefined,
+        inheritsParentPermissions: parentPositionId ? inheritsParentPermissions : undefined,
         salaryBandMin,
         salaryBandMax,
-        description,
+        description: description || undefined,
       });
       alert('Position created successfully!');
       navigate('/dashboard/hr/positions');
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error creating position:', err);
-      setSubmitError('Failed to create position');
+      setSubmitError(err.response?.data?.message || 'Failed to create position');
     } finally {
       setIsSubmitting(false);
     }
@@ -100,7 +108,7 @@ export default function CreatePosition() {
               <input
                 type="text"
                 className="form-control"
-                placeholder="e.g., POS-001"
+                placeholder="e.g., SWE-SR"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
                 required
@@ -108,7 +116,7 @@ export default function CreatePosition() {
             </div>
 
             <div className="col-md-6">
-              <label className="form-label fw-semibold">Department Id *</label>
+              <label className="form-label fw-semibold">Department *</label>
               <select
                 className="form-select"
                 required
@@ -125,21 +133,38 @@ export default function CreatePosition() {
             </div>
 
             <div className="col-md-6">
-              <label className="form-label fw-semibold">Grade Level</label>
+              <label className="form-label fw-semibold">Parent Position</label>
               <select
                 className="form-select"
-                value={gradeLevel}
-                onChange={(e) => setGradeLevel(e.target.value)}
-                disabled={isSubmitting}
+                disabled={loadingDeps || isSubmitting}
+                value={parentPositionId}
+                onChange={(e) => setParentPositionId(e.target.value)}
               >
-                <option value="">Select grade level</option>
-                <option value="Entry">Entry</option>
-                <option value="Junior">Junior</option>
-                <option value="Mid">Mid</option>
-                <option value="Senior">Senior</option>
-                <option value="Lead">Lead</option>
+                <option value="">None (top-level position)</option>
+                {positions.map((p) => (
+                  <option key={p.id} value={p.id}>{p.title} ({p.code})</option>
+                ))}
               </select>
+              <small className="text-muted">Optional: Create as a mini-position under a parent</small>
             </div>
+
+            {parentPositionId && (
+              <div className="col-12">
+                <div className="form-check">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="inheritsPermissions"
+                    checked={inheritsParentPermissions}
+                    onChange={(e) => setInheritsParentPermissions(e.target.checked)}
+                    disabled={isSubmitting}
+                  />
+                  <label className="form-check-label" htmlFor="inheritsPermissions">
+                    Inherit parent position permissions
+                  </label>
+                </div>
+              </div>
+            )}
 
             <div className="col-md-6">
               <label className="form-label fw-semibold">Salary Band Min</label>
@@ -187,5 +212,3 @@ export default function CreatePosition() {
     </div>
   );
 }
-
-
