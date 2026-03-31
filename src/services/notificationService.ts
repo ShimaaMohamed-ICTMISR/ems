@@ -23,9 +23,12 @@ import {
 import type { Notification } from '../store/notificationSlice';
 import toast from 'react-hot-toast';
 
-const NOTIFICATION_API_BASE = 'https://ems-notification-service.onrender.com/api/notifications/v1';
+const NOTIFICATION_API_BASE =
+  import.meta.env.VITE_NOTIFICATION_API_BASE_URL ??
+  'https://ems-notification-service.onrender.com/api/notifications/v1';
 
-const SERVICE_TICKET = 'TEST-SECRET-TICKET-2026';
+const SERVICE_TICKET =
+  import.meta.env.VITE_NOTIFICATION_SERVICE_TICKET ?? 'TEST-SECRET-TICKET-2026';
 
 const getErrorMessage = (error: unknown, fallback: string): string => {
   if (axios.isAxiosError(error)) {
@@ -63,7 +66,10 @@ export const notificationService = {
     limit: number = 5, 
     page: number = 1,
     filters?: {
+      /** Optional — narrow list to one user (notification API query param when supported). */
       userId?: string;
+      /** Optional — narrow list to a department when the API supports it. */
+      departmentId?: string;
       priority?: string;
       category?: string;
       channel?: string;
@@ -78,8 +84,9 @@ export const notificationService = {
       params.append('limit', limit.toString());
       params.append('page', page.toString());
       
-      // Add filters if provided
+      // Add filters if provided (all optional — omit query keys when undefined)
       if (filters?.userId) params.append('userId', filters.userId);
+      if (filters?.departmentId) params.append('departmentId', filters.departmentId);
       if (filters?.priority) params.append('priority', filters.priority);
       if (filters?.category) params.append('category', filters.category);
       if (filters?.channel) params.append('channel', filters.channel);

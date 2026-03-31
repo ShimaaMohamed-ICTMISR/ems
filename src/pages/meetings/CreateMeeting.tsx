@@ -2,8 +2,19 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
 import type { CreateMeetingDto } from '../../services/meetingService';
-import hrService, { type Employee } from '../../services/hrProjectManagementService';
+import hrService, { type Employee, type Department } from '../../services/hrProjectManagementService';
 import './meetings.css';
+
+function parseNestedList<T>(res: { data?: { data?: { data?: T[] } | T[] } }): T[] {
+  const innerData = res.data?.data;
+  return Array.isArray(innerData?.data)
+    ? innerData.data
+    : Array.isArray(innerData)
+      ? innerData
+      : [];
+}
+
+type ParticipantAddMode = 'users' | 'department';
 
 export function CreateMeeting() {
   const navigate = useNavigate();
@@ -14,26 +25,57 @@ export function CreateMeeting() {
     endTime: '',
     status: 'SCHEDULED'  // Changed from DRAFT to SCHEDULED
   });
+  const [participantAddMode, setParticipantAddMode] = useState<ParticipantAddMode>('users');
   const [participantUserId, setParticipantUserId] = useState('');
   const [participants, setParticipants] = useState<string[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  /** When adding by user: optional filter for the employee dropdown (HR). */
+  const [employeeListDepartmentFilter, setEmployeeListDepartmentFilter] = useState('');
+  /** When adding by department: target department for bulk add. */
+  const [bulkDepartmentId, setBulkDepartmentId] = useState('');
   const [employees, setEmployees] = useState<Employee[]>([]);
+  /** Keeps labels for participants if the dropdown list is refetched under another department filter. */
+  const [employeeById, setEmployeeById] = useState<Record<string, Employee>>({});
+  const [bulkAdding, setBulkAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     hrService
-      .getEmployees()
+      .getDepartments({ isActive: true })
       .then((res) => {
-        // API shape:
-        // { success, data: { data: Employee[] } }
-        const innerData = res.data?.data;
-        const list = Array.isArray(innerData?.data) ? innerData.data : Array.isArray(innerData) ? innerData : [];
+        setDepartments(parseNestedList<Department>(res));
+      })
+      .catch((err) => {
+        console.error('Failed to load departments:', err);
+        setDepartments([]);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (participantAddMode !== 'users') {
+      return;
+    }
+    const params = employeeListDepartmentFilter
+      ? { departmentId: employeeListDepartmentFilter }
+      : undefined;
+    hrService
+      .getEmployees(params)
+      .then((res) => {
+        const list = parseNestedList<Employee>(res);
         setEmployees(list);
+        setEmployeeById((prev) => {
+          const next = { ...prev };
+          for (const e of list) {
+            next[e.id] = e;
+          }
+          return next;
+        });
       })
       .catch((err) => {
         console.error('Failed to load employees for participants dropdown:', err);
         setEmployees([]);
       });
-  }, []);
+  }, [participantAddMode, employeeListDepartmentFilter]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +115,39 @@ export function CreateMeeting() {
 
   const removeParticipant = (userId: string) => {
     setParticipants(participants.filter(id => id !== userId));
+  };
+
+  const mergeEmployeesIntoParticipants = (list: Employee[]) => {
+    setParticipants((prev) => {
+      const next = new Set(prev);
+      for (const e of list) {
+        next.add(e.id);
+      }
+      return Array.from(next);
+    });
+    setEmployeeById((prev) => {
+      const next = { ...prev };
+      for (const e of list) {
+        next[e.id] = e;
+      }
+      return next;
+    });
+  };
+
+  const addAllEmployeesInDepartment = async () => {
+    if (!bulkDepartmentId) return;
+    try {
+      setBulkAdding(true);
+      const res = await hrService.getEmployees({ departmentId: bulkDepartmentId });
+      const list = parseNestedList<Employee>(res);
+      mergeEmployeesIntoParticipants(list);
+      setBulkDepartmentId('');
+    } catch (e) {
+      console.error('Failed to load department employees:', e);
+      alert('Could not load employees for this department.');
+    } finally {
+      setBulkAdding(false);
+    }
   };
 
   return (
@@ -169,32 +244,112 @@ export function CreateMeeting() {
                     <i className="bi bi-people me-2 text-dark"></i>
                     Add Participants
                   </label>
-                  <div className="input-group shadow-sm">
+                  <div className="mb-2">
+                    <label className="form-label small text-muted mb-1">Invite by</label>
                     <select
-                      className="form-select border-0"
-                      value={participantUserId}
-                      onChange={(e) => setParticipantUserId(e.target.value)}
+                      className="form-select border-0 shadow-sm"
+                      value={participantAddMode}
+                      onChange={(e) => {
+                        setParticipantAddMode(e.target.value as ParticipantAddMode);
+                        setParticipantUserId('');
+                        setBulkDepartmentId('');
+                      }}
                     >
-                      <option value="">Select employee...</option>
-                      {employees.map((emp) => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.firstName} {emp.lastName} - {emp.email}
-                        </option>
-                      ))}
+                      <option value="users">Specific employees (users)</option>
+                      <option value="department">Whole department</option>
                     </select>
-                    <button
-                      type="button"
-                      className="btn btn-meetings-primary"
-                      onClick={addParticipant}
-                      disabled={!participantUserId}
-                    >
-                      <i className="bi bi-plus-circle me-2"></i>Add
-                    </button>
                   </div>
-                  <small className="text-muted mt-2 d-block">
-                    <i className="bi bi-info-circle me-1"></i>
-                    Choose employees from the list to invite as participants
-                  </small>
+
+                  {participantAddMode === 'users' ? (
+                    <>
+                      <div className="mb-2">
+                        <label className="form-label small text-muted mb-1">Department</label>
+                        <select
+                          className="form-select border-0 shadow-sm"
+                          value={employeeListDepartmentFilter}
+                          onChange={(e) => {
+                            setEmployeeListDepartmentFilter(e.target.value);
+                            setParticipantUserId('');
+                          }}
+                        >
+                          <option value="">All departments</option>
+                          {departments.map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.name}
+                              {d.code ? ` (${d.code})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="input-group shadow-sm">
+                        <select
+                          className="form-select border-0"
+                          value={participantUserId}
+                          onChange={(e) => setParticipantUserId(e.target.value)}
+                        >
+                          <option value="">Select employee...</option>
+                          {employees.map((emp) => (
+                            <option key={emp.id} value={emp.id}>
+                              {emp.firstName} {emp.lastName} - {emp.email}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          className="btn btn-meetings-primary"
+                          onClick={addParticipant}
+                          disabled={!participantUserId}
+                        >
+                          <i className="bi bi-plus-circle me-2"></i>Add
+                        </button>
+                      </div>
+                      <small className="text-muted mt-2 d-block">
+                        <i className="bi bi-info-circle me-1"></i>
+                        Optional department filter narrows the employee list; add users one by one.
+                      </small>
+                    </>
+                  ) : (
+                    <>
+                      <div className="mb-2">
+                        <label className="form-label small text-muted mb-1">Department</label>
+                        <select
+                          className="form-select border-0 shadow-sm"
+                          value={bulkDepartmentId}
+                          onChange={(e) => setBulkDepartmentId(e.target.value)}
+                        >
+                          <option value="">Select department...</option>
+                          {departments.map((d) => (
+                            <option key={d.id} value={d.id}>
+                              {d.name}
+                              {d.code ? ` (${d.code})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <button
+                        type="button"
+                        className="btn btn-meetings-primary"
+                        onClick={addAllEmployeesInDepartment}
+                        disabled={!bulkDepartmentId || bulkAdding}
+                      >
+                        {bulkAdding ? (
+                          <>
+                            <span className="spinner-border spinner-border-sm me-2" role="status" />
+                            Loading…
+                          </>
+                        ) : (
+                          <>
+                            <i className="bi bi-people-fill me-2"></i>
+                            Add all employees in department
+                          </>
+                        )}
+                      </button>
+                      <small className="text-muted mt-2 d-block">
+                        <i className="bi bi-info-circle me-1"></i>
+                        Loads all HR users for that department and adds them as meeting participants.
+                      </small>
+                    </>
+                  )}
                 </div>
 
                 {participants.length > 0 && (
@@ -205,7 +360,7 @@ export function CreateMeeting() {
                     </label>
                     <div className="border rounded-3 p-3 bg-light">
                       {participants.map((userId) => {
-                        const emp = employees.find((e) => e.id === userId);
+                        const emp = employeeById[userId];
                         const displayName = emp
                           ? `${emp.firstName} ${emp.lastName} - ${emp.email}`
                           : userId;
