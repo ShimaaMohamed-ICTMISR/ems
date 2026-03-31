@@ -614,109 +614,103 @@ export function Profile() {
               </div>
             </div>
 
-            {/* Task Charts - Always show */}
-            <div className="profile-form-card mt-4">
-              <div className="form-card-header">
-                <div className="header-content">
-                  <h4 className="form-title">
-                    <i className="bi bi-pie-chart me-2"></i>
-                    Task Analysis
-                  </h4>
-                  <p className="form-subtitle">Task distribution by status</p>
-                </div>
-              </div>
-              <div className="form-card-body">
-                {taskStats && taskBreakdown.length > 0 ? (
-                  <div className="row g-4">
-                    {/* Pie Chart */}
-                    <div className="col-md-6">
-                      <div className="chart-container">
-                        <h5 className="chart-title">Task Distribution</h5>
-                        <ResponsiveContainer width="100%" height={250}>
-                          <PieChart>
-                            <Pie
-                              data={taskBreakdown}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={40}
-                              outerRadius={80}
-                              paddingAngle={5}
-                              dataKey="count"
-                            >
-                              {taskBreakdown.map((entry, index) => (
-                                <Cell 
-                                  key={`cell-${index}`} 
-                                  fill={getStatusColor(entry.status)} 
-                                />
-                              ))}
-                            </Pie>
-                            <Tooltip 
-                              formatter={(value, _name, props) => [
-                                `${value} tasks (${props.payload?.percentage?.toFixed(1) || 0}%)`,
-                                props.payload?.statusName || 'Unknown'
-                              ]}
-                            />
-                            <Legend 
-                              formatter={(_value, entry) => (entry.payload as any)?.statusName || 'Unknown'}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-
-                    {/* Bar Chart */}
-                    <div className="col-md-6">
-                      <div className="chart-container">
-                        <h5 className="chart-title">Detailed Statistics</h5>
-                        <ResponsiveContainer width="100%" height={250}>
-                          <BarChart data={taskBreakdown}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis 
-                              dataKey="statusName" 
-                              tick={{ fontSize: 12 }}
-                              angle={-45}
-                              textAnchor="end"
-                              height={60}
-                            />
-                            <YAxis />
-                            <Tooltip 
-                              formatter={(value, _name) => [`${value} tasks`, 'Count']}
-                              labelFormatter={(label) => `Status: ${label}`}
-                            />
-                            <Bar 
-                              dataKey="count" 
-                              fill="var(--primary-color)"
-                              radius={[4, 4, 0, 0]}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
+            {/* Task Charts */}
+            {taskStats && (
+              <div className="profile-form-card mt-4">
+                <div className="form-card-header">
+                  <div className="header-content">
+                    <h4 className="form-title">
+                      <i className="bi bi-pie-chart me-2"></i>
+                      Task Analysis
+                    </h4>
+                    <p className="form-subtitle">Task distribution by status</p>
                   </div>
-                ) : (
-                  <div className="no-tasks-message">
-                    <div className="text-center py-5">
-                      <i className="bi bi-bar-chart display-1 text-muted mb-3"></i>
-                      <h5 className="text-muted">No Task Data Available</h5>
-                      <p className="text-muted">
-                        {!taskStats 
-                          ? "Loading task data..."
-                          : taskStats.totalTasks === 0 
+                </div>
+                <div className="form-card-body">
+                  {taskBreakdown.length > 0 ? (
+                    <div className="row g-4">
+                      {/* Pie Chart */}
+                      <div className="col-md-6">
+                        <div className="chart-container">
+                          <h5 className="chart-title">Task Distribution</h5>
+                          <ResponsiveContainer width="100%" height={250}>
+                            <PieChart>
+                              <Pie
+                                data={taskBreakdown}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={40}
+                                outerRadius={80}
+                                paddingAngle={5}
+                                dataKey="count"
+                              >
+                                {taskBreakdown.map((entry, index) => (
+                                  <Cell 
+                                    key={`cell-${index}`} 
+                                    fill={getStatusColor(entry.status)} 
+                                  />
+                                ))}
+                              </Pie>
+                              <Tooltip 
+                                formatter={(value, _name, props) => [
+                                  `${value} tasks (${props.payload?.percentage?.toFixed(1) || 0}%)`,
+                                  props.payload?.statusName || 'Unknown'
+                                ]}
+                              />
+                              <Legend 
+                                formatter={(_value, entry) => (entry.payload as any)?.statusName || 'Unknown'}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                      {/* Bar Chart */}
+                      <div className="col-md-6">
+                        <div className="chart-container">
+                          <h5 className="chart-title">Detailed Statistics</h5>
+                          <ResponsiveContainer width="100%" height={250}>
+                            <BarChart data={taskBreakdown}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis 
+                                dataKey="statusName" 
+                                tick={{ fontSize: 12 }}
+                                angle={-45}
+                                textAnchor="end"
+                                height={60}
+                              />
+                              <YAxis />
+                              <Tooltip 
+                                formatter={(value, _name) => [`${value} tasks`, 'Count']}
+                                labelFormatter={(label) => `Status: ${label}`}
+                              />
+                              <Bar 
+                                dataKey="count" 
+                                fill="var(--primary-color)"
+                                radius={[4, 4, 0, 0]}
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="no-tasks-message">
+                      <div className="text-center py-5">
+                        <i className="bi bi-bar-chart display-1 text-muted mb-3"></i>
+                        <h5 className="text-muted">No Task Data Available</h5>
+                        <p className="text-muted">
+                          {taskStats.totalTasks === 0 
                             ? "You don't have any assigned tasks yet. Charts will appear once you have tasks with different statuses."
                             : "All your tasks have the same status. Charts will show more detail as you progress through different task statuses."
-                        }
-                      </p>
-                      {/* Debug info */}
-                      <small className="text-muted">
-                        Debug: taskStats={taskStats ? 'loaded' : 'null'}, 
-                        breakdown length={taskBreakdown.length}, 
-                        total tasks={taskStats?.totalTasks || 0}
-                      </small>
+                          }
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
