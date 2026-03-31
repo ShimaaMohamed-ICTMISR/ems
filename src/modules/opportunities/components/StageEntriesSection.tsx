@@ -151,7 +151,7 @@ export function StageEntriesSection({ opportunityId }: { opportunityId: string }
         {showLoadingSkeleton && (
           <div className="py-4">
             <p className="small text-muted mb-3 mb-md-2">
-              جاري تحميل <strong>سجلات النشاط</strong> لهذه الفرصة (اجتماعات، متابعات، ملاحظات) من الخادم…
+              Loading <strong>activity records</strong> for this opportunity (meetings, follow-ups, notes) from server…
             </p>
             <div className="placeholder-glow">
               <span className="placeholder col-12 mb-2" style={{ height: '1.25rem', display: 'block' }} />
