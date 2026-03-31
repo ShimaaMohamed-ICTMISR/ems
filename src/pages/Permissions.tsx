@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { permissionService, type Permission } from '../services/permissionService';
 import './Permissions.css';
+
  
 export function Permissions() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -13,6 +14,7 @@ export function Permissions() {
   const [pageSize, setPageSize] = useState(25);
   const [totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+
  
   // Fetch permissions with pagination
   useEffect(() => {
@@ -52,6 +54,7 @@ export function Permissions() {
     };
     fetchCategories();
   }, []);
+
  
   // Reset to page 1 when category changes
   useEffect(() => {
@@ -71,6 +74,7 @@ export function Permissions() {
       permission.action?.toLowerCase().includes(search)
     );
   });
+
  
   if (isLoading) {
     return (
@@ -102,6 +106,7 @@ export function Permissions() {
           <button type="button" className="btn-close" onClick={() => setError('')}></button>
         </div>
       )}
+
  
       {/* Filters and Search */}
       <div className="card shadow-sm mb-4">
@@ -120,6 +125,7 @@ export function Permissions() {
                 />
               </div>
             </div>
+
  
             <div className="col-md-4">
               <label className="form-label fw-bold">Filter by Category</label>
@@ -134,6 +140,7 @@ export function Permissions() {
                 ))}
               </select>
             </div>
+
  
             <div className="col-md-4">
               <label className="form-label fw-bold">Items per page</label>
@@ -151,6 +158,7 @@ export function Permissions() {
           </div>
         </div>
       </div>
+
  
       {/* Results Info */}
       <div className="mb-3 d-flex justify-content-between align-items-center">
@@ -158,6 +166,7 @@ export function Permissions() {
           Showing <strong>{filteredPermissions.length}</strong> permissions on page <strong>{pageNumber}</strong> of <strong>{totalPages}</strong>
         </p>
       </div>
+
  
       {/* Permissions Table */}
       {filteredPermissions.length > 0 ? (
@@ -176,6 +185,7 @@ export function Permissions() {
                     )}
                   </div>
                 </div>
+
  
                 <div className="permission-card-body">
                   <div className="permission-meta">
@@ -202,6 +212,7 @@ export function Permissions() {
                     )}
                   </div>
                 </div>
+
  
                 <div className="permission-card-footer">
                   <div className="permission-status">
@@ -219,6 +230,7 @@ export function Permissions() {
               </div>
             ))}
           </div>
+
  
           {/* Pagination Controls */}
           <div className="pagination-controls mt-4">
