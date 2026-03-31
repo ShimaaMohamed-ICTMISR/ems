@@ -614,19 +614,19 @@ export function Profile() {
               </div>
             </div>
 
-            {/* Task Charts */}
-            {taskStats && taskBreakdown.length > 0 && (
-              <div className="profile-form-card mt-4">
-                <div className="form-card-header">
-                  <div className="header-content">
-                    <h4 className="form-title">
-                      <i className="bi bi-pie-chart me-2"></i>
-                      Task Analysis
-                    </h4>
-                    <p className="form-subtitle">Task distribution by status</p>
-                  </div>
+            {/* Task Charts - Always show */}
+            <div className="profile-form-card mt-4">
+              <div className="form-card-header">
+                <div className="header-content">
+                  <h4 className="form-title">
+                    <i className="bi bi-pie-chart me-2"></i>
+                    Task Analysis
+                  </h4>
+                  <p className="form-subtitle">Task distribution by status</p>
                 </div>
-                <div className="form-card-body">
+              </div>
+              <div className="form-card-body">
+                {taskStats && taskBreakdown.length > 0 ? (
                   <div className="row g-4">
                     {/* Pie Chart */}
                     <div className="col-md-6">
@@ -693,9 +693,30 @@ export function Profile() {
                       </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="no-tasks-message">
+                    <div className="text-center py-5">
+                      <i className="bi bi-bar-chart display-1 text-muted mb-3"></i>
+                      <h5 className="text-muted">No Task Data Available</h5>
+                      <p className="text-muted">
+                        {!taskStats 
+                          ? "Loading task data..."
+                          : taskStats.totalTasks === 0 
+                            ? "You don't have any assigned tasks yet. Charts will appear once you have tasks with different statuses."
+                            : "All your tasks have the same status. Charts will show more detail as you progress through different task statuses."
+                        }
+                      </p>
+                      {/* Debug info */}
+                      <small className="text-muted">
+                        Debug: taskStats={taskStats ? 'loaded' : 'null'}, 
+                        breakdown length={taskBreakdown.length}, 
+                        total tasks={taskStats?.totalTasks || 0}
+                      </small>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </div>

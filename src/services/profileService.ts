@@ -178,13 +178,17 @@ export const profileService = {
         averageCompletionTime = totalDays / completedTasksWithDates.length;
       }
 
-      // Calculate project statistics (all projects user has access to)
-      const totalProjects = projects.length;
-      const activeProjects = projects.filter(project => 
-        project.stage !== undefined && project.stage < 4 // Assuming stages 0-3 are active
+      // Calculate project statistics (filter projects user has access to)
+      // Filter projects that user is involved in (has tasks assigned)
+      const userProjectIds = new Set(userTasks.map(task => task.projectId).filter(Boolean));
+      const userProjects = projects.filter(project => userProjectIds.has(project.id));
+      
+      const totalProjects = userProjects.length;
+      const activeProjects = userProjects.filter(project => 
+        project.stage !== undefined && project.stage < 4 // stages 0-3 are active
       ).length;
-      const completedProjects = projects.filter(project => 
-        project.stage === 4 // Assuming stage 4 is completed
+      const completedProjects = userProjects.filter(project => 
+        project.stage === 4 // stage 4 is completed
       ).length;
 
       // Try to get HR data if available (make this completely optional)

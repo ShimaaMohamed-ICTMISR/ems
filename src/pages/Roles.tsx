@@ -35,6 +35,13 @@ const Roles = () => {
     isActive: true,
   });
 
+  // Validation states
+  const [codeValidation, setCodeValidation] = useState({
+    isChecking: false,
+    isValid: true,
+    message: '',
+  });
+
   // Edit form state
   const [editFormData, setEditFormData] = useState({
     name: '',
@@ -162,6 +169,17 @@ const Roles = () => {
   };
 
   const handleCreateRole = async () => {
+    // Validate code uniqueness before creating
+    if (!codeValidation.isValid) {
+      setError('Please fix the validation errors before creating the role.');
+      return;
+    }
+
+    if (!createFormData.code.trim() || !createFormData.name.trim()) {
+      setError('Code and Name are required fields.');
+      return;
+    }
+
     try {
       await roleService.createRole(createFormData);
       await fetchRoles();
@@ -171,6 +189,11 @@ const Roles = () => {
         name: '',
         description: '',
         isActive: true,
+      });
+      setCodeValidation({
+        isChecking: false,
+        isValid: true,
+        message: '',
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create role');
@@ -185,6 +208,63 @@ const Roles = () => {
     );
   };
 
+  // Validate role code uniqueness
+  const validateRoleCode = async (code: string) => {
+    if (!code.trim()) {
+      setCodeValidation({
+        isChecking: false,
+        isValid: true,
+        message: '',
+      });
+      return;
+    }
+
+    setCodeValidation({
+      isChecking: true,
+      isValid: true,
+      message: 'Checking code availability...',
+    });
+
+    try {
+      // Get all roles to check for duplicates
+      const allRoles = await roleService.getAllRoles();
+      const isDuplicate = allRoles.some(role => 
+        role.code.toLowerCase() === code.toLowerCase()
+      );
+
+      if (isDuplicate) {
+        setCodeValidation({
+          isChecking: false,
+          isValid: false,
+          message: 'This code is already in use. Please choose a different code.',
+        });
+      } else {
+        setCodeValidation({
+          isChecking: false,
+          isValid: true,
+          message: 'Code is available.',
+        });
+      }
+    } catch (err) {
+      setCodeValidation({
+        isChecking: false,
+        isValid: false,
+        message: 'Unable to validate code. Please try again.',
+      });
+    }
+  };
+
+  // Debounced code validation
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (createFormData.code && showCreateForm) {
+        validateRoleCode(createFormData.code);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [createFormData.code, showCreateForm]);
+
   if (loading)
     return <div className="roles-container"><p>Loading roles...</p></div>;
 
@@ -194,7 +274,23 @@ const Roles = () => {
         <h1>Roles Management</h1>
         <button
           className="btn btn-create"
-          onClick={() => setShowCreateForm(!showCreateForm)}
+          onClick={() => {
+            setShowCreateForm(!showCreateForm);
+            if (!showCreateForm) {
+              // Reset form and validation when opening
+              setCreateFormData({
+                code: '',
+                name: '',
+                description: '',
+                isActive: true,
+              });
+              setCodeValidation({
+                isChecking: false,
+                isValid: true,
+                message: '',
+              });
+            }
+          }}
           title="Create a new role"
         >
           ➕ Add Role
@@ -531,13 +627,32 @@ const Roles = () => {
                   <input
                     id="create-code"
                     type="text"
-                    className="form-control"
+                    className={`form-control ${
+                      createFormData.code && !codeValidation.isValid ? 'is-invalid' : 
+                      createFormData.code && codeValidation.isValid && !codeValidation.isChecking ? 'is-valid' : ''
+                    }`}
                     value={createFormData.code}
-                    onChange={(e) =>
-                      setCreateFormData({ ...createFormData, code: e.target.value })
-                    }
+                    onChange={(e) => {
+                      const value = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
+                      setCreateFormData({ ...createFormData, code: value });
+                    }}
                     placeholder="e.g., ADMIN, USER, MANAGER"
+                    maxLength={50}
                   />
+                  {codeValidation.isChecking && (
+                    <div className="form-feedback text-info">
+                      <i className="spinner-border spinner-border-sm me-1"></i>
+                      {codeValidation.message}
+                    </div>
+                  )}
+                  {!codeValidation.isChecking && codeValidation.message && (
+                    <div className={`form-feedback ${codeValidation.isValid ? 'text-success' : 'text-danger'}`}>
+                      {codeValidation.isValid ? '✓' : '✗'} {codeValidation.message}
+                    </div>
+                  )}
+                  <small className="form-text text-muted">
+                    Code must be unique and contain only uppercase letters, numbers, and underscores.
+                  </small>
                 </div>
                 <div className="form-group">
                   <label htmlFor="create-name">Name *</label>
@@ -585,12 +700,36 @@ const Roles = () => {
             <div className="modal-footer">
               <button
                 className="btn btn-secondary"
-                onClick={() => setShowCreateForm(false)}
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setCreateFormData({
+                    code: '',
+                    name: '',
+                    description: '',
+                    isActive: true,
+                  });
+                  setCodeValidation({
+                    isChecking: false,
+                    isValid: true,
+                    message: '',
+                  });
+                }}
               >
                 Cancel
               </button>
-              <button className="btn btn-primary" onClick={handleCreateRole}>
-                Create Role
+              <button
+                className="btn btn-primary"
+                onClick={handleCreateRole}
+                disabled={!createFormData.code.trim() || !createFormData.name.trim() || codeValidation.isChecking || !codeValidation.isValid}
+              >
+                {codeValidation.isChecking ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2"></span>
+                    Validating...
+                  </>
+                ) : (
+                  'Create Role'
+                )}
               </button>
             </div>
           </div>
