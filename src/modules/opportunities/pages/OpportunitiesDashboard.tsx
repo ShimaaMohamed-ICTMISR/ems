@@ -75,7 +75,7 @@ export function OpportunitiesDashboard() {
     stage: 'prospecting',
   });
 
-  const [assignForm, setAssignForm] = useState<{ userId: string }>({ userId: '' });
+  const [assignForm, setAssignForm] = useState<{ userIds: string[] }>({ userIds: [] });
 
   const [closeForm, setCloseForm] = useState<CloseOpportunityPayload>({
     type: 'won',
@@ -147,7 +147,7 @@ export function OpportunitiesDashboard() {
 
   const openAssignModal = (opp: Opportunity) => {
     setSelected(opp);
-    setAssignForm({ userId: '' });
+    setAssignForm({ userIds: [] });
     setAssignModalOpen(true);
   };
 
@@ -180,17 +180,22 @@ export function OpportunitiesDashboard() {
 
   const handleAssign = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selected) return;
+    if (!selected || assignForm.userIds.length === 0) return;
     try {
       setActionLoading(true);
       setError(null);
-      await assignOpportunity(selected.id, {
-        userId: assignForm.userId,
-        role: 'owner',
-      });
+      
+      // Assign to multiple employees
+      for (const userId of assignForm.userIds) {
+        await assignOpportunity(selected.id, {
+          userId: userId,
+          role: 'owner',
+        });
+      }
+      
       setAssignModalOpen(false);
       setSelected(null);
-      setSuccessMessage('Opportunity assigned successfully.');
+      setSuccessMessage(`Opportunity assigned to ${assignForm.userIds.length} employee(s) successfully.`);
       await loadPage(page);
     } catch (err: any) {
       setError(err?.message ?? 'Failed to assign opportunity.');
@@ -747,27 +752,70 @@ export function OpportunitiesDashboard() {
               <form onSubmit={handleAssign}>
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label fw-semibold">Employee</label>
+                    <label className="form-label fw-semibold">Employees</label>
                     {hrEmployeesLoading && (
                       <div className="small text-muted mb-1">Loading employees…</div>
                     )}
                     {hrEmployeesError && (
                       <div className="alert alert-warning py-2 small mb-2">{hrEmployeesError}</div>
                     )}
+                    
+                    {/* Selected employees display */}
+                    {assignForm.userIds.length > 0 && (
+                      <div className="mb-3">
+                        <div className="small text-muted mb-2">Selected employees:</div>
+                        <div className="d-flex flex-wrap gap-2">
+                          {assignForm.userIds.map((userId) => {
+                            const employee = hrEmployees.find(emp => emp.id === userId);
+                            return employee ? (
+                              <span key={userId} className="badge bg-primary d-flex align-items-center gap-1">
+                                {employee.firstName} {employee.lastName}
+                                <button
+                                  type="button"
+                                  className="btn-close btn-close-white"
+                                  style={{ fontSize: '0.7rem' }}
+                                  onClick={() => {
+                                    setAssignForm({
+                                      userIds: assignForm.userIds.filter(id => id !== userId)
+                                    });
+                                  }}
+                                  aria-label="Remove employee"
+                                />
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Employee selection dropdown */}
                     <select
                       className="form-select"
-                      value={assignForm.userId}
-                      onChange={(e) => setAssignForm({ userId: e.target.value })}
-                      required
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value && !assignForm.userIds.includes(e.target.value)) {
+                          setAssignForm({
+                            userIds: [...assignForm.userIds, e.target.value]
+                          });
+                        }
+                      }}
                       disabled={hrEmployeesLoading}
                     >
-                      <option value="">Select employee…</option>
-                      {hrEmployees.map((emp) => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.firstName} {emp.lastName} — {emp.email}
-                        </option>
-                      ))}
+                      <option value="">Select employee to add…</option>
+                      {hrEmployees
+                        .filter(emp => !assignForm.userIds.includes(emp.id))
+                        .map((emp) => (
+                          <option key={emp.id} value={emp.id}>
+                            {emp.firstName} {emp.lastName} — {emp.email}
+                          </option>
+                        ))}
                     </select>
+                    
+                    {assignForm.userIds.length === 0 && (
+                      <div className="form-text text-muted">
+                        Select one or more employees to assign this opportunity to.
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="modal-footer">
@@ -782,9 +830,9 @@ export function OpportunitiesDashboard() {
                   <button
                     type="submit"
                     className="btn btn-opportunities-primary"
-                    disabled={actionLoading || hrEmployeesLoading || !assignForm.userId}
+                    disabled={actionLoading || hrEmployeesLoading || assignForm.userIds.length === 0}
                   >
-                    {actionLoading ? 'Assigning...' : 'Assign'}
+                    {actionLoading ? 'Assigning...' : `Assign to ${assignForm.userIds.length} Employee${assignForm.userIds.length !== 1 ? 's' : ''}`}
                   </button>
                 </div>
               </form>
@@ -826,7 +874,7 @@ export function OpportunitiesDashboard() {
                     </select>
                   </div>
                   <div className="mb-0">
-                    <label className="form-label fw-semibold">Reason (optional)</label>
+                    <label className="form-label fw-semibold">Note</label>
                     <textarea
                       className="form-control"
                       rows={3}
@@ -920,6 +968,21 @@ export function OpportunitiesDashboard() {
           background: #f9fafb !important;
           border-color: #06b6d4 !important;
           color: #06b6d4 !important;
+        }
+        
+        /* Multi-select employee badges */
+        .opportunities-dashboard .badge {
+          font-size: 0.85rem;
+          padding: 0.5rem 0.75rem;
+        }
+        
+        .opportunities-dashboard .btn-close-white {
+          filter: brightness(0) invert(1);
+          opacity: 0.8;
+        }
+        
+        .opportunities-dashboard .btn-close-white:hover {
+          opacity: 1;
         }
       `}</style>
     </div>

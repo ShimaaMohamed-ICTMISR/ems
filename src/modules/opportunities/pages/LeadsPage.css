@@ -152,6 +152,29 @@
   pointer-events: none;
 }
 
+.leads-page .lead-action-btn--qualify:disabled {
+  background: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #64748b !important;
+  opacity: 0.7;
+  position: relative;
+}
+
+.leads-page .lead-action-btn--qualify:disabled::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: #16a34a;
+}
+
+.leads-page .lead-action-btn--qualify:disabled i {
+  opacity: 0.3;
+}
+
 .leads-page .table-hover tbody td {
   padding-top: 0.65rem;
   padding-bottom: 0.65rem;

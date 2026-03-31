@@ -78,6 +78,26 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
     totalAmount: undefined,
     currency: 'USD',
   });
+
+  // Get the latest quote date for validation
+  const latestQuoteDate = useMemo(() => {
+    if (!quotes || quotes.length === 0) return null;
+    const dates = quotes
+      .map(q => q.validUntil)
+      .filter(date => date)
+      .map(date => new Date(date))
+      .filter(date => !isNaN(date.getTime())) // Filter out invalid dates
+      .sort((a, b) => b.getTime() - a.getTime());
+    return dates.length > 0 ? dates[0] : null;
+  }, [quotes]);
+
+  // Validate quote date
+  const isQuoteDateValid = useMemo(() => {
+    if (!latestQuoteDate) return true;
+    const newQuoteDate = new Date(quoteForm.validUntil);
+    if (isNaN(newQuoteDate.getTime())) return false; // Invalid date
+    return newQuoteDate >= latestQuoteDate;
+  }, [quoteForm.validUntil, latestQuoteDate]);
   const [editForm, setEditForm] = useState<UpdateOpportunityDto>({
     name: '',
     stage: 'prospecting',
@@ -467,7 +487,7 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
         </div>
 
         <div className="col-12">
-          <StageEntriesSection opportunityId={id} />
+          <StageEntriesSection opportunityId={id} opportunityStage={opp?.stage} />
         </div>
 
         {/* Quotes Card - voting/meetings style */}
@@ -925,29 +945,44 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                 }}
               >
                 <div className="modal-body">
-                  <label className="form-label" style={{ color: '#0f172a', fontWeight: 600 }}>Valid until</label>
-                  <input
-                    className="form-control"
-                    type="date"
-                    value={quoteForm.validUntil}
-                    onChange={(e) => setQuoteForm({ ...quoteForm, validUntil: e.target.value })}
-                    required
-                  />
-                  <label className="form-label mt-2" style={{ color: '#0f172a', fontWeight: 600 }}>
-                    Total amount (optional)
-                  </label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    min={0}
-                    value={quoteForm.totalAmount ?? ''}
-                    onChange={(e) =>
-                      setQuoteForm({
-                        ...quoteForm,
-                        totalAmount: e.target.value ? Number(e.target.value) : undefined,
-                      })
-                    }
-                  />
+                  <div className="mb-3">
+                    <label className="form-label" style={{ color: '#0f172a', fontWeight: 600 }}>Valid until</label>
+                    <input
+                      className={`form-control ${!isQuoteDateValid ? 'is-invalid' : ''}`}
+                      type="date"
+                      value={quoteForm.validUntil}
+                      onChange={(e) => setQuoteForm({ ...quoteForm, validUntil: e.target.value })}
+                      min={latestQuoteDate ? latestQuoteDate.toISOString().slice(0, 10) : undefined}
+                      required
+                    />
+                    {!isQuoteDateValid && (
+                      <div className="invalid-feedback">
+                        Quote date cannot be earlier than the latest existing quote ({latestQuoteDate?.toLocaleDateString()})
+                      </div>
+                    )}
+                    {latestQuoteDate && isQuoteDateValid && (
+                      <div className="form-text text-muted">
+                        Latest quote date: {latestQuoteDate.toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label" style={{ color: '#0f172a', fontWeight: 600 }}>
+                      Total amount (optional)
+                    </label>
+                    <input
+                      className="form-control"
+                      type="number"
+                      min={0}
+                      value={quoteForm.totalAmount ?? ''}
+                      onChange={(e) =>
+                        setQuoteForm({
+                          ...quoteForm,
+                          totalAmount: e.target.value ? Number(e.target.value) : undefined,
+                        })
+                      }
+                    />
+                  </div>
                 </div>
                 <div className="modal-footer" style={{
                   borderTop: '2px solid #e2e8f0',
@@ -957,8 +992,13 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                   <button type="button" className="btn btn-outline-secondary" onClick={() => setQuoteOpen(false)}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary" disabled={busy}>
-                    Create
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary" 
+                    disabled={busy || !isQuoteDateValid}
+                    title={!isQuoteDateValid ? "Quote date must be equal to or later than the latest existing quote" : ""}
+                  >
+                    {busy ? 'Creating...' : 'Create'}
                   </button>
                 </div>
               </form>

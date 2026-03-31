@@ -6,6 +6,7 @@ import { useCreateEntry } from '../hooks/useCreateEntry';
 import { useUpdateEntry } from '../hooks/useUpdateEntry';
 import { useDeleteEntry } from '../hooks/useDeleteEntry';
 import { StageEntryForm } from './StageEntryForm';
+import { isOpportunityClosedStage } from '../utils/opportunityFlow';
 import type { CreateOpportunityStageEntryDto, UpdateOpportunityStageEntryDto } from '../types/opportunity.types';
 
 function safeHttpUrl(u: string | null | undefined): string | null {
@@ -26,7 +27,13 @@ function formatWhen(iso: string | null | undefined): string {
   return d.toLocaleString();
 }
 
-export function StageEntriesSection({ opportunityId }: { opportunityId: string }) {
+export function StageEntriesSection({ 
+  opportunityId, 
+  opportunityStage 
+}: { 
+  opportunityId: string;
+  opportunityStage?: string;
+}) {
   const {
     data: entries = [],
     isLoading,
@@ -76,6 +83,7 @@ export function StageEntriesSection({ opportunityId }: { opportunityId: string }
   };
 
   const busy = createMut.isPending || updateMut.isPending || deleteMut.isPending;
+  const isOpportunityClosed = isOpportunityClosedStage(opportunityStage);
 
   useEffect(() => {
     if (!formOpen) return;
@@ -141,7 +149,13 @@ export function StageEntriesSection({ opportunityId }: { opportunityId: string }
           </h5>
           <small className="text-muted">Activity log — meetings, follow-ups, notes (not pipeline stage)</small>
         </div>
-        <button type="button" className="btn btn-primary btn-sm" onClick={openCreate} disabled={busy}>
+        <button 
+          type="button" 
+          className="btn btn-primary btn-sm" 
+          onClick={openCreate} 
+          disabled={busy || isOpportunityClosed}
+          title={isOpportunityClosed ? "Cannot add entries to closed opportunities" : "Add new entry"}
+        >
           <i className="bi bi-plus-lg me-1" />
           Add Entry
         </button>
@@ -177,10 +191,17 @@ export function StageEntriesSection({ opportunityId }: { opportunityId: string }
         {!isLoading && !isError && sorted.length === 0 && (
           <div className="text-center py-5">
             <p className="text-muted mb-3">No entries yet</p>
-            <button type="button" className="btn btn-primary" onClick={openCreate} disabled={busy}>
-              <i className="bi bi-plus-lg me-1" />
-              Add Entry
-            </button>
+            {isOpportunityClosed ? (
+              <div className="text-muted">
+                <i className="bi bi-lock me-2"></i>
+                Cannot add entries to closed opportunities
+              </div>
+            ) : (
+              <button type="button" className="btn btn-primary" onClick={openCreate} disabled={busy}>
+                <i className="bi bi-plus-lg me-1" />
+                Add Entry
+              </button>
+            )}
           </div>
         )}
 
@@ -199,7 +220,8 @@ export function StageEntriesSection({ opportunityId }: { opportunityId: string }
                       type="button"
                       className="btn btn-sm btn-outline-secondary"
                       onClick={() => openEdit(row)}
-                      disabled={busy}
+                      disabled={busy || isOpportunityClosed}
+                      title={isOpportunityClosed ? "Cannot edit entries in closed opportunities" : "Edit entry"}
                     >
                       Edit
                     </button>
@@ -207,7 +229,8 @@ export function StageEntriesSection({ opportunityId }: { opportunityId: string }
                       type="button"
                       className="btn btn-sm btn-outline-danger"
                       onClick={() => handleDelete(row)}
-                      disabled={busy}
+                      disabled={busy || isOpportunityClosed}
+                      title={isOpportunityClosed ? "Cannot delete entries in closed opportunities" : "Delete entry"}
                     >
                       Delete
                     </button>

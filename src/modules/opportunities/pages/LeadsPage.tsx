@@ -333,8 +333,8 @@ export function LeadsPage() {
                               type="button"
                               className="lead-action-btn lead-action-btn--qualify"
                               onClick={() => openQualify(lead)}
-                              disabled={actionLoading}
-                              title="Qualify lead"
+                              disabled={actionLoading || lead.isQualified === true}
+                              title={lead.isQualified === true ? "Lead is already qualified" : "Qualify lead"}
                               aria-label="Qualify lead"
                             >
                               <i className="bi bi-patch-check" aria-hidden />
@@ -572,7 +572,7 @@ export function LeadsPage() {
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label fw-semibold">Amount *</label>
+                    <label className="form-label fw-semibold">Excepected Budget *</label>
                     <input
                       type="number"
                       className="form-control"
@@ -596,27 +596,8 @@ export function LeadsPage() {
                       }
                     />
                   </div>
-                  <div className="mb-3">
-                    <label className="form-label fw-semibold">Initial stage</label>
-                    <select
-                      className="form-select"
-                      value={convertForm.stage}
-                      onChange={(e) =>
-                        setConvertForm({
-                          ...convertForm,
-                          stage: e.target.value as ConvertLeadDto['stage'],
-                        })
-                      }
-                    >
-                      <option value="prospecting">Prospecting</option>
-                      <option value="qualification">Qualification</option>
-                      <option value="needs_analysis">Needs analysis</option>
-                      <option value="proposal">Proposal</option>
-                      <option value="negotiation">Negotiation</option>
-                    </select>
-                  </div>
                   <div className="mb-0">
-                    <label className="form-label fw-semibold">Conversion reason</label>
+                    <label className="form-label fw-semibold">Note</label>
                     <textarea
                       className="form-control"
                       rows={2}
