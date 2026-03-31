@@ -8,5 +8,7 @@ export function useStageEntries(opportunityId: string | undefined) {
     queryKey: opportunityId ? stageEntriesQueryKey(opportunityId) : ['stage-entries', ''],
     queryFn: () => listStageEntries(opportunityId!),
     enabled: Boolean(opportunityId),
+    /** 500 من السيرفر مش هتتصلح بإعادة المحاولة — يقلل الطلبات المكررة في Network */
+    retry: false,
   });
 }

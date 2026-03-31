@@ -33,7 +33,7 @@
 
 .profile-container .profile-title {
   color: white;
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 700;
   margin: 0;
   display: flex;
@@ -46,7 +46,7 @@
 
 .profile-container .profile-subtitle {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   margin: 0.5rem 0 0 0;
 }
 
@@ -102,20 +102,91 @@
 }
 
 .profile-container .avatar-circle {
-  width: 100px;
-  height: 100px;
+  width: 80px;
+  height: 80px;
   background: var(--primary-color);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 4px solid rgba(255, 255, 255, 0.2);
+  border: 3px solid rgba(255, 255, 255, 0.2);
   position: relative;
+  overflow: hidden;
 }
 
 .profile-container .avatar-circle i {
-  font-size: 3rem;
+  font-size: 2.5rem;
   color: white;
+}
+
+.profile-container .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-container .avatar-loading {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.profile-container .avatar-controls {
+  position: absolute;
+  bottom: -10px;
+  right: -10px;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.profile-container .avatar-upload-btn,
+.profile-container .avatar-delete-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.profile-container .avatar-upload-btn {
+  background: var(--primary-color);
+  color: white;
+}
+
+.profile-container .avatar-upload-btn:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: scale(1.1);
+}
+
+.profile-container .avatar-delete-btn {
+  background: var(--danger-color);
+  color: white;
+}
+
+.profile-container .avatar-delete-btn:hover:not(:disabled) {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.profile-container .avatar-upload-btn:disabled,
+.profile-container .avatar-delete-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .profile-container .avatar-status {
@@ -124,13 +195,23 @@
   right: 5px;
   width: 20px;
   height: 20px;
-  background: var(--success-color);
   border-radius: 50%;
   border: 3px solid white;
+  transition: all 0.3s ease;
+}
+
+.profile-container .avatar-status.active {
+  background: var(--success-color);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+}
+
+.profile-container .avatar-status.inactive {
+  background: var(--text-secondary);
+  box-shadow: 0 0 0 2px rgba(100, 116, 139, 0.3);
 }
 
 .profile-container .profile-name {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
   color: white;
@@ -139,7 +220,7 @@
 .profile-container .profile-email {
   color: rgba(255, 255, 255, 0.7);
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.875rem;
 }
 
 .profile-container .profile-card-body {
@@ -170,15 +251,15 @@
 }
 
 .profile-container .stat-icon {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   background: var(--primary-color);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -189,7 +270,7 @@
 
 .profile-container .stat-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-secondary);
   font-weight: 500;
   margin-bottom: 0.1rem;
@@ -197,7 +278,7 @@
 
 .profile-container .stat-value {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -231,7 +312,7 @@
 }
 
 .profile-container .profile-roles-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-secondary);
   font-weight: 500;
   flex-shrink: 0;
@@ -246,9 +327,9 @@
 .profile-container .profile-role-badge-small {
   background: var(--primary-color);
   color: white;
-  padding: 0.1rem 0.4rem;
-  border-radius: 8px;
-  font-size: 0.65rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 6px;
+  font-size: 0.6rem;
   font-weight: 500;
   line-height: 1;
 }
@@ -282,7 +363,7 @@
 }
 
 .profile-container .form-title {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0 0 0.5rem 0;
@@ -297,7 +378,7 @@
 .profile-container .form-subtitle {
   color: var(--text-secondary);
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.875rem;
 }
 
 .profile-container .edit-toggle-btn {
@@ -366,7 +447,7 @@
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .profile-container .form-label i {
@@ -376,8 +457,8 @@
 .profile-container .form-control {
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
+  padding: 0.6rem 0.8rem;
+  font-size: 0.875rem;
   transition: all 0.2s ease;
   background: white;
 }
@@ -454,15 +535,15 @@
 }
 
 .profile-container .info-icon {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   background: var(--primary-color);
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 1.1rem;
+  font-size: 1rem;
 }
 
 .profile-container .info-content {
@@ -471,7 +552,7 @@
 
 .profile-container .info-content label {
   display: block;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: var(--text-secondary);
   font-weight: 500;
   margin-bottom: 0.25rem;
@@ -479,7 +560,7 @@
 
 .profile-container .info-content p {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--text-primary);
   font-weight: 600;
 }
@@ -511,7 +592,7 @@
   }
   
   .profile-container .profile-title {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
   
   .profile-container .profile-content {
@@ -526,18 +607,18 @@
   }
   
   .profile-container .avatar-circle {
-    width: 80px;
-    height: 80px;
+    width: 70px;
+    height: 70px;
   }
   
   .profile-container .avatar-circle i {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
 }
 
 @media (max-width: 576px) {
   .profile-container .profile-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
   
   .profile-container .profile-card-header,
@@ -551,4 +632,159 @@
   .profile-container .info-item {
     padding: 1rem;
   }
+}
+
+/* Task Statistics Styles */
+.profile-container .task-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-container .task-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--light-bg);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.profile-container .task-stat-item:hover {
+  background: #f1f5f9;
+  transform: translateY(-2px);
+}
+
+.profile-container .task-stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+}
+
+.profile-container .task-stat-icon.total {
+  background: var(--primary-color);
+}
+
+.profile-container .task-stat-icon.completed {
+  background: var(--success-color);
+}
+
+.profile-container .task-stat-icon.progress {
+  background: #f59e0b;
+}
+
+.profile-container .task-stat-icon.overdue {
+  background: var(--danger-color);
+}
+
+.profile-container .task-stat-content {
+  flex: 1;
+}
+
+.profile-container .task-stat-number {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.profile-container .task-stat-label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+/* Completion Progress Bar */
+.profile-container .completion-progress {
+  margin-top: 1.5rem;
+}
+
+.profile-container .progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.profile-container .progress-percentage {
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+.profile-container .progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.profile-container .progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--success-color) 100%);
+  border-radius: 4px;
+  transition: width 1s ease-in-out;
+}
+
+/* Chart Styles */
+.profile-container .chart-container {
+  background: var(--light-bg);
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color);
+}
+
+.profile-container .chart-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+/* Responsive adjustments for task stats */
+@media (max-width: 576px) {
+  .profile-container .task-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .profile-container .task-stat-item {
+    padding: 0.75rem;
+  }
+  
+  .profile-container .task-stat-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+  
+  .profile-container .task-stat-number {
+    font-size: 1.25rem;
+  }
+}
+
+/* No Tasks Message */
+.profile-container .no-tasks-message {
+  background: var(--light-bg);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.profile-container .no-tasks-message .display-1 {
+  font-size: 4rem;
+  opacity: 0.3;
 }

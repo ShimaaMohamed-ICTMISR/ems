@@ -266,7 +266,8 @@ export interface AttendanceRecord {
 // ─── Service ─────────────────────────────────────────
 export const hrService = {
   // ─── Departments ─────────────────────────
-  getDepartments: () => hrApiClient.get('/v1/departments'),
+  getDepartments: (params?: { id?: string; isActive?: boolean }) =>
+    hrApiClient.get('/v1/departments', { params }),
   getDepartmentById: (id: string) => hrApiClient.get(`/v1/departments?id=${id}`),
   createDepartment: (data: CreateDepartmentRequest) => hrApiClient.post('/v1/departments', data),
   updateDepartment: (id: string, data: UpdateDepartmentRequest) => hrApiClient.patch(`/v1/departments/${id}`, data),

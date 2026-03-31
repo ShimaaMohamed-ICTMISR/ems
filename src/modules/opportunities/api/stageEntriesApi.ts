@@ -1,6 +1,7 @@
 /**
  * Opportunity stage entries (activity log) — uses shared opportunityManagementClient only.
  */
+import type { AxiosError } from 'axios';
 import {
   opportunityManagementClient,
   extractOpportunityApiError,
@@ -21,13 +22,37 @@ async function handle<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+/** If dedicated list route errors, OpenAPI allows the same data on GET /opportunities/{id}?includeStageEntries=true */
+function extractStageEntriesFromOpportunityPayload(raw: unknown): OpportunityStageEntry[] {
+  const layer = unwrapEntity<Record<string, unknown>>(raw);
+  const nested =
+    layer.data && typeof layer.data === 'object' ? (layer.data as Record<string, unknown>) : null;
+  const candidates = [layer.stageEntries, layer.stage_entries, nested?.stageEntries, nested?.stage_entries];
+  for (const c of candidates) {
+    if (Array.isArray(c)) return c as OpportunityStageEntry[];
+  }
+  return [];
+}
+
 export async function listStageEntries(opportunityId: string): Promise<OpportunityStageEntry[]> {
-  return handle(async () => {
-    const res = await opportunityManagementClient.get(
-      `/opportunities/${opportunityId}/stage-entries`,
-    );
+  try {
+    const res = await opportunityManagementClient.get(`/opportunities/${opportunityId}/stage-entries`);
     return unwrapList<OpportunityStageEntry>(res.data);
-  });
+  } catch (e) {
+    const status = (e as AxiosError).response?.status;
+    const retryable = status === 500 || status === 502 || status === 503;
+    if (!retryable) {
+      throw new Error(extractOpportunityApiError(e));
+    }
+    try {
+      const res = await opportunityManagementClient.get(`/opportunities/${opportunityId}`, {
+        params: { includeStageEntries: 'true' },
+      });
+      return extractStageEntriesFromOpportunityPayload(res.data);
+    } catch (fallbackErr) {
+      throw new Error(extractOpportunityApiError(fallbackErr));
+    }
+  }
 }
 
 export async function createStageEntry(
