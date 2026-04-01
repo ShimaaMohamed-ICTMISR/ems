@@ -15,13 +15,25 @@ interface PollEligibilityProps {
 
 type RuleMode = 'employee' | 'department';
 
-function parseNestedList<T>(res: { data?: { data?: { data?: T[] } | T[] } }): T[] {
-  const innerData = res.data?.data;
-  return Array.isArray(innerData?.data)
-    ? innerData.data
-    : Array.isArray(innerData)
-      ? innerData
-      : [];
+function parseNestedList<T>(res: { data?: any }): T[] {
+  const root = res.data;
+  const layer1 = root?.data;
+  const layer2 = layer1?.data;
+
+  const candidates = [
+    layer2,
+    layer1,
+    root,
+    layer1?.employees,
+    layer1?.departments,
+    layer2?.employees,
+    layer2?.departments,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate as T[];
+  }
+  return [];
 }
 
 export function PollEligibilityComponent({

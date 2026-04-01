@@ -5,13 +5,15 @@ import type { CreateMeetingDto } from '../../services/meetingService';
 import hrService, { type Employee, type Department } from '../../services/hrProjectManagementService';
 import './meetings.css';
 
-function parseNestedList<T>(res: { data?: { data?: { data?: T[] } | T[] } }): T[] {
-  const innerData = res.data?.data;
-  return Array.isArray(innerData?.data)
-    ? innerData.data
-    : Array.isArray(innerData)
-      ? innerData
-      : [];
+function parseNestedList<T>(res: { data?: any }): T[] {
+  const root = res.data;
+  const layer1 = root?.data;
+  const layer2 = layer1?.data;
+  const candidates = [layer2, layer1, root, layer1?.employees, layer1?.departments, layer2?.employees, layer2?.departments];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate as T[];
+  }
+  return [];
 }
 
 type ParticipantAddMode = 'users' | 'department';
@@ -34,7 +36,6 @@ export function CreateMeeting() {
   /** When adding by department: target department for bulk add. */
   const [bulkDepartmentId, setBulkDepartmentId] = useState('');
   const [employees, setEmployees] = useState<Employee[]>([]);
-  /** Keeps labels for participants if the dropdown list is refetched under another department filter. */
   const [employeeById, setEmployeeById] = useState<Record<string, Employee>>({});
   const [bulkAdding, setBulkAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -86,21 +87,33 @@ export function CreateMeeting() {
       // Convert datetime-local format to ISO 8601 with timezone
       const startTime = new Date(formData.startTime).toISOString();
       const endTime = new Date(formData.endTime).toISOString();
+      if (new Date(endTime).getTime() < new Date(startTime).getTime()) {
+        alert('End Time cannot be earlier than Start Time.');
+        return;
+      }
       
       const meetingData: CreateMeetingDto = {
-        ...formData,
+        title: formData.title,
+        description: formData.description,
         startTime,
         endTime,
-        participants: participants.map(userId => ({ userId }))
       };
+      if (participants.length > 0) {
+        meetingData.participants = participants.map((userId) => ({ userId }));
+      }
       
       console.log('Sending meeting data:', meetingData);
       
-      await meetingService.createMeeting(meetingData);
-      navigate('/dashboard/meetings');
+      const createdMeeting = await meetingService.createMeeting(meetingData);
+      navigate(`/dashboard/meetings/${createdMeeting.id}/external-invites`);
     } catch (err) {
       console.error('Failed to create meeting:', err);
-      alert('Failed to create meeting');
+      const message =
+        (err as any)?.response?.data?.message ||
+        (err as any)?.response?.data?.error ||
+        (err as Error)?.message ||
+        'Failed to create meeting';
+      alert(message);
     } finally {
       setSubmitting(false);
     }
@@ -233,6 +246,7 @@ export function CreateMeeting() {
                       type="datetime-local"
                       className="form-control border-0 shadow-sm"
                       value={formData.endTime}
+                      min={formData.startTime || undefined}
                       onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                       required
                     />

@@ -44,9 +44,9 @@ meetingClient.interceptors.response.use(
 // Add token to requests if available
 meetingClient.interceptors.request.use(
   (config) => {
-    // Use the service ticket provided by backend team
-    const serviceTicket = 'auH2RtYi9df5vO79WXl5XyaUck6GNwClJ54ayehPU9A=';
-    config.headers['x-service-ticket'] = serviceTicket; // Changed to lowercase
+    // Meeting service ticket
+    const serviceTicket = 'TEST-SECRET-TICKET-2026';
+    config.headers['X-Service-Ticket'] = serviceTicket;
     
     // Also add user auth token for user identification
     const userToken = localStorage.getItem('authToken');
@@ -56,7 +56,7 @@ meetingClient.interceptors.request.use(
     
     // Debug logging
     console.log('Meeting service request headers:', {
-      'x-service-ticket': config.headers['x-service-ticket'],
+      'X-Service-Ticket': config.headers['X-Service-Ticket'],
       'Authorization': config.headers.Authorization,
       'url': config.url,
       'method': config.method
@@ -179,6 +179,11 @@ export interface UpdateParticipantDto {
   response: ParticipantResponse;
 }
 
+export interface InviteExternalEmailDto {
+  email: string;
+  name?: string;
+}
+
 // ============= HEALTH CHECK =============
 
 // Check if meeting service is available
@@ -299,4 +304,23 @@ export const updateParticipantResponse = async (
 // Remove participant from meeting
 export const removeParticipant = async (meetingId: string, participantId: string): Promise<void> => {
   await meetingClient.delete(`/meetings/${meetingId}/participants/${participantId}`);
+};
+
+// Send invitation email to an external address (no participant record is created)
+export const inviteExternalParticipantEmail = async (
+  meetingId: string,
+  data: InviteExternalEmailDto
+): Promise<void> => {
+  const endpoint = `/meetings/${meetingId}/participants/email`;
+  try {
+    await meetingClient.post(endpoint, data, { timeout: 30000 });
+  } catch (error: any) {
+    // Email dispatch can be slower than standard meeting endpoints.
+    // Retry once on timeout before bubbling up the failure.
+    if (error?.code === 'ECONNABORTED') {
+      await meetingClient.post(endpoint, data, { timeout: 30000 });
+      return;
+    }
+    throw error;
+  }
 };
