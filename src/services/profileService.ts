@@ -1,6 +1,6 @@
 import { apiClient } from './apiClient';
 import { taskService } from './taskService';
-import { projectService } from './projectService';
+import { projectService } from './projectManagementServices/projectService';
 import { hrService } from './hrProjectManagementService';
 
 export interface UserProfile {
