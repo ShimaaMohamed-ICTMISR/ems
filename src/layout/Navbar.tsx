@@ -101,18 +101,27 @@ export function Navbar() {
           >
             <i
               className="bi bi-stack me-2"
-              style={{ color: "#06b6d4", fontSize: "clamp(1rem, 2.2vw, 1.6rem)" }}
+              style={{
+                color: "#06b6d4",
+                fontSize: "clamp(1rem, 2.2vw, 1.6rem)",
+              }}
             ></i>
             <div className="d-flex flex-column lh-sm" style={{ minWidth: 0 }}>
               <span
                 className="text-white fw-bold"
-                style={{ fontSize: "clamp(1rem, 2vw, 1.35rem)", letterSpacing: "0.02em" }}
+                style={{
+                  fontSize: "clamp(1rem, 2vw, 1.35rem)",
+                  letterSpacing: "0.02em",
+                }}
               >
                 EMS
               </span>
               <small
                 className="text-white-50"
-                style={{ fontSize: "clamp(0.68rem, 1.1vw, 0.78rem)", whiteSpace: "nowrap" }}
+                style={{
+                  fontSize: "clamp(0.68rem, 1.1vw, 0.78rem)",
+                  whiteSpace: "nowrap",
+                }}
               >
                 Management System
               </small>
