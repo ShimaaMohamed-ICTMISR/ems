@@ -20,6 +20,7 @@ import {
   Roles,
   Users,
   ProjectManagement,
+  QuickTasks,
   Resources,
   ResourceRequests,
 } from "../pages";
@@ -92,6 +93,7 @@ const router = createBrowserRouter([
       { path: "hr/leave-balances", element: <LeaveBalances /> },
       { path: "portfolios", element: <Portfolios /> },
       { path: "project-management", element: <ProjectManagement /> },
+      { path: "project-management/quick-tasks", element: <QuickTasks /> },
       { path: "project-management/portfolios", element: <Portfolios /> },
       { path: "project-management/resources", element: <Resources /> },
       {
@@ -109,6 +111,10 @@ const router = createBrowserRouter([
       },
       {
         path: "portfolios/:portfolioId/projects/:projectId/tasks/:taskId",
+        element: <TaskDetails />,
+      },
+      {
+        path: "tasks/:taskId",
         element: <TaskDetails />,
       },
       // Meetings

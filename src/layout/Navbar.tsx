@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import type { RootState } from "../store/store";
 import { logout } from "../store/authSlice";
 import { authService } from "../services/authService";
-import finovatelogo from "../assets/images/finovate-logo.webp";
 import notificationService from "../services/notificationService";
 import NotificationSidebar from "../pages/notifications/NotificationSidebar.tsx";
 
@@ -96,68 +95,32 @@ export function Navbar() {
           </button>
 
           {/* Page Title */}
-          <span
-            className="navbar-brand mb-0 fw-bold d-flex align-items-center"
-            style={{ fontSize: "1.5rem", minHeight: "50px" }}
+          <div
+            className="navbar-brand mb-0 d-flex align-items-center"
+            style={{ minHeight: "50px", maxWidth: "min(44vw, 320px)" }}
           >
-            {/* <i className="bi bi-building fs-4 me-2" style={{ color: '#06b6d4' }}></i> */}
-            <img
-              src={finovatelogo}
-              alt="Finovate Logo"
-              className="img-fluid"
-              style={{
-                maxWidth: "100%",
-                height: "auto", //maintains aspects ratio
-                maxHeight: "50px",
-                objectFit: "contain",
-              }}
-            />
-          </span>
-
-          {/* Search and Actions */}
-          <div className="d-flex align-items-center gap-3 ms-auto">
-            <div className="d-none d-md-block">
-              <div className="position-relative">
-                <i
-                  className="bi bi-search position-absolute text-muted"
-                  style={{
-                    left: "14px",
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    zIndex: 10,
-                    fontSize: "0.9rem",
-                  }}
-                ></i>
-                <input
-                  type="search"
-                  className="form-control border-0 shadow-sm ps-5"
-                  placeholder="Search anything..."
-                  aria-label="Search"
-                  style={{
-                    width: "320px",
-                    borderRadius: "25px",
-                    backgroundColor: "rgba(255, 255, 255, 0.95)",
-                    fontSize: "0.875rem",
-                    paddingTop: "0.6rem",
-                    paddingBottom: "0.6rem",
-                    paddingRight: "1rem",
-                    transition: "all 0.3s ease",
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.width = "380px";
-                    e.currentTarget.style.backgroundColor = "#ffffff";
-                    e.currentTarget.style.boxShadow =
-                      "0 4px 12px rgba(6, 182, 212, 0.15)";
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.width = "320px";
-                    e.currentTarget.style.backgroundColor =
-                      "rgba(255, 255, 255, 0.95)";
-                    e.currentTarget.style.boxShadow = "";
-                  }}
-                />
-              </div>
+            <i
+              className="bi bi-stack me-2"
+              style={{ color: "#06b6d4", fontSize: "clamp(1rem, 2.2vw, 1.6rem)" }}
+            ></i>
+            <div className="d-flex flex-column lh-sm" style={{ minWidth: 0 }}>
+              <span
+                className="text-white fw-bold"
+                style={{ fontSize: "clamp(1rem, 2vw, 1.35rem)", letterSpacing: "0.02em" }}
+              >
+                EMS
+              </span>
+              <small
+                className="text-white-50"
+                style={{ fontSize: "clamp(0.68rem, 1.1vw, 0.78rem)", whiteSpace: "nowrap" }}
+              >
+                Management System
+              </small>
             </div>
+          </div>
+
+          {/* Actions */}
+          <div className="d-flex align-items-center gap-3 ms-auto">
             <button
               className="btn btn-link text-white position-relative p-0 icon-bounce"
               type="button"

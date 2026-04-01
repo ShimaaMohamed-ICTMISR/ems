@@ -179,6 +179,44 @@
   color: #00b4d8;
 }
 
+.pm-quick-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.pm-quick-action-btn {
+  border: 1px solid #dbe4ef;
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+  font-weight: 700;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.pm-quick-action-create {
+  background: linear-gradient(145deg, #fffdf7, #fff5df);
+  border-color: #ffd089;
+  color: #b45309;
+}
+
+.pm-quick-action-create:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.2);
+}
+
+.pm-quick-action-show {
+  background: linear-gradient(145deg, #f5fbff, #ecf8ff);
+  border-color: #9ad9ff;
+  color: #0b5f8a;
+}
+
+.pm-quick-action-show:hover {
+  border-color: #38bdf8;
+  box-shadow: 0 8px 20px rgba(56, 189, 248, 0.22);
+}
+
 /* ─── Widgets Placeholder ─── */
 
 .pm-widgets-section {
@@ -251,7 +289,180 @@
     grid-template-columns: 1fr;
   }
 
+  .pm-quick-actions-row {
+    grid-template-columns: 1fr;
+  }
+
   .pm-widgets-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.pm-task-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(14, 165, 233, 0.2), transparent 38%),
+    radial-gradient(circle at 88% 8%, rgba(58, 134, 255, 0.17), transparent 35%),
+    rgba(2, 6, 23, 0.55);
+  backdrop-filter: blur(6px);
+}
+
+.pm-task-modal-card {
+  width: min(860px, 100%);
+  max-height: calc(100vh - 2.5rem);
+  overflow: auto;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f9fcff 100%);
+  border: 1px solid #d2e4f5;
+  box-shadow: 0 26px 60px rgba(15, 23, 42, 0.28);
+  padding: 1.15rem 1.2rem 1.15rem;
+}
+
+.pm-task-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid #dbeafe;
+  background: linear-gradient(145deg, #eff7ff 0%, #e8f5ff 100%);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.pm-task-modal-header-content {
+  min-width: 0;
+}
+
+.pm-task-modal-kicker {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04rem;
+  text-transform: uppercase;
+  color: #0369a1;
+  background: rgba(14, 165, 233, 0.15);
+  margin-bottom: 0.45rem;
+}
+
+.pm-task-modal-title {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.1vw, 1.35rem);
+  line-height: 1.2;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.pm-task-modal-subtitle {
+  margin: 0.35rem 0 0;
+  font-size: 0.86rem;
+  color: #3b556e;
+}
+
+.pm-task-form {
+  margin-top: 0.2rem;
+}
+
+.pm-task-label {
+  font-weight: 600;
+  color: #1e3a5f;
+  margin-bottom: 0.35rem;
+}
+
+.pm-task-input {
+  border-radius: 11px;
+  border-color: #d0deee;
+  box-shadow: none;
+  min-height: 42px;
+}
+
+.pm-task-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 0.2rem rgba(56, 189, 248, 0.15);
+}
+
+.pm-task-helper {
+  color: #607286 !important;
+}
+
+.pm-task-actions {
+  margin-top: 0.25rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e3edf7;
+}
+
+.pm-task-cancel-btn {
+  border-radius: 10px;
+  padding-inline: 1rem;
+}
+
+.pm-task-submit-btn {
+  border: 0;
+  color: #fff;
+  border-radius: 10px;
+  font-weight: 700;
+  padding-inline: 1rem;
+  background: linear-gradient(135deg, #0284c7, #2563eb);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.3);
+}
+
+.pm-task-submit-btn:hover,
+.pm-task-submit-btn:focus {
+  color: #fff;
+  background: linear-gradient(135deg, #0369a1, #1d4ed8);
+}
+
+.pm-task-submit-btn:disabled {
+  opacity: 0.75;
+  box-shadow: none;
+}
+
+@media (max-width: 992px) {
+  .pm-task-modal-card {
+    width: min(740px, 100%);
+  }
+}
+
+@media (max-width: 768px) {
+  .pm-task-modal-backdrop {
+    align-items: flex-end;
+    padding: 0.6rem;
+  }
+
+  .pm-task-modal-card {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 18px 18px 14px 14px;
+    padding: 0.85rem 0.85rem 0.9rem;
+  }
+
+  .pm-task-modal-header {
+    padding: 0.75rem 0.75rem;
+  }
+
+  .pm-task-modal-subtitle {
+    font-size: 0.82rem;
+  }
+
+  .pm-task-actions {
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(180deg, rgba(249, 252, 255, 0.82) 0%, #f9fcff 38%);
+    padding-bottom: 0.1rem;
+    z-index: 2;
+  }
+
+  .pm-task-cancel-btn,
+  .pm-task-submit-btn {
+    flex: 1;
   }
 }

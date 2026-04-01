@@ -5,6 +5,7 @@ export interface Task {
   projectId?: string;
   projectPhaseId?: string | null;
   milestoneId?: string | null;
+  employerId?: string | null;
   title?: string | null;
   description?: string | null;
   priority?: number;
@@ -20,35 +21,37 @@ export interface Task {
 }
 
 export interface TaskCreateDTO {
-  projectId: string;
-  projectPhaseId?: string;
-  milestoneId?: string;
+  projectId?: string | null;
+  projectPhaseId?: string | null;
+  milestoneId?: string | null;
+  employerId?: string | null;
   title: string;
-  description?: string;
+  description?: string | null;
   priority?: number;
   status?: number;
   startDateUtc?: string;
-  dueDateUtc?: string;
+  dueDateUtc?: string | null;
   completionPercentage?: number;
   effortEstimateHours?: number;
-  assignedToMemberId?: string;
+  assignedToMemberId?: string | null;
 }
 
 export interface TaskUpdateDTO {
-  id: string;
-  projectId: string;
+  id?: string;
+  projectId?: string | null;
   rowVersion: string;
-  projectPhaseId?: string;
-  milestoneId?: string;
+  projectPhaseId?: string | null;
+  milestoneId?: string | null;
+  employerId?: string | null;
   title: string;
-  description?: string;
+  description?: string | null;
   priority?: number;
   status?: number;
   startDateUtc?: string;
-  dueDateUtc?: string;
+  dueDateUtc?: string | null;
   completionPercentage?: number;
   effortEstimateHours?: number;
-  assignedToMemberId?: string;
+  assignedToMemberId?: string | null;
 }
 
 export interface TaskQueryParams {

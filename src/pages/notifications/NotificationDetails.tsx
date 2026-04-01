@@ -1,7 +1,9 @@
 import { useSelector } from "react-redux";
+import { createPortal } from "react-dom";
 import notificationService from "../../services/notificationService";
 import { formatTimeAgo } from "../../utils";
 import type { RootState } from "../../store/store";
+import "./styles.css";
 
 interface Props {
   setShowDetailModal: (value: boolean) => void;
@@ -60,9 +62,15 @@ export default function NotificationDetails({
 
   if (!selectedNotif) return null;
 
-  return (
-    <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+  return createPortal(
+    <div
+      className="modal-overlay notification-details-modal-overlay"
+      onClick={() => setShowDetailModal(false)}
+    >
+      <div
+        className="modal-content notification-details-modal-content"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-header">
           <h2>Notification Details</h2>
           <button
@@ -211,6 +219,7 @@ export default function NotificationDetails({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

@@ -5,10 +5,12 @@ import {
   resourceService,
   type ResourceRequest,
   type Resource,
-} from "../services/resourceService";
-import projectService, { type Project } from "../services/projectService";
-import { ResourceType, RequestStatus } from "../config/enums";
-import "./styles/ResourceRequests.css";
+} from "../../services/projectManagementServices/resourceService";
+import projectService, {
+  type Project,
+} from "../../services/projectManagementServices/projectService";
+import { ResourceType, RequestStatus } from "../../config/enums";
+import ".././styles/ResourceRequests.css";
 
 const statusColor: Record<number, string> = {
   0: "#3b82f6", // Requested

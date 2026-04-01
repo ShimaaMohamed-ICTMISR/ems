@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
 import {
   Bar,
@@ -15,29 +16,44 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import projectService, { type Project } from "../services/projectService";
-import taskService, { type Task } from "../services/taskService";
-import phaseService, { type Phase } from "../services/phaseService";
-import milestoneService, { type Milestone } from "../services/milestoneService";
+import projectService, {
+  type Project,
+} from "../../services/projectManagementServices/projectService";
+import taskService, {
+  type Task,
+} from "../../services/projectManagementServices/taskService";
+import phaseService, {
+  type Phase,
+} from "../../services/projectManagementServices/phaseService";
+import milestoneService, {
+  type Milestone,
+} from "../../services/projectManagementServices/milestoneService";
+import milestoneApprovalService, {
+  type MilestoneApproval,
+} from "../../services/projectManagementServices/milestoneApprovalService";
 import hrService, {
   type Employee,
-} from "../services/hrProjectManagementService";
-import memberService, { type ProjectMember } from "../services/memberService";
+} from "../../services/hrProjectManagementService";
+import memberService, {
+  type ProjectMember,
+} from "../../services/projectManagementServices/memberService";
+
 import financeService, {
   type Budget,
   type BudgetCreateDTO,
-} from "../services/financeService";
+} from "../../services/projectManagementServices/financeService";
+
 import {
   resourceRequestService,
   resourceService,
   type ResourceRequest,
   type Resource,
   type ResourceRequestCreateDTO,
-} from "../services/resourceService";
+} from "../../services/projectManagementServices/resourceService";
 import riskService, {
   type Risk,
   type RiskEvent,
-} from "../services/riskService";
+} from "../../services/projectManagementServices/riskService";
 import {
   ProjectStage,
   HealthStatus,
@@ -47,12 +63,14 @@ import {
   BudgetCategory,
   ResourceType,
   RequestStatus,
+  ApprovalStatus,
   RiskImpact,
   RiskProbability,
   RiskEventStatus,
-} from "../config/enums";
-import "./styles/ProjectDetails.css";
-import "./styles/TaskDetails.css";
+} from "../../config/enums";
+import type { RootState } from "../../store/store";
+import ".././styles/ProjectDetails.css";
+import ".././styles/TaskDetails.css";
 
 function formatDate(value?: string | null) {
   if (!value) {
@@ -67,7 +85,7 @@ function formatDate(value?: string | null) {
   return date.toLocaleString();
 }
 
-function toDateInputValue(value?: string) {
+function toDateInputValue(value?: string | null) {
   if (!value) {
     return "";
   }
@@ -80,9 +98,37 @@ function toDateInputValue(value?: string) {
   return date.toISOString().slice(0, 10);
 }
 
+function toDateTimeLocalInputValue(value?: string | null) {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 function safeInt(value: string | undefined, fallback = 0): number {
   const n = parseInt(String(value), 10);
   return Number.isFinite(n) ? n : fallback;
+}
+
+function getTaskStatusColor(status: number): string {
+  const statusColors: Record<number, string> = {
+    0: "#6c757d",
+    1: "#17a2b8",
+    2: "#007bff",
+    3: "#dc3545",
+    4: "#f59e0b",
+    5: "#28a745",
+    6: "#adb5bd",
+  };
+
+  return statusColors[status] || "#6b7280";
 }
 
 function resolveEmployeeUserId(employee: Employee): string {
@@ -148,6 +194,7 @@ type ProjectDetailsTab =
 export function ProjectDetails() {
   const navigate = useNavigate();
   const { portfolioId, projectId } = useParams();
+  const authUser = useSelector((state: RootState) => state.auth.user);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [project, setProject] = useState<Project | null>(null);
@@ -227,10 +274,33 @@ export function ProjectDetails() {
   const [editMilestoneForm, setEditMilestoneForm] = useState({
     name: "",
     targetDateUtc: "",
+    actualDateUtc: "",
     successCriteria: "",
     isCompleted: false,
   });
   const [confirmDeleteMilestoneId, setConfirmDeleteMilestoneId] = useState<
+    string | null
+  >(null);
+  const [milestoneApprovals, setMilestoneApprovals] = useState<
+    MilestoneApproval[]
+  >([]);
+  const [approvalsLoading, setApprovalsLoading] = useState(false);
+  const [showCreateApproval, setShowCreateApproval] = useState(false);
+  const [creatingApproval, setCreatingApproval] = useState(false);
+  const [newApprovalForm, setNewApprovalForm] = useState({
+    status: "2",
+    comments: "",
+    decidedAtUtc: "",
+  });
+  const [editingApprovalId, setEditingApprovalId] = useState<string | null>(
+    null,
+  );
+  const [editApprovalForm, setEditApprovalForm] = useState({
+    status: "2",
+    comments: "",
+    decidedAtUtc: "",
+  });
+  const [confirmDeleteApprovalId, setConfirmDeleteApprovalId] = useState<
     string | null
   >(null);
   const [phaseVisualLoading, setPhaseVisualLoading] = useState(false);
@@ -248,6 +318,50 @@ export function ProjectDetails() {
     null,
   );
   const [confirmDeleteProject, setConfirmDeleteProject] = useState(false);
+
+  const currentUserId = useMemo(() => {
+    if (authUser?.id?.trim()) {
+      return authUser.id.trim();
+    }
+
+    try {
+      const raw = localStorage.getItem("user");
+      if (!raw) {
+        return "";
+      }
+
+      const parsed = JSON.parse(raw) as { id?: string };
+      return typeof parsed.id === "string" ? parsed.id.trim() : "";
+    } catch {
+      return "";
+    }
+  }, [authUser?.id]);
+
+  function getApproverDisplayName(approverId?: string | null) {
+    if (!approverId) {
+      return "Unknown";
+    }
+
+    if (currentUserId && approverId === currentUserId) {
+      return "You";
+    }
+
+    const byUserId = projectMembers.find(
+      (member) => member.userId === approverId,
+    );
+    if (byUserId?.fullName) {
+      return byUserId.fullName;
+    }
+
+    const byMemberId = projectMembers.find(
+      (member) => member.id === approverId,
+    );
+    if (byMemberId?.fullName) {
+      return byMemberId.fullName;
+    }
+
+    return approverId;
+  }
 
   // ── Finance (Budget) state ──
   const [budgets, setBudgets] = useState<Budget[]>([]);
@@ -407,6 +521,10 @@ export function ProjectDetails() {
     setSelectedPhaseId(null);
     setMilestones([]);
     setSelectedMilestoneId(null);
+    setMilestoneApprovals([]);
+    setShowCreateApproval(false);
+    setEditingApprovalId(null);
+    setConfirmDeleteApprovalId(null);
     setTasks([]);
     setShowCreateTask(false);
     setShowCreateMilestone(false);
@@ -455,7 +573,7 @@ export function ProjectDetails() {
         setMilestonesLoading(true);
         const data = await milestoneService.getMilestones({
           projectId,
-          projectPhaseId: selectedPhaseId,
+          projectPhaseId: selectedPhaseId ?? undefined,
         });
         setMilestones(data);
       } catch (error) {
@@ -494,6 +612,38 @@ export function ProjectDetails() {
 
     fetchTasks();
   }, [projectId, activeTab, selectedMilestoneId]);
+
+  // ── Fetch approvals for selected milestone ──
+  useEffect(() => {
+    async function fetchMilestoneApprovals() {
+      if (!activeTab || activeTab !== "phases") {
+        return;
+      }
+
+      if (!selectedMilestoneId) {
+        setMilestoneApprovals([]);
+        setShowCreateApproval(false);
+        setEditingApprovalId(null);
+        return;
+      }
+
+      try {
+        setApprovalsLoading(true);
+        const data =
+          await milestoneApprovalService.getApprovalsByMilestoneId(
+            selectedMilestoneId,
+          );
+        setMilestoneApprovals(data);
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load milestone approvals.");
+      } finally {
+        setApprovalsLoading(false);
+      }
+    }
+
+    fetchMilestoneApprovals();
+  }, [activeTab, selectedMilestoneId]);
 
   // ── Fetch tasks for all milestones in selected phase (visual summary) ──
   useEffect(() => {
@@ -899,7 +1049,9 @@ export function ProjectDetails() {
   // ── Fetch employees (for adding to project) ──
   useEffect(() => {
     async function fetchEmployees() {
-      if (activeTab !== "team" || employeesLoaded) return;
+      if ((activeTab !== "team" && activeTab !== "phases") || employeesLoaded) {
+        return;
+      }
       try {
         const res = await hrService.getEmployees();
         const payload =
@@ -929,7 +1081,7 @@ export function ProjectDetails() {
   }
 
   useEffect(() => {
-    if (activeTab === "team" && !membersLoaded) {
+    if ((activeTab === "team" || activeTab === "phases") && !membersLoaded) {
       refreshMembers();
     }
   }, [projectId, activeTab, membersLoaded]);
@@ -955,6 +1107,54 @@ export function ProjectDetails() {
       (e) => resolveEmployeeUserId(e) === member.userId,
     );
     return emp ? `${emp.firstName} ${emp.lastName}` : member.fullName;
+  }
+
+  function getEmployeeDisplayName(employee: Employee) {
+    return `${employee.firstName || ""} ${employee.lastName || ""}`.trim();
+  }
+
+  function getEmployerId(employee: Employee) {
+    const withEmployerId = employee as Employee & { employerId?: string };
+    return withEmployerId.employerId || employee.id;
+  }
+
+  const employeeLabelByEmployerId = useMemo(() => {
+    const map = new Map<string, string>();
+    employees.forEach((employee) => {
+      const label =
+        getEmployeeDisplayName(employee) ||
+        employee.email ||
+        employee.employeeCode ||
+        employee.id;
+      map.set(getEmployerId(employee), label);
+    });
+    return map;
+  }, [employees]);
+
+  function getTaskAssigneeInfo(task: Task): {
+    label: string;
+    type: "hr" | "member" | null;
+  } {
+    const withEmployerId = task as Task & { employerId?: string | null };
+    const employerId = withEmployerId.employerId?.trim();
+
+    if (employerId) {
+      return {
+        label: employeeLabelByEmployerId.get(employerId) || employerId,
+        type: "hr",
+      };
+    }
+
+    if (task.assignedToMemberId) {
+      return {
+        label:
+          getMemberDisplayName(task.assignedToMemberId) ||
+          task.assignedToMemberId,
+        type: "member",
+      };
+    }
+
+    return { label: "Unassigned", type: null };
   }
 
   // Employees not yet added to the project
@@ -1413,7 +1613,7 @@ export function ProjectDetails() {
       setCreatingMilestone(true);
       await milestoneService.createMilestone({
         projectId,
-        projectPhaseId: selectedPhaseId,
+        projectPhaseId: selectedPhaseId ?? undefined,
         name: newMilestone.name.trim(),
         targetDateUtc: newMilestone.targetDateUtc
           ? new Date(newMilestone.targetDateUtc).toISOString()
@@ -1433,7 +1633,7 @@ export function ProjectDetails() {
 
       const refreshed = await milestoneService.getMilestones({
         projectId,
-        projectPhaseId: selectedPhaseId,
+        projectPhaseId: selectedPhaseId ?? undefined,
       });
       setMilestones(refreshed);
     } catch (error) {
@@ -1449,6 +1649,7 @@ export function ProjectDetails() {
     setEditMilestoneForm({
       name: milestone.name || "",
       targetDateUtc: toDateInputValue(milestone.targetDateUtc),
+      actualDateUtc: toDateInputValue(milestone.actualDateUtc),
       successCriteria: milestone.successCriteria || "",
       isCompleted: milestone.isCompleted ?? false,
     });
@@ -1470,23 +1671,30 @@ export function ProjectDetails() {
   }
 
   async function handleUpdateMilestone(milestone: Milestone) {
-    if (!projectId || !selectedPhaseId || !editMilestoneForm.name.trim()) {
+    if (!projectId || !editMilestoneForm.name.trim()) {
       toast.error("Milestone name is required.");
       return;
     }
 
     try {
       const full = await milestoneService.getMilestoneById(milestone.id);
+      const resolvedProjectPhaseId =
+        full.projectPhaseId ??
+        milestone.projectPhaseId ??
+        selectedPhaseId ??
+        undefined;
       await milestoneService.updateMilestoneById(milestone.id, {
-        id: milestone.id,
-        projectId,
-        projectPhaseId: selectedPhaseId,
+        id: full.id || milestone.id,
+        projectId: full.projectId || projectId,
+        projectPhaseId: resolvedProjectPhaseId,
         rowVersion: full.rowVersion || milestone.rowVersion || "",
         name: editMilestoneForm.name.trim(),
         targetDateUtc: editMilestoneForm.targetDateUtc
           ? new Date(editMilestoneForm.targetDateUtc).toISOString()
           : undefined,
-        actualDateUtc: full.actualDateUtc || undefined,
+        actualDateUtc: editMilestoneForm.actualDateUtc
+          ? new Date(editMilestoneForm.actualDateUtc).toISOString()
+          : undefined,
         successCriteria: editMilestoneForm.successCriteria.trim() || undefined,
         isCompleted: editMilestoneForm.isCompleted,
       });
@@ -1495,7 +1703,7 @@ export function ProjectDetails() {
       setEditingMilestoneId(null);
       const refreshed = await milestoneService.getMilestones({
         projectId,
-        projectPhaseId: selectedPhaseId,
+        projectPhaseId: selectedPhaseId ?? undefined,
       });
       setMilestones(refreshed);
     } catch (error) {
@@ -1518,6 +1726,128 @@ export function ProjectDetails() {
       toast.error("Failed to delete milestone.");
     } finally {
       setConfirmDeleteMilestoneId(null);
+    }
+  }
+
+  function handleNewApprovalChange(
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) {
+    const { name, value } = event.target;
+    setNewApprovalForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function startEditApproval(approval: MilestoneApproval) {
+    setEditingApprovalId(approval.id);
+    setEditApprovalForm({
+      status: String(approval.status ?? 2),
+      comments: approval.comments || "",
+      decidedAtUtc: toDateTimeLocalInputValue(approval.decidedAtUtc),
+    });
+  }
+
+  function handleEditApprovalChange(
+    event: ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) {
+    const { name, value } = event.target;
+    setEditApprovalForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  async function refreshMilestoneApprovals() {
+    if (!selectedMilestoneId) {
+      setMilestoneApprovals([]);
+      return;
+    }
+
+    const data =
+      await milestoneApprovalService.getApprovalsByMilestoneId(
+        selectedMilestoneId,
+      );
+    setMilestoneApprovals(data);
+  }
+
+  async function handleCreateApproval() {
+    if (!selectedMilestoneId) {
+      toast.error("Select a milestone first.");
+      return;
+    }
+
+    if (!currentUserId) {
+      toast.error("Unable to detect the logged-in user.");
+      return;
+    }
+
+    try {
+      setCreatingApproval(true);
+      await milestoneApprovalService.createApproval({
+        milestoneId: selectedMilestoneId,
+        approverId: currentUserId,
+        status: safeInt(newApprovalForm.status, 2),
+        comments: newApprovalForm.comments.trim() || undefined,
+        decidedAtUtc: newApprovalForm.decidedAtUtc
+          ? new Date(newApprovalForm.decidedAtUtc).toISOString()
+          : undefined,
+      });
+
+      toast.success("Approval added.");
+      setShowCreateApproval(false);
+      setNewApprovalForm({ status: "2", comments: "", decidedAtUtc: "" });
+      await refreshMilestoneApprovals();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to add approval.");
+    } finally {
+      setCreatingApproval(false);
+    }
+  }
+
+  async function handleUpdateApproval(approval: MilestoneApproval) {
+    if (!selectedMilestoneId) {
+      toast.error("Select a milestone first.");
+      return;
+    }
+
+    if (!currentUserId) {
+      toast.error("Unable to detect the logged-in user.");
+      return;
+    }
+
+    try {
+      const full = await milestoneApprovalService.getApprovalById(approval.id);
+      await milestoneApprovalService.updateApprovalById(approval.id, {
+        id: full.id || approval.id,
+        milestoneId: full.milestoneId || selectedMilestoneId,
+        approverId: currentUserId,
+        status: safeInt(editApprovalForm.status, 2),
+        comments: editApprovalForm.comments.trim() || undefined,
+        decidedAtUtc: editApprovalForm.decidedAtUtc
+          ? new Date(editApprovalForm.decidedAtUtc).toISOString()
+          : undefined,
+        rowVersion: full.rowVersion || approval.rowVersion || "",
+      });
+
+      toast.success("Approval updated.");
+      setEditingApprovalId(null);
+      await refreshMilestoneApprovals();
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update approval.");
+    }
+  }
+
+  async function handleDeleteApproval(approvalId: string) {
+    try {
+      await milestoneApprovalService.deleteApprovalById(approvalId);
+      toast.success("Approval deleted.");
+      setMilestoneApprovals((prev) => prev.filter((a) => a.id !== approvalId));
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete approval.");
+    } finally {
+      setConfirmDeleteApprovalId(null);
     }
   }
 
@@ -1801,18 +2131,15 @@ export function ProjectDetails() {
     () =>
       milestones.map((milestone) => {
         const milestoneTasks = phaseMilestoneTasks[milestone.id] || [];
-        const completedTasks = milestoneTasks.filter(
-          (task) =>
-            task.status === 5 || (task.completionPercentage ?? 0) >= 100,
-        ).length;
-        const inProgressTasks = milestoneTasks.filter((task) => {
-          const status = task.status ?? 0;
-          return [1, 2, 3, 4].includes(status);
-        }).length;
-        const notStartedTasks = Math.max(
-          0,
-          milestoneTasks.length - completedTasks - inProgressTasks,
+        const statusCounts = milestoneTasks.reduce(
+          (acc, task) => {
+            const status = typeof task.status === "number" ? task.status : 0;
+            acc[status] = (acc[status] || 0) + 1;
+            return acc;
+          },
+          {} as Record<number, number>,
         );
+        const completedTasks = statusCounts[5] || 0;
         const completionPercent =
           milestoneTasks.length > 0
             ? Math.round((completedTasks / milestoneTasks.length) * 100)
@@ -1820,9 +2147,9 @@ export function ProjectDetails() {
 
         const milestoneStatus = milestone.isCompleted
           ? "Completed"
-          : inProgressTasks > 0 || completedTasks > 0
-            ? "In Progress"
-            : "Not Started";
+          : milestoneTasks.length > 0
+            ? "Active"
+            : "No Tasks";
 
         return {
           id: milestone.id,
@@ -1831,8 +2158,7 @@ export function ProjectDetails() {
           completionPercent,
           totalTasks: milestoneTasks.length,
           completedTasks,
-          inProgressTasks,
-          notStartedTasks,
+          statusCounts,
         };
       }),
     [milestones, phaseMilestoneTasks],
@@ -1852,15 +2178,17 @@ export function ProjectDetails() {
       (acc, row) => {
         acc.total += row.totalTasks;
         acc.completed += row.completedTasks;
-        acc.inProgress += row.inProgressTasks;
-        acc.notStarted += row.notStartedTasks;
+        Object.entries(row.statusCounts).forEach(([status, count]) => {
+          const statusKey = Number(status);
+          acc.statusCounts[statusKey] =
+            (acc.statusCounts[statusKey] || 0) + count;
+        });
         return acc;
       },
       {
         total: 0,
         completed: 0,
-        inProgress: 0,
-        notStarted: 0,
+        statusCounts: {} as Record<number, number>,
       },
     );
 
@@ -2621,39 +2949,59 @@ export function ProjectDetails() {
                         className={`hierarchy-item ${selectedPhaseId === p.id ? "selected" : ""}`}
                       >
                         {editingPhaseId === p.id ? (
-                          <div className="w-100">
-                            <input
-                              className="form-control form-control-sm mb-2"
-                              name="name"
-                              value={editPhaseForm.name}
-                              onChange={handleEditPhaseChange}
-                              maxLength={120}
-                              required
-                            />
-                            <div className="d-flex gap-2 mb-2">
+                          <div className="w-100 inline-edit-form">
+                            <div className="inline-edit-field">
+                              <label className="inline-edit-label">
+                                Phase Name
+                              </label>
                               <input
                                 className="form-control form-control-sm"
-                                type="date"
-                                name="startDateUtc"
-                                value={editPhaseForm.startDateUtc}
+                                name="name"
+                                value={editPhaseForm.name}
                                 onChange={handleEditPhaseChange}
-                              />
-                              <input
-                                className="form-control form-control-sm"
-                                type="date"
-                                name="endDateUtc"
-                                value={editPhaseForm.endDateUtc}
-                                onChange={handleEditPhaseChange}
+                                maxLength={120}
+                                required
                               />
                             </div>
-                            <textarea
-                              className="form-control form-control-sm mb-2"
-                              rows={2}
-                              name="deliverables"
-                              value={editPhaseForm.deliverables}
-                              onChange={handleEditPhaseChange}
-                              maxLength={1000}
-                            />
+                            <div className="d-flex gap-2 inline-edit-row">
+                              <div className="inline-edit-field flex-fill">
+                                <label className="inline-edit-label">
+                                  Start Date
+                                </label>
+                                <input
+                                  className="form-control form-control-sm"
+                                  type="date"
+                                  name="startDateUtc"
+                                  value={editPhaseForm.startDateUtc}
+                                  onChange={handleEditPhaseChange}
+                                />
+                              </div>
+                              <div className="inline-edit-field flex-fill">
+                                <label className="inline-edit-label">
+                                  End Date
+                                </label>
+                                <input
+                                  className="form-control form-control-sm"
+                                  type="date"
+                                  name="endDateUtc"
+                                  value={editPhaseForm.endDateUtc}
+                                  onChange={handleEditPhaseChange}
+                                />
+                              </div>
+                            </div>
+                            <div className="inline-edit-field">
+                              <label className="inline-edit-label">
+                                Deliverables
+                              </label>
+                              <textarea
+                                className="form-control form-control-sm"
+                                rows={2}
+                                name="deliverables"
+                                value={editPhaseForm.deliverables}
+                                onChange={handleEditPhaseChange}
+                                maxLength={1000}
+                              />
+                            </div>
                             <div className="d-flex justify-content-between align-items-center">
                               <label className="form-check-label d-flex align-items-center gap-2">
                                 <input
@@ -2866,30 +3214,57 @@ export function ProjectDetails() {
                             className={`hierarchy-item ${selectedMilestoneId === m.id ? "selected" : ""}`}
                           >
                             {editingMilestoneId === m.id ? (
-                              <div className="w-100">
-                                <input
-                                  className="form-control form-control-sm mb-2"
-                                  name="name"
-                                  value={editMilestoneForm.name}
-                                  onChange={handleEditMilestoneChange}
-                                  maxLength={150}
-                                  required
-                                />
-                                <input
-                                  className="form-control form-control-sm mb-2"
-                                  type="date"
-                                  name="targetDateUtc"
-                                  value={editMilestoneForm.targetDateUtc}
-                                  onChange={handleEditMilestoneChange}
-                                />
-                                <textarea
-                                  className="form-control form-control-sm mb-2"
-                                  rows={2}
-                                  name="successCriteria"
-                                  value={editMilestoneForm.successCriteria}
-                                  onChange={handleEditMilestoneChange}
-                                  maxLength={1000}
-                                />
+                              <div className="w-100 inline-edit-form">
+                                <div className="inline-edit-field">
+                                  <label className="inline-edit-label">
+                                    Milestone Name
+                                  </label>
+                                  <input
+                                    className="form-control form-control-sm"
+                                    name="name"
+                                    value={editMilestoneForm.name}
+                                    onChange={handleEditMilestoneChange}
+                                    maxLength={150}
+                                    required
+                                  />
+                                </div>
+                                <div className="inline-edit-field">
+                                  <label className="inline-edit-label">
+                                    Target Date
+                                  </label>
+                                  <input
+                                    className="form-control form-control-sm"
+                                    type="date"
+                                    name="targetDateUtc"
+                                    value={editMilestoneForm.targetDateUtc}
+                                    onChange={handleEditMilestoneChange}
+                                  />
+                                </div>
+                                <div className="inline-edit-field">
+                                  <label className="inline-edit-label">
+                                    Actual Date
+                                  </label>
+                                  <input
+                                    className="form-control form-control-sm"
+                                    type="date"
+                                    name="actualDateUtc"
+                                    value={editMilestoneForm.actualDateUtc}
+                                    onChange={handleEditMilestoneChange}
+                                  />
+                                </div>
+                                <div className="inline-edit-field">
+                                  <label className="inline-edit-label">
+                                    Success Criteria
+                                  </label>
+                                  <textarea
+                                    className="form-control form-control-sm"
+                                    rows={2}
+                                    name="successCriteria"
+                                    value={editMilestoneForm.successCriteria}
+                                    onChange={handleEditMilestoneChange}
+                                    maxLength={1000}
+                                  />
+                                </div>
                                 <div className="d-flex justify-content-between align-items-center">
                                   <label className="form-check-label d-flex align-items-center gap-2">
                                     <input
@@ -3249,53 +3624,78 @@ export function ProjectDetails() {
                       </div>
                     ) : (
                       <div className="hierarchy-list">
-                        {tasks.map((t) => (
-                          <div key={t.id} className="hierarchy-item">
-                            <button
-                              type="button"
-                              className="hierarchy-item-main"
-                              onClick={() =>
-                                navigate(
-                                  `/dashboard/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
-                                )
-                              }
-                            >
-                              <strong>{t.title || "Untitled"}</strong>
-                              <span>
-                                {TaskStatusEnum[t.status ?? 0] || "Unknown"} ·{" "}
-                                {t.completionPercentage ?? 0}%
-                              </span>
-                            </button>
-                            <div className="task-row-actions">
-                              {confirmDeleteTaskId === t.id ? (
-                                <span className="confirm-inline confirm-inline-sm">
-                                  <button
-                                    type="button"
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => handleDeleteTask(t.id)}
-                                  >
-                                    Yes
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-secondary btn-sm"
-                                    onClick={() => setConfirmDeleteTaskId(null)}
-                                  >
-                                    No
-                                  </button>
+                        {tasks.map((t) => {
+                          const assignee = getTaskAssigneeInfo(t);
+
+                          return (
+                            <div key={t.id} className="hierarchy-item">
+                              <button
+                                type="button"
+                                className="hierarchy-item-main"
+                                onClick={() =>
+                                  navigate(
+                                    `/dashboard/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
+                                  )
+                                }
+                              >
+                                <strong>{t.title || "Untitled"}</strong>
+                                <span>
+                                  {TaskStatusEnum[t.status ?? 0] || "Unknown"} ·{" "}
+                                  {t.completionPercentage ?? 0}%
                                 </span>
-                              ) : (
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-danger btn-sm"
-                                  onClick={() => setConfirmDeleteTaskId(t.id)}
-                                >
-                                  <i className="bi bi-trash" />
-                                </button>
-                              )}
+                                <span className="task-assignee-line">
+                                  <span className="task-assignee-label">
+                                    Assignee:
+                                  </span>
+                                  <span className="task-assignee-name">
+                                    {assignee.label}
+                                  </span>
+                                  {assignee.type && (
+                                    <span
+                                      className={`task-assignee-badge ${
+                                        assignee.type === "hr" ? "hr" : "member"
+                                      }`}
+                                    >
+                                      {assignee.type === "hr"
+                                        ? "HR employee"
+                                        : "Project member"}
+                                    </span>
+                                  )}
+                                </span>
+                              </button>
+                              <div className="task-row-actions">
+                                {confirmDeleteTaskId === t.id ? (
+                                  <span className="confirm-inline confirm-inline-sm">
+                                    <button
+                                      type="button"
+                                      className="btn btn-danger btn-sm"
+                                      onClick={() => handleDeleteTask(t.id)}
+                                    >
+                                      Yes
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-secondary btn-sm"
+                                      onClick={() =>
+                                        setConfirmDeleteTaskId(null)
+                                      }
+                                    >
+                                      No
+                                    </button>
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() => setConfirmDeleteTaskId(t.id)}
+                                  >
+                                    <i className="bi bi-trash" />
+                                  </button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </>
@@ -3426,6 +3826,271 @@ export function ProjectDetails() {
                               "No success criteria recorded."}
                           </p>
                         </div>
+                        <div className="detail-approvals-section">
+                          <div className="detail-approvals-head">
+                            <h5>
+                              <i className="bi bi-check2-square me-1" />
+                              Approvals
+                            </h5>
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm"
+                              onClick={() =>
+                                setShowCreateApproval((prev) => !prev)
+                              }
+                              disabled={!currentUserId}
+                            >
+                              {showCreateApproval ? "Cancel" : "Add Approval"}
+                            </button>
+                          </div>
+
+                          {!currentUserId && (
+                            <p className="detail-approvals-note mb-2">
+                              Unable to detect the logged-in user for
+                              approverId.
+                            </p>
+                          )}
+
+                          {showCreateApproval && (
+                            <div className="detail-approval-form mb-2">
+                              <div className="row g-2">
+                                <div className="col-12 col-md-4">
+                                  <label className="form-label mb-1">
+                                    Status
+                                  </label>
+                                  <select
+                                    className="form-select form-select-sm"
+                                    name="status"
+                                    value={newApprovalForm.status}
+                                    onChange={handleNewApprovalChange}
+                                  >
+                                    {Object.entries(ApprovalStatus).map(
+                                      ([value, label]) => (
+                                        <option key={value} value={value}>
+                                          {label}
+                                        </option>
+                                      ),
+                                    )}
+                                  </select>
+                                </div>
+                                <div className="col-12 col-md-8">
+                                  <label className="form-label mb-1">
+                                    Decided At
+                                  </label>
+                                  <input
+                                    className="form-control form-control-sm"
+                                    type="datetime-local"
+                                    name="decidedAtUtc"
+                                    value={newApprovalForm.decidedAtUtc}
+                                    onChange={handleNewApprovalChange}
+                                  />
+                                </div>
+                                <div className="col-12">
+                                  <label className="form-label mb-1">
+                                    Comments
+                                  </label>
+                                  <textarea
+                                    className="form-control form-control-sm"
+                                    rows={2}
+                                    name="comments"
+                                    value={newApprovalForm.comments}
+                                    onChange={handleNewApprovalChange}
+                                    maxLength={1000}
+                                  />
+                                </div>
+                                <div className="col-12 text-end">
+                                  <button
+                                    type="button"
+                                    className="btn btn-success btn-sm"
+                                    onClick={handleCreateApproval}
+                                    disabled={
+                                      creatingApproval || !currentUserId
+                                    }
+                                  >
+                                    {creatingApproval
+                                      ? "Adding..."
+                                      : "Save Approval"}
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {approvalsLoading ? (
+                            <div className="text-center py-2">
+                              <div
+                                className="spinner-border spinner-border-sm text-info"
+                                role="status"
+                              />
+                            </div>
+                          ) : milestoneApprovals.length === 0 ? (
+                            <p className="detail-approvals-note mb-0">
+                              No approvals for this milestone.
+                            </p>
+                          ) : (
+                            <div className="detail-approvals-list">
+                              {milestoneApprovals.map((approval) => (
+                                <div
+                                  key={approval.id}
+                                  className="detail-approval-item"
+                                >
+                                  {editingApprovalId === approval.id ? (
+                                    <div className="detail-approval-form">
+                                      <div className="row g-2">
+                                        <div className="col-12 col-md-4">
+                                          <label className="form-label mb-1">
+                                            Status
+                                          </label>
+                                          <select
+                                            className="form-select form-select-sm"
+                                            name="status"
+                                            value={editApprovalForm.status}
+                                            onChange={handleEditApprovalChange}
+                                          >
+                                            {Object.entries(ApprovalStatus).map(
+                                              ([value, label]) => (
+                                                <option
+                                                  key={value}
+                                                  value={value}
+                                                >
+                                                  {label}
+                                                </option>
+                                              ),
+                                            )}
+                                          </select>
+                                        </div>
+                                        <div className="col-12 col-md-8">
+                                          <label className="form-label mb-1">
+                                            Decided At
+                                          </label>
+                                          <input
+                                            className="form-control form-control-sm"
+                                            type="datetime-local"
+                                            name="decidedAtUtc"
+                                            value={
+                                              editApprovalForm.decidedAtUtc
+                                            }
+                                            onChange={handleEditApprovalChange}
+                                          />
+                                        </div>
+                                        <div className="col-12">
+                                          <label className="form-label mb-1">
+                                            Comments
+                                          </label>
+                                          <textarea
+                                            className="form-control form-control-sm"
+                                            rows={2}
+                                            name="comments"
+                                            value={editApprovalForm.comments}
+                                            onChange={handleEditApprovalChange}
+                                            maxLength={1000}
+                                          />
+                                        </div>
+                                        <div className="col-12 d-flex justify-content-end gap-2">
+                                          <button
+                                            type="button"
+                                            className="btn btn-success btn-sm"
+                                            onClick={() =>
+                                              handleUpdateApproval(approval)
+                                            }
+                                          >
+                                            Save
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="btn btn-outline-secondary btn-sm"
+                                            onClick={() =>
+                                              setEditingApprovalId(null)
+                                            }
+                                          >
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="detail-approval-main">
+                                        <span
+                                          className={`approval-status-badge approval-status-${approval.status ?? 0}`}
+                                        >
+                                          {ApprovalStatus[
+                                            approval.status ?? 0
+                                          ] || "Unknown"}
+                                        </span>
+                                        <strong>
+                                          {getApproverDisplayName(
+                                            approval.approverId,
+                                          )}
+                                        </strong>
+                                        <small>
+                                          {formatDate(
+                                            approval.decidedAtUtc ||
+                                              approval.createdDateUtc,
+                                          )}
+                                        </small>
+                                        <p>
+                                          {approval.comments ||
+                                            "No comments provided."}
+                                        </p>
+                                      </div>
+                                      <div className="task-row-actions">
+                                        {confirmDeleteApprovalId ===
+                                        approval.id ? (
+                                          <span className="confirm-inline confirm-inline-sm">
+                                            <button
+                                              type="button"
+                                              className="btn btn-danger btn-sm"
+                                              onClick={() =>
+                                                handleDeleteApproval(
+                                                  approval.id,
+                                                )
+                                              }
+                                            >
+                                              Yes
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="btn btn-outline-secondary btn-sm"
+                                              onClick={() =>
+                                                setConfirmDeleteApprovalId(null)
+                                              }
+                                            >
+                                              No
+                                            </button>
+                                          </span>
+                                        ) : (
+                                          <>
+                                            <button
+                                              type="button"
+                                              className="btn btn-outline-primary btn-sm"
+                                              onClick={() =>
+                                                startEditApproval(approval)
+                                              }
+                                            >
+                                              <i className="bi bi-pencil" />
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="btn btn-outline-danger btn-sm"
+                                              onClick={() =>
+                                                setConfirmDeleteApprovalId(
+                                                  approval.id,
+                                                )
+                                              }
+                                            >
+                                              <i className="bi bi-trash" />
+                                            </button>
+                                          </>
+                                        )}
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                         <div className="detail-row detail-id">
                           <span>Milestone ID</span>
                           <strong>{selectedMilestone.id}</strong>
@@ -3517,17 +4182,10 @@ export function ProjectDetails() {
                         </div>
                       </div>
 
-                      <div className="visual-status-legend">
-                        <span className="legend-item">
-                          <i className="legend-dot ok" /> Completed
-                        </span>
-                        <span className="legend-item">
-                          <i className="legend-dot progress" /> In Progress
-                        </span>
-                        <span className="legend-item">
-                          <i className="legend-dot idle" /> Not Started
-                        </span>
-                      </div>
+                      <p className="visual-status-note mb-0">
+                        Task completion is calculated from tasks with status
+                        "Done" only.
+                      </p>
                     </section>
 
                     <section className="detail-card visual-list-card">
@@ -3546,7 +4204,7 @@ export function ProjectDetails() {
                                   className={`visual-badge ${
                                     row.milestoneStatus === "Completed"
                                       ? "ok"
-                                      : row.milestoneStatus === "In Progress"
+                                      : row.milestoneStatus === "Active"
                                         ? "progress"
                                         : "idle"
                                   }`}
@@ -3561,15 +4219,28 @@ export function ProjectDetails() {
                                 />
                               </div>
                               <div className="visual-task-stats">
-                                <span className="ok">
-                                  {row.completedTasks} done
-                                </span>
-                                <span className="progress">
-                                  {row.inProgressTasks} in progress
-                                </span>
-                                <span className="idle">
-                                  {row.notStartedTasks} not started
-                                </span>
+                                {Object.entries(TaskStatusEnum).map(
+                                  ([statusKey, label]) => {
+                                    const status = Number(statusKey);
+                                    const count = row.statusCounts[status] || 0;
+
+                                    return (
+                                      <span
+                                        key={`${row.id}-${status}`}
+                                        className="visual-task-chip"
+                                      >
+                                        <i
+                                          className="visual-task-chip-dot"
+                                          style={{
+                                            background:
+                                              getTaskStatusColor(status),
+                                          }}
+                                        />
+                                        {label}: {count}
+                                      </span>
+                                    );
+                                  },
+                                )}
                               </div>
                             </div>
                           ))}

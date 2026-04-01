@@ -145,6 +145,40 @@
   max-width: 55%;
 }
 
+.task-assignee-display {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.task-assignee-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.task-assignee-badge.hr {
+  color: #5eead4;
+  border-color: rgba(94, 234, 212, 0.4);
+  background: rgba(20, 184, 166, 0.2);
+}
+
+.task-assignee-badge.member {
+  color: #93c5fd;
+  border-color: rgba(147, 197, 253, 0.4);
+  background: rgba(37, 99, 235, 0.2);
+}
+
 .task-full-width {
   grid-column: 1 / -1;
 }
@@ -169,6 +203,105 @@
   font-size: 0.8rem;
   color: #94a3b8;
   text-align: right;
+}
+
+.task-documents-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.task-documents-count {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.task-documents-loading,
+.task-documents-empty {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.task-documents-list {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.task-document-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  border-radius: 10px;
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.task-document-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-document-uploader {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.35rem;
+}
+
+.task-document-uploader-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  background: rgba(56, 189, 248, 0.2);
+  color: #7dd3fc;
+}
+
+.task-document-uploader-name {
+  font-size: 0.74rem;
+  color: #cbd5e1;
+  font-weight: 600;
+}
+
+.task-document-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.25rem;
+}
+
+.task-document-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  color: #94a3b8;
+  font-size: 0.76rem;
+  margin-bottom: 0.2rem;
+}
+
+.task-document-path {
+  color: #cbd5e1;
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.task-document-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 /* ─── Tasks Section (inside ProjectDetails) ─── */

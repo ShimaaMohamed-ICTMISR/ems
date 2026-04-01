@@ -55,9 +55,9 @@ function extractMember(data: unknown): ProjectMember {
 }
 
 export const memberService = {
-  getProjectMembers: async (projectId: string): Promise<ProjectMember[]> => {
+  getProjectMembers: async (projectId?: string): Promise<ProjectMember[]> => {
     const response = await projectManagementApiClient.get('/project-admin/members', {
-      params: { projectId },
+      params: projectId ? { projectId } : undefined,
     });
     return extractMembers(response.data);
   },
