@@ -2,12 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
+
 import projectService, {
   type ProjectCreateDTO,
-} from "../services/projectService";
-import portfolioService, { type Portfolio } from "../services/portfolioService";
-import { ProjectStage, HealthStatus, MethodologyType } from "../config/enums";
-import "./styles/CreateProject.css";
+} from "../../services/projectManagementServices/projectService";
+
+import portfolioService, { type Portfolio } from "../../services/projectManagementServices/portfolioService";
+import { ProjectStage, HealthStatus, MethodologyType } from "../../config/enums";
+import ".././styles/CreateProject.css";
 
 function safeInt(value: string | undefined, fallback = 0): number {
   const n = parseInt(String(value), 10);

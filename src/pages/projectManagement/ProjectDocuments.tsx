@@ -3,15 +3,17 @@ import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import projectService, { type Project } from "../services/projectService";
+import projectService, {
+  type Project,
+} from "../../services/projectManagementServices/projectService";
 import documentService, {
   type ProjectDocument,
   type DocumentCreateDTO,
   type DocumentUpdateDTO,
-} from "../services/documentService";
-import { DocumentType } from "../config/enums";
-import type { RootState } from "../store/store";
-import "./styles/ProjectDocuments.css";
+} from "../../services/projectManagementServices/documentService";
+import { DocumentType } from "../../config/enums";
+import type { RootState } from "../../store/store";
+import ".././styles/ProjectDocuments.css";
 
 type CreateDocumentFormState = {
   name: string;

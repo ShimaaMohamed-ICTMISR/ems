@@ -16,32 +16,44 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import projectService, { type Project } from "../services/projectService";
-import taskService, { type Task } from "../services/taskService";
-import phaseService, { type Phase } from "../services/phaseService";
-import milestoneService, { type Milestone } from "../services/milestoneService";
+import projectService, {
+  type Project,
+} from "../../services/projectManagementServices/projectService";
+import taskService, {
+  type Task,
+} from "../../services/projectManagementServices/taskService";
+import phaseService, {
+  type Phase,
+} from "../../services/projectManagementServices/phaseService";
+import milestoneService, {
+  type Milestone,
+} from "../../services/projectManagementServices/milestoneService";
 import milestoneApprovalService, {
   type MilestoneApproval,
-} from "../services/milestoneApprovalService";
+} from "../../services/projectManagementServices/milestoneApprovalService";
 import hrService, {
   type Employee,
-} from "../services/hrProjectManagementService";
-import memberService, { type ProjectMember } from "../services/memberService";
+} from "../../services/hrProjectManagementService";
+import memberService, {
+  type ProjectMember,
+} from "../../services/projectManagementServices/memberService";
+
 import financeService, {
   type Budget,
   type BudgetCreateDTO,
-} from "../services/financeService";
+} from "../../services/projectManagementServices/financeService";
+
 import {
   resourceRequestService,
   resourceService,
   type ResourceRequest,
   type Resource,
   type ResourceRequestCreateDTO,
-} from "../services/resourceService";
+} from "../../services/projectManagementServices/resourceService";
 import riskService, {
   type Risk,
   type RiskEvent,
-} from "../services/riskService";
+} from "../../services/projectManagementServices/riskService";
 import {
   ProjectStage,
   HealthStatus,
@@ -55,10 +67,10 @@ import {
   RiskImpact,
   RiskProbability,
   RiskEventStatus,
-} from "../config/enums";
-import type { RootState } from "../store/store";
-import "./styles/ProjectDetails.css";
-import "./styles/TaskDetails.css";
+} from "../../config/enums";
+import type { RootState } from "../../store/store";
+import ".././styles/ProjectDetails.css";
+import ".././styles/TaskDetails.css";
 
 function formatDate(value?: string | null) {
   if (!value) {

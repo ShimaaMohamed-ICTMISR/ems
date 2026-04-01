@@ -6,8 +6,8 @@ import portfolioService, {
   type Portfolio,
   type PortfolioCreateDTO,
   type PortfolioUpdateDTO,
-} from "../services/portfolioService";
-import "./styles/Portfolios.css";
+} from "../../services/projectManagementServices/portfolioService";
+import ".././styles/Portfolios.css";
 
 type FormState = {
   name: string;

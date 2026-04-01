@@ -8,10 +8,12 @@ import {
   type ResourceCreateDTO,
   type ResourceUpdateDTO,
   type ResourceRequest,
-} from "../services/resourceService";
-import projectService, { type Project } from "../services/projectService";
-import { ResourceType, RequestStatus } from "../config/enums";
-import "./styles/Resources.css";
+} from "../../services/projectManagementServices/resourceService";
+import projectService, {
+  type Project,
+} from "../../services/projectManagementServices/projectService";
+import { ResourceType, RequestStatus } from "../../config/enums";
+import ".././styles/Resources.css";
 
 const initialForm = {
   name: "",

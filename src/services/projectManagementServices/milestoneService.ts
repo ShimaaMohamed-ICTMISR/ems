@@ -2,7 +2,7 @@ import projectManagementApiClient from './projectManagementApiClient';
 
 export interface Milestone {
   id: string;
-  projectId: string;
+  projectId?: string | null;
   projectPhaseId?: string | null;
   name?: string | null;
   targetDateUtc?: string;
@@ -25,13 +25,13 @@ export interface MilestoneCreateDTO {
 
 export interface MilestoneUpdateDTO {
   id: string;
-  projectId: string;
+  projectId?: string | null;
   rowVersion: string;
-  projectPhaseId?: string;
+  projectPhaseId?: string | null;
   name: string;
   targetDateUtc?: string;
-  actualDateUtc?: string;
-  successCriteria?: string;
+  actualDateUtc?: string | null;
+  successCriteria?: string | null;
   isCompleted?: boolean;
 }
 

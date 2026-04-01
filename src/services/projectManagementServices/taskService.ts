@@ -1,4 +1,4 @@
-import projectManagementApiClient from './projectManagementServices/projectManagementApiClient';
+import projectManagementApiClient from './projectManagementApiClient';
 
 export interface Task {
   id: string;

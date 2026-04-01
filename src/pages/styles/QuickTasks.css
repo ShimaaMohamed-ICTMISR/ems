@@ -1,0 +1,216 @@
+.quick-tasks-page {
+  min-height: 100%;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 85% 5%, rgba(14, 165, 233, 0.1), transparent 32%),
+    radial-gradient(circle at 10% 15%, rgba(16, 185, 129, 0.08), transparent 34%),
+    linear-gradient(180deg, #f7fbff 0%, #f1f6fc 100%);
+}
+
+.quick-tasks-hero {
+  border-radius: 16px;
+  padding: 1.4rem 1.5rem;
+  color: #f8fafc;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.15);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.quick-tasks-kicker {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08rem;
+  text-transform: uppercase;
+  color: #7dd3fc;
+}
+
+.quick-tasks-title {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.5vw, 1.9rem);
+  font-weight: 700;
+}
+
+.quick-tasks-subtitle {
+  margin: 0.3rem 0 0;
+  color: rgba(241, 245, 249, 0.9);
+  font-size: 0.9rem;
+  max-width: 640px;
+}
+
+.quick-tasks-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.quick-task-stat {
+  background: #fff;
+  border: 1px solid #dbe4ef;
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.quick-task-stat span {
+  display: block;
+  font-size: 0.76rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03rem;
+}
+
+.quick-task-stat strong {
+  display: block;
+  font-size: 1.35rem;
+  color: #0f172a;
+  margin-top: 0.25rem;
+}
+
+.quick-tasks-controls {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.quick-tasks-search {
+  position: relative;
+}
+
+.quick-tasks-search i {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #64748b;
+}
+
+.quick-tasks-search input {
+  padding-left: 2.1rem;
+  border-radius: 10px;
+  border: 1px solid #dbe4ef;
+}
+
+.quick-tasks-status-filter {
+  border-radius: 10px;
+  border: 1px solid #dbe4ef;
+}
+
+.quick-tasks-list-section {
+  background: #fff;
+  border: 1px solid #dbe4ef;
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+  padding: 0.75rem;
+}
+
+.quick-tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.quick-task-card {
+  width: 100%;
+  border: 1px solid #e6edf6;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #ffffff, #f9fbff);
+  text-align: left;
+  padding: 0.9rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.quick-task-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 8px 18px rgba(59, 130, 246, 0.14);
+  transform: translateY(-1px);
+}
+
+.quick-task-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.quick-task-card-head h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.quick-task-badges {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.quick-task-badge {
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.quick-task-desc {
+  margin: 0.6rem 0;
+  color: #475569;
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.quick-task-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.6rem;
+  font-size: 0.77rem;
+  color: #64748b;
+}
+
+.quick-task-meta-grid span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-tasks-empty {
+  padding: 1rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+@media (max-width: 1200px) {
+  .quick-tasks-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quick-task-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .quick-tasks-page {
+    padding: 0.85rem;
+  }
+
+  .quick-tasks-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-tasks-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .quick-task-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}

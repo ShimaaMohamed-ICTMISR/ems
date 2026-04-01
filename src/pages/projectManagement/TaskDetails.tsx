@@ -3,21 +3,25 @@ import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import taskService, { type Task } from "../services/taskService";
+import taskService, {
+  type Task,
+} from "../../services/projectManagementServices/taskService";
 import taskDocumentService, {
   type TaskDocument,
-} from "../services/taskDocumentService";
-import memberService, { type ProjectMember } from "../services/memberService";
+} from "../../services/projectManagementServices/taskDocumentService";
+import memberService, {
+  type ProjectMember,
+} from "../../services/projectManagementServices/memberService";
 import hrService, {
   type Employee,
-} from "../services/hrProjectManagementService";
+} from "../../services/hrProjectManagementService";
 import {
   DocumentType,
   PriorityLevel,
   TaskStatus as TaskStatusEnum,
-} from "../config/enums";
-import type { RootState } from "../store/store";
-import "./styles/TaskDetails.css";
+} from "../../config/enums";
+import type { RootState } from "../../store/store";
+import ".././styles/TaskDetails.css";
 
 function formatDate(value?: string | null) {
   if (!value) return "N/A";
@@ -280,10 +284,6 @@ export function TaskDetails() {
     return map;
   }, [employees]);
 
-  function getEmployerId(employee: Employee) {
-    const withEmployerId = employee as Employee & { employerId?: string };
-    return withEmployerId.employerId || employee.id;
-  }
 
   const filteredMembers = projectMembers.filter((m) => {
     const search = memberSearch.toLowerCase();

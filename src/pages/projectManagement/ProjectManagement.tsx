@@ -3,15 +3,20 @@ import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "axios";
-import portfolioService from "../services/portfolioService";
-import { resourceService } from "../services/resourceService";
-import { resourceRequestService } from "../services/resourceService";
-import taskService, { type TaskCreateDTO } from "../services/taskService";
+import portfolioService from "../../services/projectManagementServices/portfolioService";
+import { resourceService } from "../../services/projectManagementServices/resourceService";
+import { resourceRequestService } from "../../services/projectManagementServices/resourceService";
+import taskService, {
+  type TaskCreateDTO,
+} from "../../services/projectManagementServices/taskService";
 import hrService, {
   type Employee,
-} from "../services/hrProjectManagementService";
-import { PriorityLevel, TaskStatus as TaskStatusEnum } from "../config/enums";
-import "./styles/ProjectManagement.css";
+} from "../../services/hrProjectManagementService";
+import {
+  PriorityLevel,
+  TaskStatus as TaskStatusEnum,
+} from "../../config/enums";
+import ".././styles/ProjectManagement.css";
 
 interface DashboardStats {
   totalPortfolios: number;

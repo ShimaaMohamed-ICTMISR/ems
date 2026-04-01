@@ -2,6 +2,7 @@
 import { useSelector } from "react-redux";
 import { NavLink } from "react-router-dom";
 import type { RootState } from "../store/store";
+import finovatelogo from "../assets/images/finovate-logo.webp";
 
 interface NavItem {
   to: string;
@@ -19,7 +20,11 @@ const moduleNavItems: NavItem[] = [
   { to: "/dashboard/project-management", icon: "bi-kanban", label: "Projects" },
   { to: "/dashboard/meetings", icon: "bi-calendar-event", label: "Meetings" },
   { to: "/dashboard/voting", icon: "bi-bar-chart", label: "Voting & Polls" },
-  { to: "/dashboard/opportunities", icon: "bi-graph-up-arrow", label: "Opportunities" },
+  {
+    to: "/dashboard/opportunities",
+    icon: "bi-graph-up-arrow",
+    label: "Opportunities",
+  },
 ];
 
 const systemNavItems: NavItem[] = [
@@ -29,7 +34,11 @@ const systemNavItems: NavItem[] = [
 ];
 
 const administrationNavItems: NavItem[] = [
-  { to: "/dashboard/permissions", icon: "bi-shield-check", label: "Permissions" },
+  {
+    to: "/dashboard/permissions",
+    icon: "bi-shield-check",
+    label: "Permissions",
+  },
   { to: "/dashboard/roles", icon: "bi-lock", label: "Roles" },
   { to: "/dashboard/users", icon: "bi-people-fill", label: "Users" },
 ];
@@ -91,11 +100,18 @@ function SidebarContent() {
     >
       {/* Logo/Brand */}
       <div className="p-4 border-bottom border-secondary">
-        <h2 className="text-white mb-0 fw-bold">
-          <i className="bi bi-stack me-2 fs-3" style={{ color: "#06b6d4" }}></i>
-          EMS
-        </h2>
-        <small className="text-white-50">Management System</small>
+        <img
+          src={finovatelogo}
+          alt="Finovate Logo"
+          className="img-fluid"
+          style={{
+            width: "100%",
+            maxWidth: "190px",
+            height: "auto",
+            objectFit: "contain",
+            display: "block",
+          }}
+        />
       </div>
 
       {/* Navigation */}
