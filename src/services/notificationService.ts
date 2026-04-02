@@ -53,7 +53,28 @@ const notificationClient = axios.create({
   },
 });
 
+export interface CreateNotificationPayload {
+  userId: string;
+  channel: 'IN_APP' | 'EMAIL' | 'EMAIL_IN_APP' | 'SMS' | 'PUSH' | 'SLACK' | 'TEAMS';
+  category: 'URGENT' | 'INFORMATIONAL' | 'PROMOTIONAL' | 'TRANSACTIONAL' | 'SYSTEM';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'URGENT';
+  subject: string;
+  bodyText: string;
+  metadata?: Record<string, unknown>;
+  sourceEvent?: string;
+  sourceEntityId?: string;
+  sourceEntityType?: string;
+}
+
 export const notificationService = {
+  /**
+   * Create a notification (backend-to-backend endpoint).
+   */
+  createNotification: async (payload: CreateNotificationPayload) => {
+    const response = await notificationClient.post('/notifications', payload);
+    return response.data;
+  },
+
   /**
    * Get all notifications or a specific notification by ID
    * @param notificationId - Optional notification ID to get a single notification

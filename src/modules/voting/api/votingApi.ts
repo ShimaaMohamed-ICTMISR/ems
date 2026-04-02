@@ -12,14 +12,11 @@ import type {
   VoteRequest,
 } from '../types/voting.types';
 
-const RAW_BASE_URL = import.meta.env.DEV 
-  ? '/api/voting'  // Use proxy in development
-  : (import.meta.env.VITE_API_BASE_URL ?? 
-     import.meta.env.VITE_VOTING_API_BASE_URL ?? 
-     'https://ems-voting-service.onrender.com');
-
-// Normalize: لو الـ env فيه /api في الآخر، نشيلها
-const BASE_URL = RAW_BASE_URL.replace(/\/api\/?$/, '');
+const BASE_URL = (
+  import.meta.env.VITE_VOTING_API_BASE_URL ??
+  import.meta.env.VITE_API_BASE_URL ??
+  'https://ems-voting-service.onrender.com/api'
+).replace(/\/+$/, '');
 
 function getServiceTicket(): string {
   return (
@@ -61,7 +58,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
       ) {
         throw new Error(
           'Voting API requires a valid X-Service-Ticket. Check .env.local (VITE_SERVICE_TICKET) and ensure the backend is running at ' +
-            (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001') +
+            (import.meta.env.VITE_VOTING_API_BASE_URL ?? import.meta.env.VITE_API_BASE_URL ?? 'https://ems-voting-service.onrender.com/api') +
             '.'
         );
       }

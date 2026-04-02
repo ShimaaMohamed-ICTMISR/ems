@@ -5,6 +5,7 @@ import hrService, {
   type Employee as HrEmployee,
   type Department,
 } from '../../../services/hrProjectManagementService';
+import { notificationService } from '../../../services/notificationService';
 
 interface PollEligibilityProps {
   pollId: string;
@@ -119,6 +120,26 @@ export function PollEligibilityComponent({
       setLoading(true);
       try {
         await createEligibility(pollId, { userId: selectedEmployee.id });
+        try {
+          await notificationService.createNotification({
+            userId: selectedEmployee.id,
+            channel: 'IN_APP',
+            category: 'TRANSACTIONAL',
+            priority: 'NORMAL',
+            subject: 'Voting Eligibility Updated',
+            bodyText: 'You have been added to a poll eligibility list.',
+            sourceEvent: 'PollEligibilityAssigned',
+            sourceEntityId: pollId,
+            sourceEntityType: 'Poll',
+            metadata: {
+              pollId,
+              employeeId: selectedEmployee.id,
+            },
+          });
+        } catch (notifyError) {
+          // Keep eligibility action successful even if notification fails.
+          console.warn('Eligibility added but notification failed:', notifyError);
+        }
         setSelectedEmployee(null);
         onEligibilityChange();
       } catch (e) {
