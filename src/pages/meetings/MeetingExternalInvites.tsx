@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
+import { validateExternalEmail, validateEmail } from '../../utils/meetingValidation';
 import './meetings.css';
 
 export function MeetingExternalInvites() {
@@ -9,21 +10,37 @@ export function MeetingExternalInvites() {
   const [email, setEmail] = useState('');
   const [emails, setEmails] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
-
-  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const [emailError, setEmailError] = useState('');
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const addEmail = () => {
-    const normalized = email.trim().toLowerCase();
-    if (!isValidEmail(normalized)) {
-      alert('Please enter a valid email.');
+    const trimmedEmail = email.trim().toLowerCase();
+    
+    // Validate email
+    const emailValidationError = validateEmail(trimmedEmail);
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
       return;
     }
-    if (emails.includes(normalized)) {
-      setEmail('');
+    
+    // Check for duplicates
+    if (emails.includes(trimmedEmail)) {
+      setEmailError('Email already added');
       return;
     }
-    setEmails((prev) => [...prev, normalized]);
+    
+    // Add email and clear form
+    setEmails((prev) => [...prev, trimmedEmail]);
     setEmail('');
+    setEmailError('');
+  };
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    // Clear error when user starts typing
+    if (emailError) {
+      setEmailError('');
+    }
   };
 
   const removeEmail = (value: string) => {
@@ -35,8 +52,11 @@ export function MeetingExternalInvites() {
       navigate('/dashboard/meetings');
       return;
     }
+    
     try {
       setSending(true);
+      setValidationErrors([]);
+      
       const results = await Promise.allSettled(
         emails.map((item) =>
           meetingService.inviteExternalParticipantEmail(meetingId, {
@@ -45,16 +65,16 @@ export function MeetingExternalInvites() {
           })
         )
       );
+      
       const failed = results.filter((r) => r.status === 'rejected').length;
       if (failed > 0) {
-        alert(`Invites sent with partial success. Failed: ${failed}`);
+        setValidationErrors([`Invites sent with partial success. Failed: ${failed}`]);
       } else {
-        alert('External invites sent successfully.');
+        navigate('/dashboard/meetings');
       }
-      navigate('/dashboard/meetings');
     } catch (error) {
       const msg = (error as any)?.response?.data?.message || (error as Error).message || 'Failed to send invites';
-      alert(msg);
+      setValidationErrors([msg]);
     } finally {
       setSending(false);
     }
@@ -82,17 +102,49 @@ export function MeetingExternalInvites() {
               </h5>
             </div>
             <div className="card-body p-4">
+              {/* Validation Errors */}
+              {validationErrors.length > 0 && (
+                <div className="alert alert-warning mb-4">
+                  <h6 className="alert-heading mb-2">
+                    <i className="bi bi-exclamation-triangle me-2"></i>
+                    Notice:
+                  </h6>
+                  <ul className="mb-0">
+                    {validationErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
               <div className="input-group shadow-sm mb-3">
                 <input
                   type="email"
-                  className="form-control border-0"
+                  className={`form-control border-0 ${emailError ? 'is-invalid' : ''}`}
                   placeholder="Enter external email..."
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      addEmail();
+                    }
+                  }}
                 />
-                <button type="button" className="btn btn-meetings-primary" onClick={addEmail} disabled={!email.trim()}>
+                <button 
+                  type="button" 
+                  className="btn btn-meetings-primary" 
+                  onClick={addEmail} 
+                  disabled={!email.trim()}
+                >
                   <i className="bi bi-plus-circle me-2"></i>Add
                 </button>
+                {emailError && (
+                  <div className="invalid-feedback d-block">
+                    <i className="bi bi-exclamation-circle me-1"></i>
+                    {emailError}
+                  </div>
+                )}
               </div>
 
               <div className="border rounded-3 p-3 bg-light mb-4">
