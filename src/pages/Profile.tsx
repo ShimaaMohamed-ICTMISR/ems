@@ -4,7 +4,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
-import { profileService, type UserProfile, type TaskStats, type TaskStatusBreakdown } from '../services/profileService';
+import { profileService, type UserProfile } from '../services/profileService';
+import { taskService, type Task } from '../services/taskService';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import './Profile.css';
 
@@ -19,8 +20,9 @@ type ProfileFormData = z.infer<typeof profileSchema>;
 export function Profile() {
   const user = useSelector((state: RootState) => state.auth.user);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [taskStats, setTaskStats] = useState<TaskStats | null>(null);
-  const [taskBreakdown, setTaskBreakdown] = useState<TaskStatusBreakdown[]>([]);
+  const [myTasks, setMyTasks] = useState<Task[]>([]);
+  const [loadingMyTasks, setLoadingMyTasks] = useState(false);
+  const [showMyTaskAnalytics, setShowMyTaskAnalytics] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [apiError, setApiError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
@@ -61,23 +63,105 @@ export function Profile() {
       }
     };
 
-    const fetchTaskStats = async () => {
-      try {
-        const [stats, breakdown] = await Promise.all([
-          profileService.getUserTaskStats(),
-          profileService.getUserTaskBreakdown()
-        ]);
-        setTaskStats(stats);
-        setTaskBreakdown(breakdown);
-      } catch (error: any) {
-        console.error('Failed to load task statistics:', error);
-        // Don't show error for task stats, just log it
-      }
-    };
-
     fetchProfile();
-    fetchTaskStats();
   }, [reset]);
+
+  // Fetch user's project-management tasks (directly via assignedMemberId) for more accurate profile analytics.
+  useEffect(() => {
+    const userId = user?.id || profile?.id;
+    if (!userId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoadingMyTasks(true);
+        const tasks = await taskService.getTasks({ assignedMemberId: userId });
+        if (!cancelled) setMyTasks(Array.isArray(tasks) ? tasks : []);
+      } catch (e) {
+        // Keep profile usable even if project management is unavailable.
+        if (!cancelled) setMyTasks([]);
+      } finally {
+        if (!cancelled) setLoadingMyTasks(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, profile?.id]);
+
+  const taskStatusLabel = (status: number | undefined): string => {
+    switch (status) {
+      case 0: return 'Pending';
+      case 1: return 'In Progress';
+      case 2: return 'Completed';
+      case 3: return 'Overdue';
+      default: return status == null ? 'Unknown' : `Status ${status}`;
+    }
+  };
+
+  const statusBadgeClass = (status: number | undefined): string => {
+    switch (status) {
+      case 2: return 'bg-success';
+      case 1: return 'bg-warning text-dark';
+      case 3: return 'bg-danger';
+      case 0: return 'bg-secondary';
+      default: return 'bg-info';
+    }
+  };
+
+  const now = new Date();
+  const overdueCount = myTasks.filter((t) => t.dueDateUtc && new Date(t.dueDateUtc) < now && t.status !== 2).length;
+  const dueSoonCount = myTasks.filter((t) => {
+    if (!t.dueDateUtc || t.status === 2) return false;
+    const due = new Date(t.dueDateUtc);
+    const diffDays = (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays >= 0 && diffDays <= 7;
+  }).length;
+  const inProgressCount = myTasks.filter((t) => t.status === 1).length;
+  const pendingCount = myTasks.filter((t) => t.status === 0).length;
+  const completedCount = myTasks.filter((t) => t.status === 2).length;
+  const completionRate = myTasks.length > 0 ? (completedCount / myTasks.length) * 100 : 0;
+
+  const myTaskStatusChartData = (() => {
+    const counts = myTasks.reduce((acc: Record<string, number>, t) => {
+      const label = taskStatusLabel(t.status);
+      acc[label] = (acc[label] || 0) + 1;
+      return acc;
+    }, {});
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  })();
+
+  const myTaskDueChartData = (() => {
+    const hasDue = (t: Task) => Boolean(t.dueDateUtc);
+    const due = (t: Task) => (t.dueDateUtc ? new Date(t.dueDateUtc) : null);
+    const overdue = myTasks.filter((t) => hasDue(t) && due(t)!.getTime() < now.getTime() && t.status !== 2).length;
+    const dueSoon = myTasks.filter((t) => {
+      if (!hasDue(t) || t.status === 2) return false;
+      const d = due(t)!;
+      const diffDays = (d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      return diffDays >= 0 && diffDays <= 7;
+    }).length;
+    const dueLater = myTasks.filter((t) => {
+      if (!hasDue(t) || t.status === 2) return false;
+      const d = due(t)!;
+      const diffDays = (d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      return diffDays > 7;
+    }).length;
+    const noDue = myTasks.filter((t) => !hasDue(t) && t.status !== 2).length;
+    const completed = completedCount;
+    return [
+      { name: 'Overdue', value: overdue },
+      { name: 'Due in 7 days', value: dueSoon },
+      { name: 'Due later', value: dueLater },
+      { name: 'No due date', value: noDue },
+      { name: 'Completed', value: completed },
+    ].filter((x) => x.value > 0);
+  })();
+
+  const myTaskStatusChartDataForRender =
+    !loadingMyTasks && myTaskStatusChartData.length === 0 ? [{ name: 'No tasks yet', value: 1 }] : myTaskStatusChartData;
+
+  const myTaskDueChartDataForRender =
+    !loadingMyTasks && myTaskDueChartData.length === 0 ? [{ name: 'No tasks yet', value: 1 }] : myTaskDueChartData;
 
   const onSubmit = async (data: ProfileFormData) => {
     try {
@@ -292,127 +376,233 @@ export function Profile() {
               </div>
             </div>
 
-            {/* Task Statistics Card */}
-            {taskStats && (
-              <div className="profile-card mt-4">
-                <div className="profile-card-header">
-                  <div className="profile-info">
-                    <h4 className="profile-name">
-                      <i className="bi bi-bar-chart-fill me-2" style={{ color: 'var(--primary-color)' }}></i>
-                      Task Statistics
-                    </h4>
-                    <p className="profile-email">Completion Rate: {taskStats.completionPercentage.toFixed(1)}%</p>
+            {/* My Tasks (Project Management) - direct user analytics */}
+            <div className="profile-card mt-4">
+              <div className="profile-card-header">
+                <div className="profile-info">
+                  <h4 className="profile-name">
+                    <i className="bi bi-kanban-fill me-2" style={{ color: 'var(--primary-color)' }}></i>
+                    My Tasks (Project Management)
+                  </h4>
+                  <p className="profile-email">
+                    {loadingMyTasks ? 'Loading…' : `${myTasks.length} task(s)`}
+                  </p>
+                </div>
+                <div className="mytasks-header-actions">
+                  <button
+                    type="button"
+                    className={`mytasks-tab ${!showMyTaskAnalytics ? 'active' : ''}`}
+                    onClick={() => setShowMyTaskAnalytics(false)}
+                  >
+                    <i className="bi bi-grid-3x3-gap-fill me-2"></i>
+                    Overview
+                  </button>
+                  <button
+                    type="button"
+                    className={`mytasks-tab ${showMyTaskAnalytics ? 'active' : ''}`}
+                    onClick={() => setShowMyTaskAnalytics(true)}
+                  >
+                    <i className="bi bi-graph-up-arrow me-2"></i>
+                    Analytics
+                  </button>
+                </div>
+              </div>
+              <div className="profile-card-body">
+                <div className="task-stats-grid">
+                  <div className="task-stat-item">
+                    <div className="task-stat-icon total" style={{ background: '#06b6d4' }}>
+                      <i className="bi bi-list-task"></i>
+                    </div>
+                    <div className="task-stat-content">
+                      <span className="task-stat-number">{myTasks.length}</span>
+                      <span className="task-stat-label">Total</span>
+                    </div>
+                  </div>
+                  <div className="task-stat-item">
+                    <div className="task-stat-icon completed">
+                      <i className="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div className="task-stat-content">
+                      <span className="task-stat-number">{completedCount}</span>
+                      <span className="task-stat-label">Completed</span>
+                    </div>
+                  </div>
+                  <div className="task-stat-item">
+                    <div className="task-stat-icon progress">
+                      <i className="bi bi-clock-fill"></i>
+                    </div>
+                    <div className="task-stat-content">
+                      <span className="task-stat-number">{inProgressCount}</span>
+                      <span className="task-stat-label">In Progress</span>
+                    </div>
+                  </div>
+                  <div className="task-stat-item">
+                    <div className="task-stat-icon overdue">
+                      <i className="bi bi-exclamation-triangle-fill"></i>
+                    </div>
+                    <div className="task-stat-content">
+                      <span className="task-stat-number">{overdueCount}</span>
+                      <span className="task-stat-label">Overdue</span>
+                    </div>
                   </div>
                 </div>
-                <div className="profile-card-body">
-                  <div className="task-stats-grid">
-                    <div className="task-stat-item">
-                      <div className="task-stat-icon total">
-                        <i className="bi bi-list-task"></i>
-                      </div>
-                      <div className="task-stat-content">
-                        <span className="task-stat-number">{taskStats.totalTasks}</span>
-                        <span className="task-stat-label">Total Tasks</span>
-                      </div>
+
+                <div className="task-stats-grid">
+                  <div className="task-stat-item">
+                    <div className="task-stat-icon total" style={{ background: '#64748b' }}>
+                      <i className="bi bi-hourglass-split"></i>
                     </div>
-                    
-                    <div className="task-stat-item">
-                      <div className="task-stat-icon completed">
-                        <i className="bi bi-check-circle-fill"></i>
-                      </div>
-                      <div className="task-stat-content">
-                        <span className="task-stat-number">{taskStats.completedTasks}</span>
-                        <span className="task-stat-label">Completed</span>
-                      </div>
-                    </div>
-                    
-                    <div className="task-stat-item">
-                      <div className="task-stat-icon progress">
-                        <i className="bi bi-clock-fill"></i>
-                      </div>
-                      <div className="task-stat-content">
-                        <span className="task-stat-number">{taskStats.inProgressTasks}</span>
-                        <span className="task-stat-label">In Progress</span>
-                      </div>
-                    </div>
-                    
-                    <div className="task-stat-item">
-                      <div className="task-stat-icon overdue">
-                        <i className="bi bi-exclamation-triangle-fill"></i>
-                      </div>
-                      <div className="task-stat-content">
-                        <span className="task-stat-number">{taskStats.overdueTasks}</span>
-                        <span className="task-stat-label">Overdue</span>
-                      </div>
+                    <div className="task-stat-content">
+                      <span className="task-stat-number">{pendingCount}</span>
+                      <span className="task-stat-label">Pending</span>
                     </div>
                   </div>
-
-                  {/* Additional Stats Row */}
-                  <div className="task-stats-grid">
-                    <div className="task-stat-item">
-                      <div className="task-stat-icon total" style={{ background: '#8b5cf6' }}>
-                        <i className="bi bi-folder-fill"></i>
-                      </div>
-                      <div className="task-stat-content">
-                        <span className="task-stat-number">{taskStats.totalProjects}</span>
-                        <span className="task-stat-label">Total Projects</span>
-                      </div>
+                  <div className="task-stat-item">
+                    <div className="task-stat-icon progress" style={{ background: '#f59e0b' }}>
+                      <i className="bi bi-calendar-event-fill"></i>
                     </div>
-                    
-                    <div className="task-stat-item">
-                      <div className="task-stat-icon progress" style={{ background: '#06b6d4' }}>
-                        <i className="bi bi-play-circle-fill"></i>
-                      </div>
-                      <div className="task-stat-content">
-                        <span className="task-stat-number">{taskStats.activeProjects}</span>
-                        <span className="task-stat-label">Active Projects</span>
-                      </div>
+                    <div className="task-stat-content">
+                      <span className="task-stat-number">{dueSoonCount}</span>
+                      <span className="task-stat-label">Due in 7 days</span>
                     </div>
-                    
-                    {taskStats.attendanceRate !== undefined && (
-                      <div className="task-stat-item">
-                        <div className="task-stat-icon completed" style={{ background: '#10b981' }}>
-                          <i className="bi bi-calendar-check-fill"></i>
-                        </div>
-                        <div className="task-stat-content">
-                          <span className="task-stat-number">{taskStats.attendanceRate.toFixed(1)}%</span>
-                          <span className="task-stat-label">Attendance</span>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {taskStats.leaveBalance !== undefined && (
-                      <div className="task-stat-item">
-                        <div className="task-stat-icon" style={{ background: '#f59e0b' }}>
-                          <i className="bi bi-calendar-x-fill"></i>
-                        </div>
-                        <div className="task-stat-content">
-                          <span className="task-stat-number">{taskStats.leaveBalance}</span>
-                          <span className="task-stat-label">Leave Days</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
-
-                  {/* Progress Bar */}
-                  <div className="completion-progress">
-                    <div className="progress-header">
-                      <span>Overall Completion Rate</span>
-                      <span className="progress-percentage">{taskStats.completionPercentage.toFixed(1)}%</span>
+                  <div className="task-stat-item">
+                    <div className="task-stat-icon completed" style={{ background: '#10b981' }}>
+                      <i className="bi bi-graph-up-arrow"></i>
                     </div>
-                    <div className="progress-bar-container">
-                      <div 
-                        className="progress-bar-fill" 
-                        style={{ width: `${taskStats.completionPercentage}%` }}
-                      ></div>
+                    <div className="task-stat-content">
+                      <span className="task-stat-number">{completionRate.toFixed(1)}%</span>
+                      <span className="task-stat-label">Completion</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`analytics-panel ${showMyTaskAnalytics ? 'open' : ''}`}>
+                  <div className="analytics-panel-inner">
+                    {/* Charts */}
+                    <div className="row g-3">
+                      <div className="col-12 col-lg-6">
+                        <div className="chart-container chart-card">
+                          <div className="chart-header">
+                            <div className="chart-title">
+                              <i className="bi bi-pie-chart-fill me-2"></i>
+                              Task status
+                            </div>
+                            <div className="chart-subtitle">Distribution across your current tasks</div>
+                          </div>
+                          {loadingMyTasks ? (
+                            <div className="text-muted small">Loading…</div>
+                          ) : (
+                            <ResponsiveContainer width="100%" height={220}>
+                              <PieChart>
+                                <Pie
+                                  data={myTaskStatusChartDataForRender}
+                                  cx="50%"
+                                  cy="50%"
+                                  innerRadius={45}
+                                  outerRadius={85}
+                                  paddingAngle={4}
+                                  dataKey="value"
+                                >
+                                  {myTaskStatusChartDataForRender.map((entry, index) => (
+                                    <Cell
+                                      key={`my-status-${index}`}
+                                      fill={
+                                        entry.name === 'No tasks yet'
+                                          ? '#cbd5e1'
+                                          : getStatusColor(
+                                              entry.name === 'Completed'
+                                                ? 2
+                                                : entry.name === 'In Progress'
+                                                  ? 1
+                                                  : entry.name === 'Overdue'
+                                                    ? 3
+                                                    : 0
+                                            )
+                                      }
+                                    />
+                                  ))}
+                                </Pie>
+                                <Tooltip
+                                  formatter={(value: any, _name: any, props: any) =>
+                                    props?.payload?.name === 'No tasks yet' ? ['No tasks yet', ''] : [`${value} tasks`, 'Count']
+                                  }
+                                />
+                                {myTaskStatusChartData.length > 0 && <Legend />}
+                              </PieChart>
+                            </ResponsiveContainer>
+                          )}
+                        </div>
+                      </div>
+                      <div className="col-12 col-lg-6">
+                        <div className="chart-container chart-card">
+                          <div className="chart-header">
+                            <div className="chart-title">
+                              <i className="bi bi-bar-chart-fill me-2"></i>
+                              Due buckets
+                            </div>
+                            <div className="chart-subtitle">Overdue vs upcoming vs completed</div>
+                          </div>
+                          {loadingMyTasks ? (
+                            <div className="text-muted small">Loading…</div>
+                          ) : myTaskDueChartData.length === 0 ? (
+                            <div className="text-muted small">No tasks yet.</div>
+                          ) : (
+                            <ResponsiveContainer width="100%" height={240}>
+                              <BarChart data={myTaskDueChartDataForRender}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" tick={{ fontSize: 12 }} angle={-20} textAnchor="end" height={55} />
+                                <YAxis allowDecimals={false} />
+                                <Tooltip formatter={(value: any) => [`${value} tasks`, 'Count']} />
+                                <Bar dataKey="value" fill="var(--primary-color)" radius={[4, 4, 0, 0]} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="recent-tasks-card mt-3">
+                      {loadingMyTasks ? (
+                        <small className="text-muted">Loading tasks…</small>
+                      ) : myTasks.length === 0 ? (
+                        <small className="text-muted">No tasks assigned to you yet.</small>
+                      ) : (
+                        <>
+                          <div className="d-flex justify-content-between align-items-center mb-2">
+                            <small className="text-muted fw-semibold">Recent tasks</small>
+                          </div>
+                          {myTasks
+                            .slice()
+                            .sort((a, b) => {
+                              const ad = a.updatedDateUtc || a.createdDateUtc || '';
+                              const bd = b.updatedDateUtc || b.createdDateUtc || '';
+                              return bd.localeCompare(ad);
+                            })
+                            .slice(0, 5)
+                            .map((t) => (
+                              <div key={t.id} className="recent-task-row">
+                                <div className="me-2" style={{ minWidth: 0 }}>
+                                  <div className="fw-medium text-truncate">{t.title || t.description || t.id}</div>
+                                  <small className="text-muted">
+                                    {t.dueDateUtc ? `Due: ${new Date(t.dueDateUtc).toLocaleDateString()}` : 'No due date'}
+                                  </small>
+                                </div>
+                                <span className={`badge ${statusBadgeClass(t.status)} ms-2`}>
+                                  {taskStatusLabel(t.status)}
+                                </span>
+                              </div>
+                            ))}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Right Side - Profile Form and Charts */}
+          {/* Right Side - Profile Form */}
           <div className="col-lg-8">
             <div className="profile-form-card">
               <div className="form-card-header">
@@ -614,103 +804,6 @@ export function Profile() {
               </div>
             </div>
 
-            {/* Task Charts */}
-            {taskStats && (
-              <div className="profile-form-card mt-4">
-                <div className="form-card-header">
-                  <div className="header-content">
-                    <h4 className="form-title">
-                      <i className="bi bi-pie-chart me-2"></i>
-                      Task Analysis
-                    </h4>
-                    <p className="form-subtitle">Task distribution by status</p>
-                  </div>
-                </div>
-                <div className="form-card-body">
-                  {taskBreakdown.length > 0 ? (
-                    <div className="row g-4">
-                      {/* Pie Chart */}
-                      <div className="col-md-6">
-                        <div className="chart-container">
-                          <h5 className="chart-title">Task Distribution</h5>
-                          <ResponsiveContainer width="100%" height={250}>
-                            <PieChart>
-                              <Pie
-                                data={taskBreakdown}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={40}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="count"
-                              >
-                                {taskBreakdown.map((entry, index) => (
-                                  <Cell 
-                                    key={`cell-${index}`} 
-                                    fill={getStatusColor(entry.status)} 
-                                  />
-                                ))}
-                              </Pie>
-                              <Tooltip 
-                                formatter={(value, _name, props) => [
-                                  `${value} tasks (${props.payload?.percentage?.toFixed(1) || 0}%)`,
-                                  props.payload?.statusName || 'Unknown'
-                                ]}
-                              />
-                              <Legend 
-                                formatter={(_value, entry) => (entry.payload as any)?.statusName || 'Unknown'}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </div>
-
-                      {/* Bar Chart */}
-                      <div className="col-md-6">
-                        <div className="chart-container">
-                          <h5 className="chart-title">Detailed Statistics</h5>
-                          <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={taskBreakdown}>
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis 
-                                dataKey="statusName" 
-                                tick={{ fontSize: 12 }}
-                                angle={-45}
-                                textAnchor="end"
-                                height={60}
-                              />
-                              <YAxis />
-                              <Tooltip 
-                                formatter={(value, _name) => [`${value} tasks`, 'Count']}
-                                labelFormatter={(label) => `Status: ${label}`}
-                              />
-                              <Bar 
-                                dataKey="count" 
-                                fill="var(--primary-color)"
-                                radius={[4, 4, 0, 0]}
-                              />
-                            </BarChart>
-                          </ResponsiveContainer>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="no-tasks-message">
-                      <div className="text-center py-5">
-                        <i className="bi bi-bar-chart display-1 text-muted mb-3"></i>
-                        <h5 className="text-muted">No Task Data Available</h5>
-                        <p className="text-muted">
-                          {taskStats.totalTasks === 0 
-                            ? "You don't have any assigned tasks yet. Charts will appear once you have tasks with different statuses."
-                            : "All your tasks have the same status. Charts will show more detail as you progress through different task statuses."
-                          }
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
