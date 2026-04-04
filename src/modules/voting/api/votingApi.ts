@@ -79,9 +79,13 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return (data ?? {}) as T;
 }
 
-// Polls
-export async function fetchPolls(): Promise<{ polls: Poll[] }> {
-  const res = await fetch(`${BASE_URL}/polls`, { headers: getHeaders() });
+// Polls — GET /polls?createdBy=<userId> lists polls created by that user (Voting Service API)
+export async function fetchPolls(createdBy?: string): Promise<{ polls: Poll[] }> {
+  const params = new URLSearchParams();
+  if (createdBy) params.set('createdBy', createdBy);
+  const qs = params.toString();
+  const url = qs ? `${BASE_URL}/polls?${qs}` : `${BASE_URL}/polls`;
+  const res = await fetch(url, { headers: getHeaders() });
   const data = await handleResponse<{ polls?: Poll[]; data?: Poll[] } | Poll[]>(res);
   // Support both { polls: [] } and top-level array from backend
   const list = Array.isArray(data)
