@@ -1,9 +1,36 @@
 import { useSelector } from "react-redux";
 import { createPortal } from "react-dom";
+import toast from "react-hot-toast";
 import notificationService from "../../services/notificationService";
 import { formatTimeAgo } from "../../utils";
 import type { RootState } from "../../store/store";
+import type { Notification } from "../../store/notificationSlice";
+import { PollVoteForm } from "../../modules/voting/components/PollVoteForm";
 import "./styles.css";
+
+function getPollIdFromNotification(n: Notification | undefined): string | undefined {
+  if (!n) return undefined;
+  let meta: unknown = n.metadata;
+  if (typeof meta === "string") {
+    try {
+      meta = JSON.parse(meta) as unknown;
+    } catch {
+      meta = undefined;
+    }
+  }
+  if (meta && typeof meta === "object" && meta !== null) {
+    const pid = (meta as Record<string, unknown>).pollId;
+    if (typeof pid === "string" && pid.trim()) return pid;
+  }
+  const type = n.sourceEntityType?.toLowerCase();
+  if (
+    (type === "poll" || n.sourceEvent === "PollEligibilityAssigned") &&
+    n.sourceEntityId
+  ) {
+    return n.sourceEntityId;
+  }
+  return undefined;
+}
 
 interface Props {
   setShowDetailModal: (value: boolean) => void;
@@ -62,6 +89,8 @@ export default function NotificationDetails({
 
   if (!selectedNotif) return null;
 
+  const pollIdForVote = getPollIdFromNotification(selectedNotif);
+
   return createPortal(
     <div
       className="modal-overlay notification-details-modal-overlay"
@@ -78,7 +107,7 @@ export default function NotificationDetails({
             onClick={() => setShowDetailModal(false)}
           ></button>
         </div>
-        <div className="modal-body">
+        <div className="modal-body notification-details-modal-body">
           <div className="notification-detail-section">
             <label className="detail-label">Subject</label>
             <div className="detail-value fw-bold">
@@ -156,6 +185,25 @@ export default function NotificationDetails({
               )}
             </div>
           </div>
+
+          {pollIdForVote && (
+            <div className="notification-detail-section notification-poll-vote-wrap mt-3 pt-3 border-top">
+              <label className="detail-label d-flex align-items-center gap-2">
+                <i className="bi bi-hand-index-thumb" style={{ color: "#06b6d4" }}></i>
+                Cast your vote
+              </label>
+              <p className="small text-muted mb-2">
+                Select an option below. You can also use the full voting page if you prefer.
+              </p>
+              <PollVoteForm
+                pollId={pollIdForVote}
+                embedded
+                onVoteSuccess={() => {
+                  toast.success("Vote submitted");
+                }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="modal-footer">
