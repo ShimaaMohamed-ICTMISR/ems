@@ -15,7 +15,7 @@ import type {
 const BASE_URL = (
   import.meta.env.VITE_VOTING_API_BASE_URL ??
   import.meta.env.VITE_API_BASE_URL ??
-  'https://ems-voting-service.onrender.com/api'
+  'https://ems-voting-service.onrender.com/'
 ).replace(/\/+$/, '');
 
 /** Voting service ticket — do not use global VITE_SERVICE_TICKET (other services may differ). */
@@ -59,7 +59,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
           'Voting API requires a valid X-Service-Ticket. Check .env.local (VITE_VOTING_SERVICE_TICKET, default ' +
             VOTING_TICKET_DEFAULT +
             ') and ensure the backend is running at ' +
-            (import.meta.env.VITE_VOTING_API_BASE_URL ?? import.meta.env.VITE_API_BASE_URL ?? 'https://ems-voting-service.onrender.com/api') +
+            BASE_URL +
             '.'
         );
       }
