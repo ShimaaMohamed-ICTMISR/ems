@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
 import type { Meeting } from '../../services/meetingService';
 import hrService, { type Employee } from '../../services/hrProjectManagementService';
+import { useMeetingPermissions } from '../../hooks/useMeetingPermissions';
+import { MEETING_PERMISSION_KEYS } from '../../config/meetingPermissions';
 import './meetings.css';
 
 export function MeetingDetails() {
@@ -12,14 +14,28 @@ export function MeetingDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const {
+    canAny,
+    isLoaded: permissionsLoaded,
+    isLoading: permissionsLoading,
+  } = useMeetingPermissions();
+  const canViewMeeting = canAny([...MEETING_PERMISSION_KEYS.VIEW]);
 
   useEffect(() => {
+    if (!permissionsLoaded || !canViewMeeting) {
+      return;
+    }
+
     if (id) {
       loadMeeting();
     }
-  }, [id]);
+  }, [id, permissionsLoaded, canViewMeeting]);
 
   useEffect(() => {
+    if (!permissionsLoaded || !canViewMeeting) {
+      return;
+    }
+
     hrService
       .getEmployees()
       .then((res) => {
@@ -31,7 +47,7 @@ export function MeetingDetails() {
         console.error('Failed to load employees for meeting details:', err);
         setEmployees([]);
       });
-  }, []);
+  }, [permissionsLoaded, canViewMeeting]);
 
   const getEmployeeDisplay = (userId: string) => {
     const emp = employees.find((e) => e.id === userId);
@@ -75,6 +91,38 @@ export function MeetingDetails() {
       default: return 'bg-secondary';
     }
   };
+
+  if (!permissionsLoaded || permissionsLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+        <div className="text-center">
+          <div className="spinner-border text-secondary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted mt-3">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canViewMeeting) {
+    return (
+      <div className="text-center py-5">
+        <div className="mb-4">
+          <i className="bi bi-shield-lock display-1 text-warning opacity-75"></i>
+        </div>
+        <h4 className="text-muted mb-2">Unauthorized</h4>
+        <p className="text-muted mb-4">You do not have permission to view meetings.</p>
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => navigate('/dashboard/meetings')}
+        >
+          <i className="bi bi-arrow-left me-2"></i>
+          Back to Meetings
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

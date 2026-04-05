@@ -1,11 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import notificationReducer from './notificationSlice';
+import meetingPermissionsReducer from './meetingPermissionsSlice';
+import hrPermissionsReducer from './hrPermissionsSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     notification: notificationReducer,
+    meetingPermissions: meetingPermissionsReducer,
+    hrPermissions: hrPermissionsReducer,
   },
 });
 

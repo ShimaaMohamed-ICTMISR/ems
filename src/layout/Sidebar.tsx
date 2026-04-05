@@ -3,6 +3,8 @@ import { useSelector } from "react-redux";
 import { NavLink } from "react-router-dom";
 import type { RootState } from "../store/store";
 import finovatelogo from "../assets/images/finovate-logo.webp";
+import { useProjectManagementPermissions } from "../hooks/useProjectManagementPermissions";
+import { PM_ROUTE_PERMISSION_KEYS } from "../config/projectManagementPermissions";
 
 interface NavItem {
   to: string;
@@ -92,6 +94,15 @@ function NavItems({ items }: { items: NavItem[] }) {
 
 function SidebarContent() {
   const user = useSelector((state: RootState) => state.auth.user);
+  const { canAny: canAnyProjectManagement } = useProjectManagementPermissions();
+
+  const visibleModuleNavItems = moduleNavItems.filter((item) => {
+    if (item.to === "/dashboard/project-management") {
+      return canAnyProjectManagement([...PM_ROUTE_PERMISSION_KEYS.HOME]);
+    }
+
+    return true;
+  });
 
   return (
     <div
@@ -141,7 +152,7 @@ function SidebarContent() {
             Modules
           </h6>
           <ul className="nav flex-column gap-1">
-            <NavItems items={moduleNavItems} />
+            <NavItems items={visibleModuleNavItems} />
           </ul>
         </div>
 

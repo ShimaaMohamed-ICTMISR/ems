@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import type { Employee } from '../../services/hrProjectManagementService';
 import hrService from '../../services/hrProjectManagementService';
+import { useHrPermissions } from '../../hooks/useHrPermissions';
+import { HR_PERMISSION_KEYS } from '../../config/hrPermissions';
+import { AccessDeniedState } from '../../Components/AccessDeniedState';
 import '../styles/Attendance.css';
 
 export default function Attendance() {
@@ -12,20 +15,37 @@ export default function Attendance() {
     const [error, setError] = useState<string | null>(null);
     const [month, setMonth] = useState(new Date().getMonth() + 1);
     const [year, setYear] = useState(new Date().getFullYear());
+    const { canAny } = useHrPermissions();
+    const canViewAttendance = canAny([...HR_PERMISSION_KEYS.ATTENDANCE.VIEW]);
+    const canManageAttendance = canAny([...HR_PERMISSION_KEYS.ATTENDANCE.CREATE]);
 
     useEffect(() => {
+        if (!canViewAttendance) return;
+
         hrService.getEmployees().then(r => {
             const d = r.data;
             const list = d?.data?.data || d?.data || d;
             setEmployees(Array.isArray(list) ? list : []);
         }).catch(() => { });
-    }, []);
+    }, [canViewAttendance]);
 
     useEffect(() => {
+        if (!canViewAttendance) return;
         if (!selectedEmployee) return;
         fetchRecords();
         fetchStats();
-    }, [selectedEmployee, month, year]);
+    }, [selectedEmployee, month, year, canViewAttendance]);
+
+    if (!canViewAttendance) {
+        return (
+            <div className="attendance-container">
+                <AccessDeniedState
+                    title="Attendance is restricted"
+                    description="You do not have permission to view attendance data."
+                />
+            </div>
+        );
+    }
 
     const fetchRecords = async () => {
         setLoading(true);
@@ -47,6 +67,11 @@ export default function Attendance() {
     };
 
     const handleCheckIn = async () => {
+        if (!canManageAttendance) {
+            alert('You do not have permission to manage attendance records.');
+            return;
+        }
+
         if (!selectedEmployee) return alert('Select an employee first');
         try {
             await hrService.checkIn({ employeeId: selectedEmployee, checkInTime: new Date().toISOString() });
@@ -56,6 +81,11 @@ export default function Attendance() {
     };
 
     const handleCheckOut = async () => {
+        if (!canManageAttendance) {
+            alert('You do not have permission to manage attendance records.');
+            return;
+        }
+
         if (!selectedEmployee) return alert('Select an employee first');
         try {
             await hrService.checkOut({ employeeId: selectedEmployee, checkOutTime: new Date().toISOString() });
@@ -65,6 +95,11 @@ export default function Attendance() {
     };
 
     const handleMarkAbsence = async () => {
+        if (!canManageAttendance) {
+            alert('You do not have permission to manage attendance records.');
+            return;
+        }
+
         if (!selectedEmployee) return alert('Select an employee first');
         const reason = prompt('Enter absence reason:');
         try {
@@ -107,20 +142,22 @@ export default function Attendance() {
             {selectedEmployee && (
                 <>
                     {/* Quick Actions */}
-                    <div className="attendance-actions">
-                        <div className="action-card" onClick={handleCheckIn}>
-                            <div className="action-icon check-in"><i className="bi bi-box-arrow-in-right"></i></div>
-                            <div className="action-text"><h4>Check In</h4><p>Record arrival time</p></div>
+                    {canManageAttendance && (
+                        <div className="attendance-actions">
+                            <div className="action-card" onClick={handleCheckIn}>
+                                <div className="action-icon check-in"><i className="bi bi-box-arrow-in-right"></i></div>
+                                <div className="action-text"><h4>Check In</h4><p>Record arrival time</p></div>
+                            </div>
+                            <div className="action-card" onClick={handleCheckOut}>
+                                <div className="action-icon check-out"><i className="bi bi-box-arrow-right"></i></div>
+                                <div className="action-text"><h4>Check Out</h4><p>Record departure time</p></div>
+                            </div>
+                            <div className="action-card" onClick={handleMarkAbsence}>
+                                <div className="action-icon absence"><i className="bi bi-calendar-x"></i></div>
+                                <div className="action-text"><h4>Mark Absence</h4><p>Record employee absence</p></div>
+                            </div>
                         </div>
-                        <div className="action-card" onClick={handleCheckOut}>
-                            <div className="action-icon check-out"><i className="bi bi-box-arrow-right"></i></div>
-                            <div className="action-text"><h4>Check Out</h4><p>Record departure time</p></div>
-                        </div>
-                        <div className="action-card" onClick={handleMarkAbsence}>
-                            <div className="action-icon absence"><i className="bi bi-calendar-x"></i></div>
-                            <div className="action-text"><h4>Mark Absence</h4><p>Record employee absence</p></div>
-                        </div>
-                    </div>
+                    )}
 
                     {/* Stats */}
                     {stats && (

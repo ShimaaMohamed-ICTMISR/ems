@@ -3,6 +3,12 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../store/store';
 import { FEATURE_PERMISSIONS } from '../config/permissions';
 import type { FeaturePermissionType, PermissionType } from '../config/permissions';
+import {
+  extractPermissionCodes,
+  hasPermissionInSet,
+  normalizePermission,
+  toUniquePermissions,
+} from '../utils/permissionUtils';
 
 /**
  * Get user permissions from localStorage
@@ -14,7 +20,7 @@ export const getUserPermissionsFromStorage = (): string[] => {
     if (!userStr) return [];
 
     const user = JSON.parse(userStr);
-    return Array.isArray(user?.permissions) ? user.permissions : [];
+    return toUniquePermissions(extractPermissionCodes(user?.permissions));
   } catch (error) {
     console.error('Error reading permissions from storage:', error);
     return [];
@@ -32,10 +38,15 @@ export const usePermissions = () => {
   const permissions = useMemo(() => {
     // Priority: Redux store permissions, fallback to localStorage
     if (user?.permissions && Array.isArray(user.permissions)) {
-      return user.permissions;
+      return toUniquePermissions(extractPermissionCodes(user.permissions));
     }
     return getUserPermissionsFromStorage();
   }, [user?.permissions]);
+
+  const normalizedPermissions = useMemo(
+    () => new Set(permissions.map((permission) => normalizePermission(permission))),
+    [permissions],
+  );
 
   /**
    * Check if user has a specific permission
@@ -44,10 +55,9 @@ export const usePermissions = () => {
    */
   const hasPermission = useCallback(
     (permission: PermissionType | string): boolean => {
-      if (!Array.isArray(permissions)) return false;
-      return permissions.includes(permission);
+      return hasPermissionInSet(normalizedPermissions, permission);
     },
-    [permissions]
+    [normalizedPermissions]
   );
 
   /**
@@ -70,10 +80,10 @@ export const usePermissions = () => {
    */
   const hasAnyPermission = useCallback(
     (permissionList: (PermissionType | string)[]): boolean => {
-      if (!Array.isArray(permissions) || !Array.isArray(permissionList)) return false;
-      return permissionList.some((permission) => permissions.includes(permission));
+      if (!Array.isArray(permissionList)) return false;
+      return permissionList.some((permission) => hasPermission(permission));
     },
-    [permissions]
+    [hasPermission]
   );
 
   /**
@@ -83,10 +93,10 @@ export const usePermissions = () => {
    */
   const hasAllPermissions = useCallback(
     (permissionList: (PermissionType | string)[]): boolean => {
-      if (!Array.isArray(permissions) || !Array.isArray(permissionList)) return false;
-      return permissionList.every((permission) => permissions.includes(permission));
+      if (!Array.isArray(permissionList)) return false;
+      return permissionList.every((permission) => hasPermission(permission));
     },
-    [permissions]
+    [hasPermission]
   );
 
   return {

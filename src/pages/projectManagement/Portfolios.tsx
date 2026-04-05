@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import {
+  PM_PERMISSION_KEYS,
+  PM_ROUTE_PERMISSION_KEYS,
+} from "../../config/projectManagementPermissions";
+import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
 import portfolioService, {
   type Portfolio,
   type PortfolioCreateDTO,
@@ -103,6 +109,16 @@ function formatDate(value?: string | null) {
 
 export function Portfolios() {
   const navigate = useNavigate();
+  const { canAny } = useProjectManagementPermissions();
+
+  const hasPortfolioAccess = canAny([...PM_ROUTE_PERMISSION_KEYS.PORTFOLIOS]);
+  const canViewPortfolios = canAny([...PM_PERMISSION_KEYS.PORTFOLIOS.VIEW]);
+  const canCreatePortfolio = canAny([...PM_PERMISSION_KEYS.PORTFOLIOS.CREATE]);
+  const canEditPortfolio = canAny([...PM_PERMISSION_KEYS.PORTFOLIOS.EDIT]);
+  const canDeletePortfolio = canAny([...PM_PERMISSION_KEYS.PORTFOLIOS.DELETE]);
+  const canCreateProject = canAny([...PM_PERMISSION_KEYS.PROJECTS.CREATE]);
+  const canViewProjects = canAny([...PM_PERMISSION_KEYS.PROJECTS.VIEW]);
+
   const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -154,6 +170,13 @@ export function Portfolios() {
   );
 
   async function fetchPortfolios() {
+    if (!canViewPortfolios) {
+      setPortfolios([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     try {
       setLoading(true);
       const data = await portfolioService.getPortfolios();
@@ -170,8 +193,13 @@ export function Portfolios() {
   }
 
   useEffect(() => {
+    if (!hasPortfolioAccess) {
+      setLoading(false);
+      return;
+    }
+
     fetchPortfolios();
-  }, []);
+  }, [hasPortfolioAccess, canViewPortfolios]);
 
   function handleCreateInputChange(
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -189,6 +217,11 @@ export function Portfolios() {
 
   async function handleCreateSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!canCreatePortfolio) {
+      toast.error("You do not have permission to create portfolios.");
+      return;
+    }
 
     const payload: PortfolioCreateDTO = {
       name: normalizeText(createForm.name),
@@ -224,6 +257,11 @@ export function Portfolios() {
   }
 
   async function handleOpenDetails(id: string) {
+    if (!canViewPortfolios) {
+      toast.error("You do not have permission to view portfolios.");
+      return;
+    }
+
     try {
       setSubmitting(true);
       const data = await portfolioService.getPortfolioById(id);
@@ -237,6 +275,11 @@ export function Portfolios() {
   }
 
   async function handleOpenEdit(id: string) {
+    if (!canEditPortfolio) {
+      toast.error("You do not have permission to edit portfolios.");
+      return;
+    }
+
     try {
       setSubmitting(true);
       const data = await portfolioService.getPortfolioById(id);
@@ -256,6 +299,11 @@ export function Portfolios() {
 
   async function handleEditSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!canEditPortfolio) {
+      toast.error("You do not have permission to edit portfolios.");
+      return;
+    }
 
     if (!editingPortfolio) {
       return;
@@ -298,6 +346,11 @@ export function Portfolios() {
   }
 
   async function handleDelete(id: string) {
+    if (!canDeletePortfolio) {
+      toast.error("You do not have permission to delete portfolios.");
+      return;
+    }
+
     try {
       setSubmitting(true);
       await portfolioService.deletePortfolioById(id);
@@ -315,6 +368,17 @@ export function Portfolios() {
   function navigateToProjectDetails(portfolioId: string, projectId: string) {
     setDetailsPortfolio(null);
     navigate(`/dashboard/portfolios/${portfolioId}/projects/${projectId}`);
+  }
+
+  if (!hasPortfolioAccess) {
+    return (
+      <div className="portfolio-page">
+        <AccessDeniedState
+          title="No Portfolio Access"
+          description="You do not have permission to access portfolio management."
+        />
+      </div>
+    );
   }
 
   if (loading) {
@@ -343,17 +407,19 @@ export function Portfolios() {
             each portfolio in one place.
           </p>
         </div>
-        <button
-          type="button"
-          className="btn btn-info text-white fw-semibold"
-          onClick={() => setShowCreateForm((prev) => !prev)}
-          disabled={submitting}
-        >
-          <i
-            className={`bi ${showCreateForm ? "bi-x-circle" : "bi-plus-circle"} me-2`}
-          />
-          {showCreateForm ? "Close Form" : "New Portfolio"}
-        </button>
+        {canCreatePortfolio && (
+          <button
+            type="button"
+            className="btn btn-info text-white fw-semibold"
+            onClick={() => setShowCreateForm((prev) => !prev)}
+            disabled={submitting}
+          >
+            <i
+              className={`bi ${showCreateForm ? "bi-x-circle" : "bi-plus-circle"} me-2`}
+            />
+            {showCreateForm ? "Close Form" : "New Portfolio"}
+          </button>
+        )}
       </section>
 
       <section className="portfolio-stats row g-3 mb-4">
@@ -377,26 +443,28 @@ export function Portfolios() {
         </div> */}
       </section>
 
-      <section className="portfolio-controls mb-4">
-        <div className="search-wrap">
-          <i className="bi bi-search" />
-          <input
-            type="text"
-            placeholder="Search portfolios by name, description, or manager id"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
-        </div>
-        <button
-          type="button"
-          className="btn btn-outline-light"
-          onClick={fetchPortfolios}
-          disabled={submitting}
-        >
-          <i className="bi bi-arrow-clockwise me-2" />
-          Refresh
-        </button>
-      </section>
+      {canViewPortfolios && (
+        <section className="portfolio-controls mb-4">
+          <div className="search-wrap">
+            <i className="bi bi-search" />
+            <input
+              type="text"
+              placeholder="Search portfolios by name, description, or manager id"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline-light"
+            onClick={fetchPortfolios}
+            disabled={submitting}
+          >
+            <i className="bi bi-arrow-clockwise me-2" />
+            Refresh
+          </button>
+        </section>
+      )}
 
       {error && (
         <div className="alert alert-danger" role="alert">
@@ -405,7 +473,7 @@ export function Portfolios() {
         </div>
       )}
 
-      {showCreateForm && (
+      {showCreateForm && canCreatePortfolio && (
         <section className="portfolio-form-card mb-4">
           <div className="form-card-header">
             <h2 className="h5 mb-1">Create Portfolio</h2>
@@ -474,7 +542,13 @@ export function Portfolios() {
         </section>
       )}
 
-      {filteredPortfolios.length === 0 ? (
+      {!canViewPortfolios ? (
+        <section className="alert alert-info" role="status">
+          <i className="bi bi-info-circle me-2" />
+          You can access this module, but you do not have permission to view
+          existing portfolios.
+        </section>
+      ) : filteredPortfolios.length === 0 ? (
         <section className="portfolio-empty-state">
           <i className="bi bi-briefcase" />
           <h3>No portfolios found</h3>
@@ -485,12 +559,19 @@ export function Portfolios() {
           {filteredPortfolios.map((portfolio) => (
             <article
               key={portfolio.id}
-              className="portfolio-card portfolio-card-clickable"
-              role="button"
-              tabIndex={0}
-              onClick={() => handleOpenDetails(portfolio.id)}
+              className={`portfolio-card ${canViewPortfolios ? "portfolio-card-clickable" : ""}`}
+              role={canViewPortfolios ? "button" : undefined}
+              tabIndex={canViewPortfolios ? 0 : -1}
+              onClick={() => {
+                if (canViewPortfolios) {
+                  handleOpenDetails(portfolio.id);
+                }
+              }}
               onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
+                if (
+                  canViewPortfolios &&
+                  (event.key === "Enter" || event.key === " ")
+                ) {
                   event.preventDefault();
                   handleOpenDetails(portfolio.id);
                 }
@@ -525,7 +606,12 @@ export function Portfolios() {
                 <p className="projects-title mb-2">
                   Projects In This Portfolio
                 </p>
-                {portfolio.projects?.length ? (
+                {!canViewProjects ? (
+                  <div className="alert alert-light border mb-0 py-2 px-3" role="status">
+                    <i className="bi bi-shield-lock me-2" />
+                    You do not have permission to view project titles.
+                  </div>
+                ) : portfolio.projects?.length ? (
                   <div className="projects-list">
                     {portfolio.projects.slice(0, 4).map((project) => (
                       <button
@@ -555,42 +641,48 @@ export function Portfolios() {
               </div>
 
               <footer className="portfolio-actions">
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-info"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleOpenDetails(portfolio.id);
-                  }}
-                  disabled={submitting}
-                >
-                  <i className="bi bi-eye me-1" />
-                  View
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-warning"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    handleOpenEdit(portfolio.id);
-                  }}
-                  disabled={submitting}
-                >
-                  <i className="bi bi-pencil-square me-1" />
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline-danger"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    setConfirmDeleteId(portfolio.id);
-                  }}
-                  disabled={submitting}
-                >
-                  <i className="bi bi-trash me-1" />
-                  Delete
-                </button>
+                {canViewPortfolios && (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-info"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleOpenDetails(portfolio.id);
+                    }}
+                    disabled={submitting}
+                  >
+                    <i className="bi bi-eye me-1" />
+                    View
+                  </button>
+                )}
+                {canEditPortfolio && (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-warning"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      handleOpenEdit(portfolio.id);
+                    }}
+                    disabled={submitting}
+                  >
+                    <i className="bi bi-pencil-square me-1" />
+                    Edit
+                  </button>
+                )}
+                {canDeletePortfolio && (
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-danger"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      setConfirmDeleteId(portfolio.id);
+                    }}
+                    disabled={submitting}
+                  >
+                    <i className="bi bi-trash me-1" />
+                    Delete
+                  </button>
+                )}
               </footer>
             </article>
           ))}
@@ -653,21 +745,31 @@ export function Portfolios() {
               <div className="drawer-projects">
                 <div className="drawer-projects-header">
                   <p className="drawer-section-label mb-0">Projects</p>
-                  <button
-                    type="button"
-                    className="btn btn-sm btn-info text-white"
-                    onClick={() => {
-                      setDetailsPortfolio(null);
-                      navigate(
-                        `/dashboard/projects/create?portfolioId=${detailsPortfolio.id}`,
-                      );
-                    }}
-                  >
-                    <i className="bi bi-plus-circle me-1" />
-                    New Project
-                  </button>
+                  {canCreateProject && (
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-info text-white"
+                      onClick={() => {
+                        setDetailsPortfolio(null);
+                        navigate(
+                          `/dashboard/projects/create?portfolioId=${detailsPortfolio.id}`,
+                        );
+                      }}
+                    >
+                      <i className="bi bi-plus-circle me-1" />
+                      New Project
+                    </button>
+                  )}
                 </div>
-                {detailsPortfolio.projects?.length ? (
+                {!canViewProjects ? (
+                  <div className="drawer-empty-projects" role="status">
+                    <i className="bi bi-shield-lock" />
+                    <p>
+                      You do not have permission to view project titles in this
+                      portfolio.
+                    </p>
+                  </div>
+                ) : detailsPortfolio.projects?.length ? (
                   <div className="drawer-project-list">
                     {detailsPortfolio.projects.map((project) => (
                       <button
@@ -701,7 +803,7 @@ export function Portfolios() {
         </div>
       )}
 
-      {confirmDeleteId && (
+      {confirmDeleteId && canDeletePortfolio && (
         <div
           className="portfolio-drawer-backdrop"
           onClick={() => setConfirmDeleteId(null)}
@@ -740,7 +842,7 @@ export function Portfolios() {
         </div>
       )}
 
-      {editingPortfolio && (
+      {editingPortfolio && canEditPortfolio && (
         <div
           className="portfolio-drawer-backdrop"
           onClick={() => {

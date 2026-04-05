@@ -23,6 +23,12 @@ export const hrApiClient = axios.create({
 hrApiClient.interceptors.request.use(
   (config) => {
     config.headers = config.headers ?? {};
+
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
     if (HR_SERVICE_TICKET) {
       config.headers['X-Service-Ticket'] = HR_SERVICE_TICKET;
     }
@@ -31,10 +37,7 @@ hrApiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// IMPORTANT:
-// HR service uses X-Service-Ticket for inter-service auth.
-// Sending the app's Bearer token can cause the gateway to reject the request even when the service ticket is valid.
-// So we do NOT attach Authorization for HR requests.
+// Keep request logging in a separate interceptor.
 hrApiClient.interceptors.request.use(
   (config) => {
     try {

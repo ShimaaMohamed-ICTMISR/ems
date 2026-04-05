@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
 import type { Meeting, MeetingStatus } from '../../services/meetingService';
+import { useMeetingPermissions } from '../../hooks/useMeetingPermissions';
+import { MEETING_PERMISSION_KEYS } from '../../config/meetingPermissions';
 import './meetings.css';
 
 export function MeetingsList() {
@@ -12,10 +14,25 @@ export function MeetingsList() {
   const [statusFilter] = useState<MeetingStatus | 'ALL'>('ALL');
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const {
+    canAny,
+    isLoaded: permissionsLoaded,
+    isLoading: permissionsLoading,
+  } = useMeetingPermissions();
+
+  const canViewMeetings = canAny([...MEETING_PERMISSION_KEYS.VIEW]);
+  const canCreateMeeting = canAny([...MEETING_PERMISSION_KEYS.CREATE]);
+  const canDeleteMeeting = canAny([...MEETING_PERMISSION_KEYS.DELETE]);
 
   useEffect(() => {
+    if (!permissionsLoaded) return;
+    if (!canViewMeetings) {
+      setLoading(false);
+      return;
+    }
+
     loadMeetings();
-  }, []);
+  }, [permissionsLoaded, canViewMeetings]);
 
   const loadMeetings = async (isRetry = false) => {
     try {
@@ -106,6 +123,31 @@ export function MeetingsList() {
     }
   };
 
+  if (!permissionsLoaded || permissionsLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+        <div className="text-center">
+          <div className="spinner-border text-secondary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted mt-3">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canViewMeetings) {
+    return (
+      <div className="text-center py-5">
+        <div className="mb-4">
+          <i className="bi bi-shield-lock display-1 text-warning opacity-75"></i>
+        </div>
+        <h4 className="text-muted mb-2">Unauthorized</h4>
+        <p className="text-muted mb-0">You do not have permission to view meetings.</p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
@@ -154,13 +196,15 @@ export function MeetingsList() {
             }
           </p>
         </div>
-        <button
-          className="btn btn-meetings-primary btn-lg shadow-sm"
-          onClick={() => navigate('/dashboard/meetings/create')}
-        >
-          <i className="bi bi-plus-circle me-2"></i>
-          Create Meeting
-        </button>
+        {canCreateMeeting && (
+          <button
+            className="btn btn-meetings-primary btn-lg shadow-sm"
+            onClick={() => navigate('/dashboard/meetings/create')}
+          >
+            <i className="bi bi-plus-circle me-2"></i>
+            Create Meeting
+          </button>
+        )}
       </div>
 
       
@@ -273,7 +317,7 @@ export function MeetingsList() {
                       <i className="bi bi-eye me-1"></i>
                       View Details
                     </button>
-                    {meeting.status !== 'CANCELLED' && (
+                    {canDeleteMeeting && meeting.status !== 'CANCELLED' && (
                       <button
                         className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
                         style={{ width: 40, height: 36, padding: 0 }}
@@ -313,13 +357,15 @@ export function MeetingsList() {
             }
           </p>
           <div className="d-flex gap-3 justify-content-center">
-            <button 
-              className="btn btn-primary btn-lg"
-              onClick={() => navigate('/dashboard/meetings/create')}
-            >
-              <i className="bi bi-plus-circle me-2"></i>
-              {error ? 'Create Meeting Offline' : 'Create Your First Meeting'}
-            </button>
+            {canCreateMeeting && (
+              <button 
+                className="btn btn-primary btn-lg"
+                onClick={() => navigate('/dashboard/meetings/create')}
+              >
+                <i className="bi bi-plus-circle me-2"></i>
+                {error ? 'Create Meeting Offline' : 'Create Your First Meeting'}
+              </button>
+            )}
             {error && (
               <button 
                 className="btn btn-outline-primary btn-lg"

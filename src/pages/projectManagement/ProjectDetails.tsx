@@ -68,6 +68,9 @@ import {
   RiskProbability,
   RiskEventStatus,
 } from "../../config/enums";
+import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import { PM_PERMISSION_KEYS } from "../../config/projectManagementPermissions";
+import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
 import type { RootState } from "../../store/store";
 import ".././styles/ProjectDetails.css";
 import ".././styles/TaskDetails.css";
@@ -194,6 +197,7 @@ type ProjectDetailsTab =
 export function ProjectDetails() {
   const navigate = useNavigate();
   const { portfolioId, projectId } = useParams();
+  const { canAny } = useProjectManagementPermissions();
   const authUser = useSelector((state: RootState) => state.auth.user);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -202,6 +206,154 @@ export function ProjectDetails() {
   const [editForm, setEditForm] =
     useState<EditProjectFormState>(initialEditForm);
   const [activeTab, setActiveTab] = useState<ProjectDetailsTab>("overview");
+
+  const canEditProject = canAny([...PM_PERMISSION_KEYS.PROJECTS.EDIT]);
+  const canDeleteProject = canAny([...PM_PERMISSION_KEYS.PROJECTS.DELETE]);
+  const canViewTeamMembers = canAny([
+    ...PM_PERMISSION_KEYS.ADMIN.MEMBERS.VIEW,
+  ]);
+  const canCreateTeamMembers = canAny([
+    ...PM_PERMISSION_KEYS.ADMIN.MEMBERS.CREATE,
+  ]);
+  const canEditTeamMembers = canAny([...PM_PERMISSION_KEYS.ADMIN.MEMBERS.EDIT]);
+  const canDeleteTeamMembers = canAny([
+    ...PM_PERMISSION_KEYS.ADMIN.MEMBERS.DELETE,
+  ]);
+  const canAccessTeamTab = canAny([
+    ...PM_PERMISSION_KEYS.ADMIN.MEMBERS.VIEW,
+    ...PM_PERMISSION_KEYS.ADMIN.MEMBERS.CREATE,
+    ...PM_PERMISSION_KEYS.ADMIN.MEMBERS.EDIT,
+    ...PM_PERMISSION_KEYS.ADMIN.MEMBERS.DELETE,
+  ]);
+  const canAccessDocumentsWorkspace = canAny([
+    ...PM_PERMISSION_KEYS.DOCUMENTS.VIEW,
+    ...PM_PERMISSION_KEYS.DOCUMENTS.CREATE,
+    ...PM_PERMISSION_KEYS.DOCUMENTS.EDIT,
+    ...PM_PERMISSION_KEYS.DOCUMENTS.DELETE,
+  ]);
+
+  const canViewPhases = canAny([...PM_PERMISSION_KEYS.ADMIN.PHASES.VIEW]);
+  const canCreatePhases = canAny([...PM_PERMISSION_KEYS.ADMIN.PHASES.CREATE]);
+  const canEditPhases = canAny([...PM_PERMISSION_KEYS.ADMIN.PHASES.EDIT]);
+  const canDeletePhases = canAny([...PM_PERMISSION_KEYS.ADMIN.PHASES.DELETE]);
+
+  const canViewMilestones = canAny([...PM_PERMISSION_KEYS.MILESTONES.VIEW]);
+  const canCreateMilestones = canAny([...PM_PERMISSION_KEYS.MILESTONES.CREATE]);
+  const canEditMilestones = canAny([...PM_PERMISSION_KEYS.MILESTONES.EDIT]);
+  const canDeleteMilestones = canAny([...PM_PERMISSION_KEYS.MILESTONES.DELETE]);
+
+  const canViewTasks = canAny([...PM_PERMISSION_KEYS.TASKS.VIEW]);
+  const canCreateTasks = canAny([...PM_PERMISSION_KEYS.TASKS.CREATE]);
+  const canDeleteTasks = canAny([...PM_PERMISSION_KEYS.TASKS.DELETE]);
+
+  const canViewMilestoneApprovals = canAny([
+    ...PM_PERMISSION_KEYS.MILESTONES.APPROVALS.VIEW,
+  ]);
+  const canCreateMilestoneApprovals = canAny([
+    ...PM_PERMISSION_KEYS.MILESTONES.APPROVALS.CREATE,
+  ]);
+  const canEditMilestoneApprovals = canAny([
+    ...PM_PERMISSION_KEYS.MILESTONES.APPROVALS.EDIT,
+  ]);
+  const canDeleteMilestoneApprovals = canAny([
+    ...PM_PERMISSION_KEYS.MILESTONES.APPROVALS.DELETE,
+  ]);
+
+  const canAccessPhasesTab = canAny([
+    ...PM_PERMISSION_KEYS.ADMIN.PHASES.VIEW,
+    ...PM_PERMISSION_KEYS.ADMIN.PHASES.CREATE,
+    ...PM_PERMISSION_KEYS.ADMIN.PHASES.EDIT,
+    ...PM_PERMISSION_KEYS.ADMIN.PHASES.DELETE,
+    ...PM_PERMISSION_KEYS.MILESTONES.VIEW,
+    ...PM_PERMISSION_KEYS.MILESTONES.CREATE,
+    ...PM_PERMISSION_KEYS.MILESTONES.EDIT,
+    ...PM_PERMISSION_KEYS.MILESTONES.DELETE,
+    ...PM_PERMISSION_KEYS.TASKS.VIEW,
+    ...PM_PERMISSION_KEYS.TASKS.CREATE,
+    ...PM_PERMISSION_KEYS.TASKS.EDIT,
+    ...PM_PERMISSION_KEYS.TASKS.DELETE,
+    ...PM_PERMISSION_KEYS.MILESTONES.APPROVALS.VIEW,
+    ...PM_PERMISSION_KEYS.MILESTONES.APPROVALS.CREATE,
+    ...PM_PERMISSION_KEYS.MILESTONES.APPROVALS.EDIT,
+    ...PM_PERMISSION_KEYS.MILESTONES.APPROVALS.DELETE,
+  ]);
+
+  const canViewResources = canAny([...PM_PERMISSION_KEYS.RESOURCES.VIEW]);
+  const canCreateResources = canAny([...PM_PERMISSION_KEYS.RESOURCES.CREATE]);
+  const canEditResources = canAny([...PM_PERMISSION_KEYS.RESOURCES.EDIT]);
+  const canDeleteResources = canAny([...PM_PERMISSION_KEYS.RESOURCES.DELETE]);
+
+  const canViewResourceRequests = canAny([
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.VIEW,
+  ]);
+  const canCreateResourceRequests = canAny([
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.CREATE,
+  ]);
+  const canEditResourceRequests = canAny([
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.EDIT,
+  ]);
+  const canDeleteResourceRequests = canAny([
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.DELETE,
+  ]);
+
+  const canAccessResourcesTab =
+    canViewResources ||
+    canCreateResources ||
+    canEditResources ||
+    canDeleteResources ||
+    canViewResourceRequests ||
+    canCreateResourceRequests ||
+    canEditResourceRequests ||
+    canDeleteResourceRequests;
+
+  const canViewBudgets = canAny([
+    ...PM_PERMISSION_KEYS.FINANCE.BUDGETS.VIEW,
+  ]);
+  const canCreateBudgets = canAny([
+    ...PM_PERMISSION_KEYS.FINANCE.BUDGETS.CREATE,
+  ]);
+  const canEditBudgets = canAny([...PM_PERMISSION_KEYS.FINANCE.BUDGETS.EDIT]);
+  const canDeleteBudgets = canAny([
+    ...PM_PERMISSION_KEYS.FINANCE.BUDGETS.DELETE,
+  ]);
+
+  const canAccessFinanceTab =
+    canViewBudgets ||
+    canCreateBudgets ||
+    canEditBudgets ||
+    canDeleteBudgets;
+
+  const canViewRisks = canAny([...PM_PERMISSION_KEYS.RISKS.VIEW]);
+  const canCreateRisks = canAny([...PM_PERMISSION_KEYS.RISKS.CREATE]);
+  const canEditRisks = canAny([...PM_PERMISSION_KEYS.RISKS.EDIT]);
+  const canDeleteRisks = canAny([...PM_PERMISSION_KEYS.RISKS.DELETE]);
+
+  const canViewRiskEvents = canAny([...PM_PERMISSION_KEYS.RISKS.EVENTS.VIEW]);
+  const canCreateRiskEvents = canAny([
+    ...PM_PERMISSION_KEYS.RISKS.EVENTS.CREATE,
+  ]);
+  const canEditRiskEvents = canAny([...PM_PERMISSION_KEYS.RISKS.EVENTS.EDIT]);
+  const canDeleteRiskEvents = canAny([
+    ...PM_PERMISSION_KEYS.RISKS.EVENTS.DELETE,
+  ]);
+
+  const canAccessRiskEvents = canAny([
+    ...PM_PERMISSION_KEYS.RISKS.EVENTS.VIEW,
+    ...PM_PERMISSION_KEYS.RISKS.EVENTS.CREATE,
+    ...PM_PERMISSION_KEYS.RISKS.EVENTS.EDIT,
+    ...PM_PERMISSION_KEYS.RISKS.EVENTS.DELETE,
+  ]);
+
+  const canAccessRisksTab = canAny([
+    ...PM_PERMISSION_KEYS.RISKS.VIEW,
+    ...PM_PERMISSION_KEYS.RISKS.CREATE,
+    ...PM_PERMISSION_KEYS.RISKS.EDIT,
+    ...PM_PERMISSION_KEYS.RISKS.DELETE,
+    ...PM_PERMISSION_KEYS.RISKS.EVENTS.VIEW,
+    ...PM_PERMISSION_KEYS.RISKS.EVENTS.CREATE,
+    ...PM_PERMISSION_KEYS.RISKS.EVENTS.EDIT,
+    ...PM_PERMISSION_KEYS.RISKS.EVENTS.DELETE,
+  ]);
 
   // ── Task state ──
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -541,10 +693,221 @@ export function ProjectDetails() {
     setActiveTab("overview");
   }, [projectId]);
 
+  useEffect(() => {
+    if (activeTab === "team" && !canAccessTeamTab) {
+      setActiveTab("overview");
+    }
+  }, [activeTab, canAccessTeamTab]);
+
+  useEffect(() => {
+    if (activeTab === "phases" && !canAccessPhasesTab) {
+      setActiveTab("overview");
+    }
+  }, [activeTab, canAccessPhasesTab]);
+
+  useEffect(() => {
+    if (activeTab === "risks" && !canAccessRisksTab) {
+      setActiveTab("overview");
+    }
+  }, [activeTab, canAccessRisksTab]);
+
+  useEffect(() => {
+    if (activeTab === "resources" && !canAccessResourcesTab) {
+      setActiveTab("overview");
+    }
+  }, [activeTab, canAccessResourcesTab]);
+
+  useEffect(() => {
+    if (activeTab === "finance" && !canAccessFinanceTab) {
+      setActiveTab("overview");
+    }
+  }, [activeTab, canAccessFinanceTab]);
+
+  useEffect(() => {
+    if (!canEditProject && isEditing) {
+      setIsEditing(false);
+    }
+  }, [canEditProject, isEditing]);
+
+  useEffect(() => {
+    if (!canDeleteProject && confirmDeleteProject) {
+      setConfirmDeleteProject(false);
+    }
+  }, [canDeleteProject, confirmDeleteProject]);
+
+  useEffect(() => {
+    if (!canCreateTeamMembers && showAddMember) {
+      setShowAddMember(false);
+    }
+  }, [canCreateTeamMembers, showAddMember]);
+
+  useEffect(() => {
+    if (!canCreatePhases && showCreatePhase) {
+      setShowCreatePhase(false);
+    }
+    if (!canCreateMilestones && showCreateMilestone) {
+      setShowCreateMilestone(false);
+    }
+    if (!canCreateTasks && showCreateTask) {
+      setShowCreateTask(false);
+    }
+    if (!canCreateMilestoneApprovals && showCreateApproval) {
+      setShowCreateApproval(false);
+    }
+    if (!canCreateRisks && showCreateRisk) {
+      setShowCreateRisk(false);
+    }
+    if (!canCreateRiskEvents && showCreateEventForRiskId) {
+      setShowCreateEventForRiskId(null);
+    }
+    if (!canCreateResourceRequests && showCreateResourceReq) {
+      setShowCreateResourceReq(false);
+    }
+    if (!canCreateBudgets && showCreateBudget) {
+      setShowCreateBudget(false);
+    }
+  }, [
+    canCreateBudgets,
+    canCreateRiskEvents,
+    canCreateRisks,
+    canCreateResourceRequests,
+    canCreateMilestoneApprovals,
+    canCreateMilestones,
+    canCreatePhases,
+    canCreateTasks,
+    showCreateEventForRiskId,
+    showCreateApproval,
+    showCreateMilestone,
+    showCreatePhase,
+    showCreateBudget,
+    showCreateResourceReq,
+    showCreateRisk,
+    showCreateTask,
+  ]);
+
+  useEffect(() => {
+    if (!canEditRisks && editingRiskId) {
+      setEditingRiskId(null);
+    }
+
+    if (!canDeleteRisks && confirmDeleteRiskId) {
+      setConfirmDeleteRiskId(null);
+    }
+
+    if (!canEditRiskEvents && editingRiskEventId) {
+      setEditingRiskEventId(null);
+    }
+
+    if (!canDeleteRiskEvents && confirmDeleteRiskEventId) {
+      setConfirmDeleteRiskEventId(null);
+    }
+
+    if (!canAccessRiskEvents && expandedRiskId) {
+      setExpandedRiskId(null);
+      setShowCreateEventForRiskId(null);
+    }
+
+    if (!canDeleteResourceRequests && confirmDeleteReqId) {
+      setConfirmDeleteReqId(null);
+    }
+
+    if (!canEditBudgets && editingBudgetId) {
+      setEditingBudgetId(null);
+    }
+
+    if (!canDeleteBudgets && confirmDeleteBudgetId) {
+      setConfirmDeleteBudgetId(null);
+    }
+  }, [
+    canAccessRiskEvents,
+    canDeleteBudgets,
+    canDeleteResourceRequests,
+    canDeleteRiskEvents,
+    canDeleteRisks,
+    canEditRiskEvents,
+    canEditRisks,
+    canEditBudgets,
+    confirmDeleteBudgetId,
+    confirmDeleteRiskEventId,
+    confirmDeleteRiskId,
+    confirmDeleteReqId,
+    editingBudgetId,
+    editingRiskEventId,
+    editingRiskId,
+    expandedRiskId,
+  ]);
+
+  useEffect(() => {
+    if (!canViewPhases) {
+      setPhases([]);
+      setSelectedPhaseId(null);
+    }
+
+    if (!canViewMilestones) {
+      setMilestones([]);
+      setSelectedMilestoneId(null);
+    }
+
+    if (!canViewTasks) {
+      setTasks([]);
+    }
+
+    if (!canViewMilestoneApprovals) {
+      setMilestoneApprovals([]);
+    }
+
+    if (!canViewRisks) {
+      setRisks([]);
+      setExpandedRiskId(null);
+      setShowCreateRisk(false);
+      setEditingRiskId(null);
+      setConfirmDeleteRiskId(null);
+      setRiskEventsByRisk({});
+      setRisksLoaded(false);
+    }
+
+    if (!canViewRiskEvents) {
+      setRiskEventsByRisk({});
+      setShowCreateEventForRiskId(null);
+      setEditingRiskEventId(null);
+      setConfirmDeleteRiskEventId(null);
+    }
+
+    if (!canViewResourceRequests) {
+      setResourceRequests([]);
+      setResourceRequestsLoaded(false);
+      setConfirmDeleteReqId(null);
+    }
+
+    if (!canViewResources) {
+      setAllResources([]);
+      setNewResourceReq((prev) => ({ ...prev, resourceId: "" }));
+    }
+
+    if (!canViewBudgets) {
+      setBudgets([]);
+      setBudgetsLoaded(false);
+      setShowCreateBudget(false);
+      setEditingBudgetId(null);
+      setConfirmDeleteBudgetId(null);
+    }
+  }, [
+    canViewBudgets,
+    canViewResourceRequests,
+    canViewResources,
+    canViewMilestoneApprovals,
+    canViewMilestones,
+    canViewPhases,
+    canViewRiskEvents,
+    canViewRisks,
+    canViewTasks,
+  ]);
+
   // ── Fetch phases ──
   useEffect(() => {
     async function fetchPhases() {
-      if (!projectId || activeTab !== "phases" || phasesLoaded) return;
+      if (!projectId || activeTab !== "phases" || phasesLoaded || !canViewPhases)
+        return;
       try {
         setPhasesLoading(true);
         const data = await phaseService.getPhases(projectId);
@@ -557,12 +920,12 @@ export function ProjectDetails() {
       }
     }
     fetchPhases();
-  }, [projectId, activeTab, phasesLoaded]);
+  }, [projectId, activeTab, phasesLoaded, canViewPhases]);
 
   // ── Fetch milestones for selected phase ──
   useEffect(() => {
     async function fetchMilestones() {
-      if (!projectId || activeTab !== "phases") return;
+      if (!projectId || activeTab !== "phases" || !canViewMilestones) return;
 
       if (!selectedPhaseId) {
         setMilestones([]);
@@ -584,12 +947,12 @@ export function ProjectDetails() {
     }
 
     fetchMilestones();
-  }, [projectId, activeTab, selectedPhaseId]);
+  }, [projectId, activeTab, selectedPhaseId, canViewMilestones]);
 
   // ── Fetch tasks for selected milestone ──
   useEffect(() => {
     async function fetchTasks() {
-      if (!projectId || activeTab !== "phases") return;
+      if (!projectId || activeTab !== "phases" || !canViewTasks) return;
 
       if (!selectedMilestoneId) {
         setTasks([]);
@@ -611,12 +974,17 @@ export function ProjectDetails() {
     }
 
     fetchTasks();
-  }, [projectId, activeTab, selectedMilestoneId]);
+  }, [projectId, activeTab, selectedMilestoneId, canViewTasks]);
 
   // ── Fetch approvals for selected milestone ──
   useEffect(() => {
     async function fetchMilestoneApprovals() {
-      if (!activeTab || activeTab !== "phases") {
+      if (
+        !activeTab ||
+        activeTab !== "phases" ||
+        !canViewMilestoneApprovals
+      ) {
+        setMilestoneApprovals([]);
         return;
       }
 
@@ -643,12 +1011,19 @@ export function ProjectDetails() {
     }
 
     fetchMilestoneApprovals();
-  }, [activeTab, selectedMilestoneId]);
+  }, [activeTab, selectedMilestoneId, canViewMilestoneApprovals]);
 
   // ── Fetch tasks for all milestones in selected phase (visual summary) ──
   useEffect(() => {
     async function fetchPhaseVisualTasks() {
-      if (!projectId || activeTab !== "phases" || !selectedPhaseId) {
+      if (
+        !projectId ||
+        activeTab !== "phases" ||
+        !selectedPhaseId ||
+        !canViewPhases ||
+        !canViewMilestones ||
+        !canViewTasks
+      ) {
         setPhaseMilestoneTasks({});
         setPhaseVisualLoading(false);
         return;
@@ -681,7 +1056,15 @@ export function ProjectDetails() {
     }
 
     fetchPhaseVisualTasks();
-  }, [projectId, activeTab, selectedPhaseId, milestones]);
+  }, [
+    projectId,
+    activeTab,
+    selectedPhaseId,
+    milestones,
+    canViewPhases,
+    canViewMilestones,
+    canViewTasks,
+  ]);
 
   // ── Fetch resource requests ──
   useEffect(() => {
@@ -691,8 +1074,10 @@ export function ProjectDetails() {
       try {
         setResourceRequestsLoading(true);
         const [reqData, resData] = await Promise.all([
-          resourceRequestService.getAll(projectId),
-          resourceService.getAll(),
+          canViewResourceRequests
+            ? resourceRequestService.getAll(projectId)
+            : Promise.resolve([]),
+          canViewResources ? resourceService.getAll() : Promise.resolve([]),
         ]);
         setResourceRequests(reqData);
         setAllResources(resData);
@@ -704,12 +1089,19 @@ export function ProjectDetails() {
       }
     }
     fetchResourceRequests();
-  }, [projectId, activeTab, resourceRequestsLoaded]);
+  }, [
+    projectId,
+    activeTab,
+    resourceRequestsLoaded,
+    canViewResourceRequests,
+    canViewResources,
+  ]);
 
   // ── Fetch budgets ──
   useEffect(() => {
     async function fetchBudgets() {
-      if (!projectId || activeTab !== "finance" || budgetsLoaded) return;
+      if (!projectId || activeTab !== "finance" || budgetsLoaded || !canViewBudgets)
+        return;
       try {
         setBudgetsLoading(true);
         const data = await financeService.getBudgets(projectId);
@@ -722,12 +1114,13 @@ export function ProjectDetails() {
       }
     }
     fetchBudgets();
-  }, [projectId, activeTab, budgetsLoaded]);
+  }, [projectId, activeTab, budgetsLoaded, canViewBudgets]);
 
   // ── Fetch risks ──
   useEffect(() => {
     async function fetchRisks() {
-      if (!projectId || activeTab !== "risks" || risksLoaded) return;
+      if (!projectId || activeTab !== "risks" || risksLoaded || !canViewRisks)
+        return;
 
       try {
         setRisksLoading(true);
@@ -743,10 +1136,14 @@ export function ProjectDetails() {
     }
 
     fetchRisks();
-  }, [projectId, activeTab, risksLoaded]);
+  }, [projectId, activeTab, risksLoaded, canViewRisks]);
 
   async function refreshRisks() {
     if (!projectId) return;
+    if (!canViewRisks) {
+      setRisks([]);
+      return;
+    }
     try {
       setRisksLoading(true);
       const data = await riskService.getRisks(projectId);
@@ -788,6 +1185,11 @@ export function ProjectDetails() {
   }
 
   async function loadRiskEvents(riskId: string, force = false) {
+    if (!canViewRiskEvents) {
+      setRiskEventsByRisk((prev) => ({ ...prev, [riskId]: [] }));
+      return;
+    }
+
     if (!force && riskEventsByRisk[riskId]) return;
 
     try {
@@ -840,6 +1242,11 @@ export function ProjectDetails() {
     event.preventDefault();
     if (!projectId) return;
 
+    if (!canCreateRisks) {
+      toast.error("You do not have permission to create risks.");
+      return;
+    }
+
     if (!newRisk.description.trim()) {
       toast.error("Risk description is required.");
       return;
@@ -875,6 +1282,11 @@ export function ProjectDetails() {
   }
 
   function startEditRisk(risk: Risk) {
+    if (!canEditRisks) {
+      toast.error("You do not have permission to edit risks.");
+      return;
+    }
+
     setEditingRiskId(risk.id);
     setEditRiskForm({
       description: risk.description || "",
@@ -887,6 +1299,11 @@ export function ProjectDetails() {
 
   async function handleUpdateRisk(risk: Risk) {
     if (!projectId) return;
+
+    if (!canEditRisks) {
+      toast.error("You do not have permission to edit risks.");
+      return;
+    }
 
     if (!editRiskForm.description.trim()) {
       toast.error("Risk description is required.");
@@ -916,6 +1333,11 @@ export function ProjectDetails() {
   }
 
   async function handleDeleteRisk(riskId: string) {
+    if (!canDeleteRisks) {
+      toast.error("You do not have permission to delete risks.");
+      return;
+    }
+
     try {
       await riskService.deleteRiskById(riskId);
       toast.success("Risk deleted.");
@@ -961,6 +1383,11 @@ export function ProjectDetails() {
   ) {
     event.preventDefault();
 
+    if (!canCreateRiskEvents) {
+      toast.error("You do not have permission to create risk events.");
+      return;
+    }
+
     if (!newRiskEvent.incidentDescription.trim()) {
       toast.error("Event incident description is required.");
       return;
@@ -994,6 +1421,11 @@ export function ProjectDetails() {
   }
 
   function startEditRiskEvent(eventItem: RiskEvent) {
+    if (!canEditRiskEvents) {
+      toast.error("You do not have permission to edit risk events.");
+      return;
+    }
+
     setEditingRiskEventId(eventItem.id);
     setEditRiskEventForm({
       incidentDescription: eventItem.incidentDescription || "",
@@ -1005,6 +1437,11 @@ export function ProjectDetails() {
   async function handleUpdateRiskEvent(eventItem: RiskEvent) {
     const riskId = eventItem.projectRiskId;
     if (!riskId) return;
+
+    if (!canEditRiskEvents) {
+      toast.error("You do not have permission to edit risk events.");
+      return;
+    }
 
     if (!editRiskEventForm.incidentDescription.trim()) {
       toast.error("Event incident description is required.");
@@ -1034,6 +1471,11 @@ export function ProjectDetails() {
   }
 
   async function handleDeleteRiskEvent(eventId: string, riskId: string) {
+    if (!canDeleteRiskEvents) {
+      toast.error("You do not have permission to delete risk events.");
+      return;
+    }
+
     try {
       await riskService.deleteRiskEventById(eventId);
       toast.success("Risk event deleted.");
@@ -1049,7 +1491,10 @@ export function ProjectDetails() {
   // ── Fetch employees (for adding to project) ──
   useEffect(() => {
     async function fetchEmployees() {
-      if ((activeTab !== "team" && activeTab !== "phases") || employeesLoaded) {
+      const shouldLoadEmployeesForTab =
+        activeTab === "phases" || (activeTab === "team" && canAccessTeamTab);
+
+      if (!shouldLoadEmployeesForTab || employeesLoaded) {
         return;
       }
       try {
@@ -1063,7 +1508,7 @@ export function ProjectDetails() {
       }
     }
     fetchEmployees();
-  }, [activeTab, employeesLoaded]);
+  }, [activeTab, canAccessTeamTab, employeesLoaded]);
 
   // ── Fetch project members ──
   async function refreshMembers() {
@@ -1081,10 +1526,13 @@ export function ProjectDetails() {
   }
 
   useEffect(() => {
-    if ((activeTab === "team" || activeTab === "phases") && !membersLoaded) {
+    if (
+      ((activeTab === "team" && canAccessTeamTab) || activeTab === "phases") &&
+      !membersLoaded
+    ) {
       refreshMembers();
     }
-  }, [projectId, activeTab, membersLoaded]);
+  }, [projectId, activeTab, canAccessTeamTab, membersLoaded]);
 
   // Close member dropdown on outside click
   useEffect(() => {
@@ -1186,6 +1634,11 @@ export function ProjectDetails() {
 
   // ── Member CRUD ──
   async function handleAddMemberFromEmployee(emp: Employee) {
+    if (!canCreateTeamMembers) {
+      toast.error("You do not have permission to add team members.");
+      return;
+    }
+
     if (!projectId) return;
     try {
       setAddingMember(true);
@@ -1237,6 +1690,11 @@ export function ProjectDetails() {
   }
 
   async function handleUpdateMemberRole(member: ProjectMember) {
+    if (!canEditTeamMembers) {
+      toast.error("You do not have permission to edit team members.");
+      return;
+    }
+
     if (!editMemberRole.trim()) return;
     try {
       // Fetch full member to get all required fields (list endpoint may omit userId/rowVersion)
@@ -1269,6 +1727,11 @@ export function ProjectDetails() {
   }
 
   async function handleDeleteMember(member: ProjectMember) {
+    if (!canDeleteTeamMembers) {
+      toast.error("You do not have permission to remove team members.");
+      return;
+    }
+
     const confirmed = window.confirm(
       `Remove ${member.fullName} from the project?`,
     );
@@ -1309,6 +1772,11 @@ export function ProjectDetails() {
 
   async function handleUpdateProject(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!canEditProject) {
+      toast.error("You do not have permission to edit this project.");
+      return;
+    }
 
     if (!projectId || !project) {
       return;
@@ -1359,6 +1827,11 @@ export function ProjectDetails() {
   }
 
   async function handleDeleteProject() {
+    if (!canDeleteProject) {
+      toast.error("You do not have permission to delete this project.");
+      return;
+    }
+
     if (!projectId || !project) return;
     try {
       setSaving(true);
@@ -1386,6 +1859,12 @@ export function ProjectDetails() {
 
   async function handleCreateTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!canCreateTasks) {
+      toast.error("You do not have permission to create tasks.");
+      return;
+    }
+
     if (!projectId) return;
     if (!selectedMilestoneId) {
       toast.error("Select a milestone before creating a task.");
@@ -1442,6 +1921,11 @@ export function ProjectDetails() {
   }
 
   async function handleDeleteTask(taskId: string) {
+    if (!canDeleteTasks) {
+      toast.error("You do not have permission to delete tasks.");
+      return;
+    }
+
     try {
       await taskService.deleteTaskById(taskId);
       toast.success("Task deleted.");
@@ -1471,6 +1955,12 @@ export function ProjectDetails() {
 
   async function handleCreatePhase(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!canCreatePhases) {
+      toast.error("You do not have permission to create phases.");
+      return;
+    }
+
     if (!projectId) return;
     if (!newPhase.name.trim()) {
       toast.error("Phase name is required.");
@@ -1536,6 +2026,11 @@ export function ProjectDetails() {
   }
 
   async function handleUpdatePhase(phase: Phase) {
+    if (!canEditPhases) {
+      toast.error("You do not have permission to edit phases.");
+      return;
+    }
+
     if (!projectId || !editPhaseForm.name.trim()) {
       toast.error("Phase name is required.");
       return;
@@ -1568,6 +2063,11 @@ export function ProjectDetails() {
   }
 
   async function handleDeletePhase(phaseId: string) {
+    if (!canDeletePhases) {
+      toast.error("You do not have permission to delete phases.");
+      return;
+    }
+
     try {
       await phaseService.deletePhase(phaseId);
       toast.success("Phase deleted.");
@@ -1603,6 +2103,12 @@ export function ProjectDetails() {
 
   async function handleCreateMilestone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!canCreateMilestones) {
+      toast.error("You do not have permission to create milestones.");
+      return;
+    }
+
     if (!projectId || !selectedPhaseId) return;
     if (!newMilestone.name.trim()) {
       toast.error("Milestone name is required.");
@@ -1671,6 +2177,11 @@ export function ProjectDetails() {
   }
 
   async function handleUpdateMilestone(milestone: Milestone) {
+    if (!canEditMilestones) {
+      toast.error("You do not have permission to edit milestones.");
+      return;
+    }
+
     if (!projectId || !editMilestoneForm.name.trim()) {
       toast.error("Milestone name is required.");
       return;
@@ -1713,6 +2224,11 @@ export function ProjectDetails() {
   }
 
   async function handleDeleteMilestone(milestoneId: string) {
+    if (!canDeleteMilestones) {
+      toast.error("You do not have permission to delete milestones.");
+      return;
+    }
+
     try {
       await milestoneService.deleteMilestoneById(milestoneId);
       toast.success("Milestone deleted.");
@@ -1757,6 +2273,11 @@ export function ProjectDetails() {
   }
 
   async function refreshMilestoneApprovals() {
+    if (!canViewMilestoneApprovals) {
+      setMilestoneApprovals([]);
+      return;
+    }
+
     if (!selectedMilestoneId) {
       setMilestoneApprovals([]);
       return;
@@ -1770,6 +2291,11 @@ export function ProjectDetails() {
   }
 
   async function handleCreateApproval() {
+    if (!canCreateMilestoneApprovals) {
+      toast.error("You do not have permission to create milestone approvals.");
+      return;
+    }
+
     if (!selectedMilestoneId) {
       toast.error("Select a milestone first.");
       return;
@@ -1805,6 +2331,11 @@ export function ProjectDetails() {
   }
 
   async function handleUpdateApproval(approval: MilestoneApproval) {
+    if (!canEditMilestoneApprovals) {
+      toast.error("You do not have permission to edit milestone approvals.");
+      return;
+    }
+
     if (!selectedMilestoneId) {
       toast.error("Select a milestone first.");
       return;
@@ -1839,6 +2370,11 @@ export function ProjectDetails() {
   }
 
   async function handleDeleteApproval(approvalId: string) {
+    if (!canDeleteMilestoneApprovals) {
+      toast.error("You do not have permission to delete milestone approvals.");
+      return;
+    }
+
     try {
       await milestoneApprovalService.deleteApprovalById(approvalId);
       toast.success("Approval deleted.");
@@ -1872,6 +2408,12 @@ export function ProjectDetails() {
   async function handleCreateResourceReq(e: FormEvent) {
     e.preventDefault();
     if (!projectId) return;
+
+    if (!canCreateResourceRequests) {
+      toast.error("You do not have permission to create resource requests.");
+      return;
+    }
+
     try {
       setCreatingResourceReq(true);
       const payload: ResourceRequestCreateDTO = {
@@ -1891,8 +2433,10 @@ export function ProjectDetails() {
         comments: "",
       });
       setShowCreateResourceReq(false);
-      const data = await resourceRequestService.getAll(projectId);
-      setResourceRequests(data);
+      if (canViewResourceRequests) {
+        const data = await resourceRequestService.getAll(projectId);
+        setResourceRequests(data);
+      }
       setResourceRequestsLoaded(true);
     } catch (error) {
       console.error(error);
@@ -1903,6 +2447,11 @@ export function ProjectDetails() {
   }
 
   async function handleDeleteResourceReq(id: string) {
+    if (!canDeleteResourceRequests) {
+      toast.error("You do not have permission to delete resource requests.");
+      return;
+    }
+
     try {
       await resourceRequestService.delete(id);
       toast.success("Resource request deleted.");
@@ -1922,6 +2471,11 @@ export function ProjectDetails() {
   }
 
   function openDocumentsWorkspace() {
+    if (!canAccessDocumentsWorkspace) {
+      toast.error("You do not have permission to access documents workspace.");
+      return;
+    }
+
     const resolvedPortfolioId = portfolioId || project?.portfolioId;
 
     if (!resolvedPortfolioId || !project?.id) {
@@ -1953,6 +2507,11 @@ export function ProjectDetails() {
   async function handleCreateBudget(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!projectId) return;
+
+    if (!canCreateBudgets) {
+      toast.error("You do not have permission to create budgets.");
+      return;
+    }
 
     const category = safeInt(newBudget.category);
     const duplicate = budgets.some((b) => (b.category ?? 0) === category);
@@ -1994,6 +2553,11 @@ export function ProjectDetails() {
   }
 
   function startEditBudget(budget: Budget) {
+    if (!canEditBudgets) {
+      toast.error("You do not have permission to edit budgets.");
+      return;
+    }
+
     setEditingBudgetId(budget.id);
     setEditBudgetForm({
       category: String(budget.category ?? 0),
@@ -2005,6 +2569,11 @@ export function ProjectDetails() {
 
   async function handleUpdateBudget(budget: Budget) {
     if (!projectId) return;
+
+    if (!canEditBudgets) {
+      toast.error("You do not have permission to edit budgets.");
+      return;
+    }
 
     const category = safeInt(editBudgetForm.category);
     const duplicate = budgets.some(
@@ -2040,6 +2609,11 @@ export function ProjectDetails() {
   }
 
   async function handleDeleteBudget(budgetId: string) {
+    if (!canDeleteBudgets) {
+      toast.error("You do not have permission to delete budgets.");
+      return;
+    }
+
     try {
       await financeService.deleteBudgetById(budgetId);
       toast.success("Budget deleted.");
@@ -2320,48 +2894,51 @@ export function ProjectDetails() {
           </p> */}
         </div>
         <div className="project-details-actions">
-          <button
-            type="button"
-            className="btn btn-light"
-            onClick={() => setIsEditing((prev) => !prev)}
-            disabled={saving}
-          >
-            <i
-              className={`bi ${isEditing ? "bi-x-circle" : "bi-pencil-square"} me-2`}
-            />
-            {isEditing ? "Cancel Edit" : "Edit Project"}
-          </button>
-          {confirmDeleteProject ? (
-            <span className="confirm-inline">
-              <span className="confirm-inline-text">Delete this project?</span>
-              <button
-                type="button"
-                className="btn btn-danger btn-sm"
-                onClick={handleDeleteProject}
-                disabled={saving}
-              >
-                {saving ? "Deleting..." : "Yes, Delete"}
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline-light btn-sm"
-                onClick={() => setConfirmDeleteProject(false)}
-                disabled={saving}
-              >
-                Cancel
-              </button>
-            </span>
-          ) : (
+          {canEditProject && (
             <button
               type="button"
-              className="btn btn-outline-danger"
-              onClick={() => setConfirmDeleteProject(true)}
+              className="btn btn-light"
+              onClick={() => setIsEditing((prev) => !prev)}
               disabled={saving}
             >
-              <i className="bi bi-trash me-2" />
-              Delete Project
+              <i
+                className={`bi ${isEditing ? "bi-x-circle" : "bi-pencil-square"} me-2`}
+              />
+              {isEditing ? "Cancel Edit" : "Edit Project"}
             </button>
           )}
+          {canDeleteProject &&
+            (confirmDeleteProject ? (
+              <span className="confirm-inline">
+                <span className="confirm-inline-text">Delete this project?</span>
+                <button
+                  type="button"
+                  className="btn btn-danger btn-sm"
+                  onClick={handleDeleteProject}
+                  disabled={saving}
+                >
+                  {saving ? "Deleting..." : "Yes, Delete"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline-light btn-sm"
+                  onClick={() => setConfirmDeleteProject(false)}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-outline-danger"
+                onClick={() => setConfirmDeleteProject(true)}
+                disabled={saving}
+              >
+                <i className="bi bi-trash me-2" />
+                Delete Project
+              </button>
+            ))}
           <button
             type="button"
             className="btn btn-outline-light"
@@ -2386,49 +2963,59 @@ export function ProjectDetails() {
           <i className="bi bi-grid-1x2 me-2" />
           Overview
         </button>
-        <button
-          type="button"
-          className={`project-tab-btn ${activeTab === "team" ? "active" : ""}`}
-          onClick={() => setActiveTab("team")}
-        >
-          <i className="bi bi-people me-2" />
-          Team
-        </button>
-        <button
-          type="button"
-          className={`project-tab-btn ${activeTab === "phases" ? "active" : ""}`}
-          onClick={() => setActiveTab("phases")}
-        >
-          <i className="bi bi-layers me-2" />
-          Phases
-        </button>
-        <button
-          type="button"
-          className={`project-tab-btn ${activeTab === "risks" ? "active" : ""}`}
-          onClick={() => setActiveTab("risks")}
-        >
-          <i className="bi bi-shield-exclamation me-2" />
-          Risks
-        </button>
-        <button
-          type="button"
-          className={`project-tab-btn ${activeTab === "resources" ? "active" : ""}`}
-          onClick={() => setActiveTab("resources")}
-        >
-          <i className="bi bi-box-seam me-2" />
-          Resources
-        </button>
-        <button
-          type="button"
-          className={`project-tab-btn ${activeTab === "finance" ? "active" : ""}`}
-          onClick={() => setActiveTab("finance")}
-        >
-          <i className="bi bi-cash-coin me-2" />
-          Finance
-        </button>
+        {canAccessTeamTab && (
+          <button
+            type="button"
+            className={`project-tab-btn ${activeTab === "team" ? "active" : ""}`}
+            onClick={() => setActiveTab("team")}
+          >
+            <i className="bi bi-people me-2" />
+            Team
+          </button>
+        )}
+        {canAccessPhasesTab && (
+          <button
+            type="button"
+            className={`project-tab-btn ${activeTab === "phases" ? "active" : ""}`}
+            onClick={() => setActiveTab("phases")}
+          >
+            <i className="bi bi-layers me-2" />
+            Phases
+          </button>
+        )}
+        {canAccessRisksTab && (
+          <button
+            type="button"
+            className={`project-tab-btn ${activeTab === "risks" ? "active" : ""}`}
+            onClick={() => setActiveTab("risks")}
+          >
+            <i className="bi bi-shield-exclamation me-2" />
+            Risks
+          </button>
+        )}
+        {canAccessResourcesTab && (
+          <button
+            type="button"
+            className={`project-tab-btn ${activeTab === "resources" ? "active" : ""}`}
+            onClick={() => setActiveTab("resources")}
+          >
+            <i className="bi bi-box-seam me-2" />
+            Resources
+          </button>
+        )}
+        {canAccessFinanceTab && (
+          <button
+            type="button"
+            className={`project-tab-btn ${activeTab === "finance" ? "active" : ""}`}
+            onClick={() => setActiveTab("finance")}
+          >
+            <i className="bi bi-cash-coin me-2" />
+            Finance
+          </button>
+        )}
       </section>
 
-      {isEditing && (
+      {canEditProject && isEditing && (
         <section className="details-card mb-4">
           <h2 className="h6 mb-3">Update Project (PUT /project/:id)</h2>
           <form className="row g-3" onSubmit={handleUpdateProject}>
@@ -2646,40 +3233,52 @@ export function ProjectDetails() {
             </div>
 
             <div className="documents-workspace-actions">
-              <button
-                type="button"
-                className="btn btn-info text-white"
-                onClick={openDocumentsWorkspace}
-              >
-                <i className="bi bi-folder2-open me-2" />
-                Open Documents Workspace
-              </button>
+              {canAccessDocumentsWorkspace ? (
+                <button
+                  type="button"
+                  className="btn btn-info text-white"
+                  onClick={openDocumentsWorkspace}
+                >
+                  <i className="bi bi-folder2-open me-2" />
+                  Open Documents Workspace
+                </button>
+              ) : (
+                <div
+                  className="alert alert-light border mb-0 py-2 px-3"
+                  role="status"
+                >
+                  <i className="bi bi-shield-lock me-2" />
+                  Documents workspace is not available for your permissions.
+                </div>
+              )}
             </div>
           </article>
         </section>
       )}
 
       {/* ── Team Members Section ── */}
-      {activeTab === "team" && (
+      {activeTab === "team" && canAccessTeamTab && (
         <section className="members-section">
           <div className="members-section-header">
             <h2>
               <i className="bi bi-people-fill me-2" />
               Team Members
             </h2>
-            <button
-              type="button"
-              className="btn btn-info text-white btn-sm"
-              onClick={() => setShowAddMember((prev) => !prev)}
-            >
-              <i
-                className={`bi ${showAddMember ? "bi-x-circle" : "bi-person-plus"} me-1`}
-              />
-              {showAddMember ? "Close" : "Add Member"}
-            </button>
+            {canCreateTeamMembers && (
+              <button
+                type="button"
+                className="btn btn-info text-white btn-sm"
+                onClick={() => setShowAddMember((prev) => !prev)}
+              >
+                <i
+                  className={`bi ${showAddMember ? "bi-x-circle" : "bi-person-plus"} me-1`}
+                />
+                {showAddMember ? "Close" : "Add Member"}
+              </button>
+            )}
           </div>
 
-          {showAddMember && (
+          {canCreateTeamMembers && showAddMember && (
             <div className="member-add-card">
               <h3 className="h6 mb-3">Add HR Employee to Project</h3>
               <input
@@ -2727,7 +3326,12 @@ export function ProjectDetails() {
             </div>
           )}
 
-          {membersLoading ? (
+          {!canViewTeamMembers ? (
+            <AccessDeniedState
+              title="Team members are restricted"
+              description="You can access this tab, but your role does not include Admin.Members.View to view the members list."
+            />
+          ) : membersLoading ? (
             <div className="text-center py-4">
               <div
                 className="spinner-border spinner-border-sm text-info"
@@ -2757,27 +3361,33 @@ export function ProjectDetails() {
                   <div key={member.id} className="member-card">
                     <div className="member-card-header">
                       <div className="member-card-avatar">{initials}</div>
-                      <div className="member-card-actions">
-                        <button
-                          type="button"
-                          className="btn btn-outline-primary btn-sm"
-                          title="Edit Role"
-                          onClick={() => {
-                            setEditingMemberId(member.id);
-                            setEditMemberRole(member.role);
-                          }}
-                        >
-                          <i className="bi bi-pencil" />
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-outline-danger btn-sm"
-                          title="Remove Member"
-                          onClick={() => handleDeleteMember(member)}
-                        >
-                          <i className="bi bi-trash" />
-                        </button>
-                      </div>
+                      {(canEditTeamMembers || canDeleteTeamMembers) && (
+                        <div className="member-card-actions">
+                          {canEditTeamMembers && (
+                            <button
+                              type="button"
+                              className="btn btn-outline-primary btn-sm"
+                              title="Edit Role"
+                              onClick={() => {
+                                setEditingMemberId(member.id);
+                                setEditMemberRole(member.role);
+                              }}
+                            >
+                              <i className="bi bi-pencil" />
+                            </button>
+                          )}
+                          {canDeleteTeamMembers && (
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger btn-sm"
+                              title="Remove Member"
+                              onClick={() => handleDeleteMember(member)}
+                            >
+                              <i className="bi bi-trash" />
+                            </button>
+                          )}
+                        </div>
+                      )}
                     </div>
                     <div className="member-card-body">
                       <h4 className="member-card-name">{member.fullName}</h4>
@@ -2825,7 +3435,7 @@ export function ProjectDetails() {
       )}
 
       {/* ── Phases Section ── */}
-      {activeTab === "phases" && (
+      {activeTab === "phases" && canAccessPhasesTab && (
         <section className="tasks-section">
           <div className="tasks-section-header">
             <h2>
@@ -2851,16 +3461,18 @@ export function ProjectDetails() {
                     <i className="bi bi-layers me-1" />
                     Phases
                   </h3>
-                  <button
-                    type="button"
-                    className="btn btn-info text-white btn-sm"
-                    onClick={() => setShowCreatePhase((prev) => !prev)}
-                  >
-                    {showCreatePhase ? "Cancel" : "+ Add"}
-                  </button>
+                  {canCreatePhases && (
+                    <button
+                      type="button"
+                      className="btn btn-info text-white btn-sm"
+                      onClick={() => setShowCreatePhase((prev) => !prev)}
+                    >
+                      {showCreatePhase ? "Cancel" : "+ Add"}
+                    </button>
+                  )}
                 </div>
 
-                {showCreatePhase && (
+                {canCreatePhases && showCreatePhase && (
                   <div className="task-create-card mb-3">
                     <form className="row g-2" onSubmit={handleCreatePhase}>
                       <div className="col-12">
@@ -2929,7 +3541,12 @@ export function ProjectDetails() {
                   </div>
                 )}
 
-                {phasesLoading ? (
+                {!canViewPhases ? (
+                  <AccessDeniedState
+                    title="Phases are restricted"
+                    description="You do not have permission to view project phases."
+                  />
+                ) : phasesLoading ? (
                   <div className="text-center py-3">
                     <div
                       className="spinner-border spinner-border-sm text-info"
@@ -2948,7 +3565,7 @@ export function ProjectDetails() {
                         key={p.id}
                         className={`hierarchy-item ${selectedPhaseId === p.id ? "selected" : ""}`}
                       >
-                        {editingPhaseId === p.id ? (
+                        {editingPhaseId === p.id && canEditPhases ? (
                           <div className="w-100 inline-edit-form">
                             <div className="inline-edit-field">
                               <label className="inline-edit-label">
@@ -3054,7 +3671,7 @@ export function ProjectDetails() {
                               </span>
                             </button>
                             <div className="task-row-actions">
-                              {confirmDeletePhaseId === p.id ? (
+                              {canDeletePhases && confirmDeletePhaseId === p.id ? (
                                 <span className="confirm-inline confirm-inline-sm">
                                   <button
                                     type="button"
@@ -3075,22 +3692,26 @@ export function ProjectDetails() {
                                 </span>
                               ) : (
                                 <>
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-primary btn-sm"
-                                    onClick={() => startEditPhase(p)}
-                                  >
-                                    <i className="bi bi-pencil" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-danger btn-sm"
-                                    onClick={() =>
-                                      setConfirmDeletePhaseId(p.id)
-                                    }
-                                  >
-                                    <i className="bi bi-trash" />
-                                  </button>
+                                  {canEditPhases && (
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-primary btn-sm"
+                                      onClick={() => startEditPhase(p)}
+                                    >
+                                      <i className="bi bi-pencil" />
+                                    </button>
+                                  )}
+                                  {canDeletePhases && (
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-danger btn-sm"
+                                      onClick={() =>
+                                        setConfirmDeletePhaseId(p.id)
+                                      }
+                                    >
+                                      <i className="bi bi-trash" />
+                                    </button>
+                                  )}
                                 </>
                               )}
                             </div>
@@ -3108,24 +3729,31 @@ export function ProjectDetails() {
                     <i className="bi bi-signpost-2 me-1" />
                     Milestones
                   </h3>
-                  <button
-                    type="button"
-                    className="btn btn-info text-white btn-sm"
-                    disabled={!selectedPhaseId}
-                    onClick={() => setShowCreateMilestone((prev) => !prev)}
-                  >
-                    {showCreateMilestone ? "Cancel" : "+ Add"}
-                  </button>
+                  {canCreateMilestones && (
+                    <button
+                      type="button"
+                      className="btn btn-info text-white btn-sm"
+                      disabled={!selectedPhaseId || !canViewMilestones}
+                      onClick={() => setShowCreateMilestone((prev) => !prev)}
+                    >
+                      {showCreateMilestone ? "Cancel" : "+ Add"}
+                    </button>
+                  )}
                 </div>
 
-                {!selectedPhaseId ? (
+                {!canViewMilestones ? (
+                  <AccessDeniedState
+                    title="Milestones are restricted"
+                    description="You do not have permission to view project milestones."
+                  />
+                ) : !selectedPhaseId ? (
                   <div className="tasks-empty-message">
                     <i className="bi bi-arrow-left-circle" />
                     Select a phase to view milestones
                   </div>
                 ) : (
                   <>
-                    {showCreateMilestone && (
+                    {canCreateMilestones && showCreateMilestone && (
                       <div className="task-create-card mb-3">
                         <form
                           className="row g-2"
@@ -3213,7 +3841,7 @@ export function ProjectDetails() {
                             key={m.id}
                             className={`hierarchy-item ${selectedMilestoneId === m.id ? "selected" : ""}`}
                           >
-                            {editingMilestoneId === m.id ? (
+                            {editingMilestoneId === m.id && canEditMilestones ? (
                               <div className="w-100 inline-edit-form">
                                 <div className="inline-edit-field">
                                   <label className="inline-edit-label">
@@ -3316,7 +3944,8 @@ export function ProjectDetails() {
                                   </span>
                                 </button>
                                 <div className="task-row-actions">
-                                  {confirmDeleteMilestoneId === m.id ? (
+                                  {canDeleteMilestones &&
+                                  confirmDeleteMilestoneId === m.id ? (
                                     <span className="confirm-inline confirm-inline-sm">
                                       <button
                                         type="button"
@@ -3339,22 +3968,26 @@ export function ProjectDetails() {
                                     </span>
                                   ) : (
                                     <>
-                                      <button
-                                        type="button"
-                                        className="btn btn-outline-primary btn-sm"
-                                        onClick={() => startEditMilestone(m)}
-                                      >
-                                        <i className="bi bi-pencil" />
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="btn btn-outline-danger btn-sm"
-                                        onClick={() =>
-                                          setConfirmDeleteMilestoneId(m.id)
-                                        }
-                                      >
-                                        <i className="bi bi-trash" />
-                                      </button>
+                                      {canEditMilestones && (
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-primary btn-sm"
+                                          onClick={() => startEditMilestone(m)}
+                                        >
+                                          <i className="bi bi-pencil" />
+                                        </button>
+                                      )}
+                                      {canDeleteMilestones && (
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-danger btn-sm"
+                                          onClick={() =>
+                                            setConfirmDeleteMilestoneId(m.id)
+                                          }
+                                        >
+                                          <i className="bi bi-trash" />
+                                        </button>
+                                      )}
                                     </>
                                   )}
                                 </div>
@@ -3374,24 +4007,31 @@ export function ProjectDetails() {
                     <i className="bi bi-check2-square me-1" />
                     Tasks
                   </h3>
-                  <button
-                    type="button"
-                    className="btn btn-info text-white btn-sm"
-                    disabled={!selectedMilestoneId}
-                    onClick={() => setShowCreateTask((prev) => !prev)}
-                  >
-                    {showCreateTask ? "Cancel" : "+ Add"}
-                  </button>
+                  {canCreateTasks && (
+                    <button
+                      type="button"
+                      className="btn btn-info text-white btn-sm"
+                      disabled={!selectedMilestoneId || !canViewTasks}
+                      onClick={() => setShowCreateTask((prev) => !prev)}
+                    >
+                      {showCreateTask ? "Cancel" : "+ Add"}
+                    </button>
+                  )}
                 </div>
 
-                {!selectedMilestoneId ? (
+                {!canViewTasks ? (
+                  <AccessDeniedState
+                    title="Tasks are restricted"
+                    description="You do not have permission to view project tasks."
+                  />
+                ) : !selectedMilestoneId ? (
                   <div className="tasks-empty-message">
                     <i className="bi bi-arrow-left-circle" />
                     Select a milestone to view tasks
                   </div>
                 ) : (
                   <>
-                    {showCreateTask && (
+                    {canCreateTasks && showCreateTask && (
                       <div className="task-create-card mb-3">
                         <form className="row g-2" onSubmit={handleCreateTask}>
                           <div className="col-12">
@@ -3664,34 +4304,35 @@ export function ProjectDetails() {
                                 </span>
                               </button>
                               <div className="task-row-actions">
-                                {confirmDeleteTaskId === t.id ? (
-                                  <span className="confirm-inline confirm-inline-sm">
+                                {canDeleteTasks &&
+                                  (confirmDeleteTaskId === t.id ? (
+                                    <span className="confirm-inline confirm-inline-sm">
+                                      <button
+                                        type="button"
+                                        className="btn btn-danger btn-sm"
+                                        onClick={() => handleDeleteTask(t.id)}
+                                      >
+                                        Yes
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline-secondary btn-sm"
+                                        onClick={() =>
+                                          setConfirmDeleteTaskId(null)
+                                        }
+                                      >
+                                        No
+                                      </button>
+                                    </span>
+                                  ) : (
                                     <button
                                       type="button"
-                                      className="btn btn-danger btn-sm"
-                                      onClick={() => handleDeleteTask(t.id)}
+                                      className="btn btn-outline-danger btn-sm"
+                                      onClick={() => setConfirmDeleteTaskId(t.id)}
                                     >
-                                      Yes
+                                      <i className="bi bi-trash" />
                                     </button>
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-secondary btn-sm"
-                                      onClick={() =>
-                                        setConfirmDeleteTaskId(null)
-                                      }
-                                    >
-                                      No
-                                    </button>
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-danger btn-sm"
-                                    onClick={() => setConfirmDeleteTaskId(t.id)}
-                                  >
-                                    <i className="bi bi-trash" />
-                                  </button>
-                                )}
+                                  ))}
                               </div>
                             </div>
                           );
@@ -3832,16 +4473,20 @@ export function ProjectDetails() {
                               <i className="bi bi-check2-square me-1" />
                               Approvals
                             </h5>
-                            <button
-                              type="button"
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() =>
-                                setShowCreateApproval((prev) => !prev)
-                              }
-                              disabled={!currentUserId}
-                            >
-                              {showCreateApproval ? "Cancel" : "Add Approval"}
-                            </button>
+                            {canCreateMilestoneApprovals && (
+                              <button
+                                type="button"
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() =>
+                                  setShowCreateApproval((prev) => !prev)
+                                }
+                                disabled={!currentUserId}
+                              >
+                                {showCreateApproval
+                                  ? "Cancel"
+                                  : "Add Approval"}
+                              </button>
+                            )}
                           </div>
 
                           {!currentUserId && (
@@ -3851,7 +4496,7 @@ export function ProjectDetails() {
                             </p>
                           )}
 
-                          {showCreateApproval && (
+                          {canCreateMilestoneApprovals && showCreateApproval && (
                             <div className="detail-approval-form mb-2">
                               <div className="row g-2">
                                 <div className="col-12 col-md-4">
@@ -3916,7 +4561,12 @@ export function ProjectDetails() {
                             </div>
                           )}
 
-                          {approvalsLoading ? (
+                          {!canViewMilestoneApprovals ? (
+                            <AccessDeniedState
+                              title="Approvals are restricted"
+                              description="You do not have permission to view milestone approvals."
+                            />
+                          ) : approvalsLoading ? (
                             <div className="text-center py-2">
                               <div
                                 className="spinner-border spinner-border-sm text-info"
@@ -3934,7 +4584,8 @@ export function ProjectDetails() {
                                   key={approval.id}
                                   className="detail-approval-item"
                                 >
-                                  {editingApprovalId === approval.id ? (
+                                  {editingApprovalId === approval.id &&
+                                  canEditMilestoneApprovals ? (
                                     <div className="detail-approval-form">
                                       <div className="row g-2">
                                         <div className="col-12 col-md-4">
@@ -4034,56 +4685,66 @@ export function ProjectDetails() {
                                             "No comments provided."}
                                         </p>
                                       </div>
-                                      <div className="task-row-actions">
-                                        {confirmDeleteApprovalId ===
-                                        approval.id ? (
-                                          <span className="confirm-inline confirm-inline-sm">
-                                            <button
-                                              type="button"
-                                              className="btn btn-danger btn-sm"
-                                              onClick={() =>
-                                                handleDeleteApproval(
-                                                  approval.id,
-                                                )
-                                              }
-                                            >
-                                              Yes
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="btn btn-outline-secondary btn-sm"
-                                              onClick={() =>
-                                                setConfirmDeleteApprovalId(null)
-                                              }
-                                            >
-                                              No
-                                            </button>
-                                          </span>
-                                        ) : (
-                                          <>
-                                            <button
-                                              type="button"
-                                              className="btn btn-outline-primary btn-sm"
-                                              onClick={() =>
-                                                startEditApproval(approval)
-                                              }
-                                            >
-                                              <i className="bi bi-pencil" />
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="btn btn-outline-danger btn-sm"
-                                              onClick={() =>
-                                                setConfirmDeleteApprovalId(
-                                                  approval.id,
-                                                )
-                                              }
-                                            >
-                                              <i className="bi bi-trash" />
-                                            </button>
-                                          </>
-                                        )}
-                                      </div>
+                                      {(canEditMilestoneApprovals ||
+                                        canDeleteMilestoneApprovals) && (
+                                        <div className="task-row-actions">
+                                          {canDeleteMilestoneApprovals &&
+                                          confirmDeleteApprovalId ===
+                                            approval.id ? (
+                                            <span className="confirm-inline confirm-inline-sm">
+                                              <button
+                                                type="button"
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                  handleDeleteApproval(
+                                                    approval.id,
+                                                  )
+                                                }
+                                              >
+                                                Yes
+                                              </button>
+                                              <button
+                                                type="button"
+                                                className="btn btn-outline-secondary btn-sm"
+                                                onClick={() =>
+                                                  setConfirmDeleteApprovalId(
+                                                    null,
+                                                  )
+                                                }
+                                              >
+                                                No
+                                              </button>
+                                            </span>
+                                          ) : (
+                                            <>
+                                              {canEditMilestoneApprovals && (
+                                                <button
+                                                  type="button"
+                                                  className="btn btn-outline-primary btn-sm"
+                                                  onClick={() =>
+                                                    startEditApproval(approval)
+                                                  }
+                                                >
+                                                  <i className="bi bi-pencil" />
+                                                </button>
+                                              )}
+                                              {canDeleteMilestoneApprovals && (
+                                                <button
+                                                  type="button"
+                                                  className="btn btn-outline-danger btn-sm"
+                                                  onClick={() =>
+                                                    setConfirmDeleteApprovalId(
+                                                      approval.id,
+                                                    )
+                                                  }
+                                                >
+                                                  <i className="bi bi-trash" />
+                                                </button>
+                                              )}
+                                            </>
+                                          )}
+                                        </div>
+                                      )}
                                     </>
                                   )}
                                 </div>
@@ -4256,24 +4917,34 @@ export function ProjectDetails() {
       )}
 
       {/* ── Risks Section ── */}
-      {activeTab === "risks" && (
+      {activeTab === "risks" && canAccessRisksTab && (
         <section className="tasks-section">
           <div className="tasks-section-header">
             <h2>
               <i className="bi bi-shield-exclamation me-2" />
               Risk Management
             </h2>
-            <button
-              type="button"
-              className="btn btn-info text-white btn-sm"
-              onClick={() => setShowCreateRisk((prev) => !prev)}
-            >
-              <i
-                className={`bi ${showCreateRisk ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-              />
-              {showCreateRisk ? "Cancel" : "New Risk"}
-            </button>
+            {canCreateRisks && (
+              <button
+                type="button"
+                className="btn btn-info text-white btn-sm"
+                onClick={() => setShowCreateRisk((prev) => !prev)}
+              >
+                <i
+                  className={`bi ${showCreateRisk ? "bi-x-circle" : "bi-plus-lg"} me-1`}
+                />
+                {showCreateRisk ? "Cancel" : "New Risk"}
+              </button>
+            )}
           </div>
+
+          {!canViewRisks ? (
+            <AccessDeniedState
+              title="Risks are restricted"
+              description="You can access this tab, but your role does not include Risks.View to display risk records."
+            />
+          ) : (
+            <>
 
           <div className="risk-charts-grid mb-3">
             <article className="details-card risk-chart-card">
@@ -4316,26 +4987,33 @@ export function ProjectDetails() {
                 </p>
               </div>
               <div className="finance-chart-body">
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={riskEventsChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e6eef5" />
-                    <XAxis
-                      dataKey="name"
-                      interval={0}
-                      angle={-12}
-                      textAnchor="end"
-                      height={58}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Bar
-                      dataKey="events"
-                      fill="#1b4965"
-                      radius={[6, 6, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
+                {canViewRiskEvents ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={riskEventsChartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e6eef5" />
+                      <XAxis
+                        dataKey="name"
+                        interval={0}
+                        angle={-12}
+                        textAnchor="end"
+                        height={58}
+                        tick={{ fontSize: 11 }}
+                      />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+                      <Tooltip />
+                      <Bar
+                        dataKey="events"
+                        fill="#1b4965"
+                        radius={[6, 6, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <AccessDeniedState
+                    title="Risk events analytics are restricted"
+                    description="You do not have permission to view risk event data."
+                  />
+                )}
               </div>
             </article>
           </div>
@@ -4383,7 +5061,7 @@ export function ProjectDetails() {
             </div>
           </div>
 
-          {showCreateRisk && (
+          {canCreateRisks && showCreateRisk && (
             <div className="task-create-card mb-3">
               <h3 className="h6 mb-3">Create Risk</h3>
               <form className="row g-3" onSubmit={handleCreateRisk}>
@@ -4490,7 +5168,7 @@ export function ProjectDetails() {
                     key={risk.id}
                     className="details-card risk-item-card"
                   >
-                    {editingRiskId === risk.id ? (
+                    {editingRiskId === risk.id && canEditRisks ? (
                       <div className="risk-edit-block">
                         <div className="row g-2">
                           <div className="col-12">
@@ -4610,52 +5288,59 @@ export function ProjectDetails() {
                             </div>
                           </div>
                           <div className="task-row-actions">
-                            <button
-                              type="button"
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() => startEditRisk(risk)}
-                              title="Edit risk"
-                            >
-                              <i className="bi bi-pencil" />
-                            </button>
-                            {confirmDeleteRiskId === risk.id ? (
-                              <span className="confirm-inline confirm-inline-sm">
-                                <button
-                                  type="button"
-                                  className="btn btn-danger btn-sm"
-                                  onClick={() => handleDeleteRisk(risk.id)}
-                                >
-                                  Yes
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-secondary btn-sm"
-                                  onClick={() => setConfirmDeleteRiskId(null)}
-                                >
-                                  No
-                                </button>
-                              </span>
-                            ) : (
+                              {canEditRisks && (
                               <button
                                 type="button"
-                                className="btn btn-outline-danger btn-sm"
-                                onClick={() => setConfirmDeleteRiskId(risk.id)}
-                                title="Delete risk"
+                                  className="btn btn-outline-primary btn-sm"
+                                  onClick={() => startEditRisk(risk)}
+                                  title="Edit risk"
                               >
-                                <i className="bi bi-trash" />
+                                  <i className="bi bi-pencil" />
                               </button>
                             )}
-                            <button
-                              type="button"
-                              className="btn btn-outline-info btn-sm"
-                              onClick={() => handleToggleRiskExpansion(risk.id)}
-                              title="Show events"
-                            >
-                              <i
-                                className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`}
-                              />
-                              <span className="ms-1">Events</span>
-                            </button>
+                              {canDeleteRisks &&
+                                (confirmDeleteRiskId === risk.id ? (
+                                  <span className="confirm-inline confirm-inline-sm">
+                                    <button
+                                      type="button"
+                                      className="btn btn-danger btn-sm"
+                                      onClick={() => handleDeleteRisk(risk.id)}
+                                    >
+                                      Yes
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-secondary btn-sm"
+                                      onClick={() => setConfirmDeleteRiskId(null)}
+                                    >
+                                      No
+                                    </button>
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-danger btn-sm"
+                                    onClick={() => setConfirmDeleteRiskId(risk.id)}
+                                    title="Delete risk"
+                                  >
+                                    <i className="bi bi-trash" />
+                                  </button>
+                                ))}
+                              {canAccessRiskEvents && (
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-info btn-sm"
+                                  onClick={() =>
+                                    handleToggleRiskExpansion(risk.id)
+                                  }
+                                  title="Show events"
+                                >
+                                  <i
+                                    className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`}
+                                  />
+                                  <span className="ms-1">Events</span>
+                                </button>
+                              )}
                           </div>
                         </div>
                         <p className="risk-mitigation-text mb-0">
@@ -4671,22 +5356,25 @@ export function ProjectDetails() {
                           <h4 className="h6 mb-0">
                             Linked Events ({events.length})
                           </h4>
-                          <button
-                            type="button"
-                            className="btn btn-outline-info btn-sm"
-                            onClick={() =>
-                              setShowCreateEventForRiskId((prev) =>
-                                prev === risk.id ? null : risk.id,
-                              )
-                            }
-                          >
-                            {showCreateEventForRiskId === risk.id
-                              ? "Cancel"
-                              : "+ Add Event"}
-                          </button>
+                          {canCreateRiskEvents && (
+                            <button
+                              type="button"
+                              className="btn btn-outline-info btn-sm"
+                              onClick={() =>
+                                setShowCreateEventForRiskId((prev) =>
+                                  prev === risk.id ? null : risk.id,
+                                )
+                              }
+                            >
+                              {showCreateEventForRiskId === risk.id
+                                ? "Cancel"
+                                : "+ Add Event"}
+                            </button>
+                          )}
                         </div>
 
-                        {showCreateEventForRiskId === risk.id && (
+                        {canCreateRiskEvents &&
+                          showCreateEventForRiskId === risk.id && (
                           <form
                             className="row g-2 risk-event-create"
                             onSubmit={(event) =>
@@ -4750,7 +5438,12 @@ export function ProjectDetails() {
                           </form>
                         )}
 
-                        {eventsLoading ? (
+                        {!canViewRiskEvents ? (
+                          <AccessDeniedState
+                            title="Risk events are restricted"
+                            description="You do not have permission to view risk events for this risk."
+                          />
+                        ) : eventsLoading ? (
                           <div className="text-center py-3">
                             <div
                               className="spinner-border spinner-border-sm text-info"
@@ -4768,7 +5461,8 @@ export function ProjectDetails() {
                                 key={eventItem.id}
                                 className="risk-event-item"
                               >
-                                {editingRiskEventId === eventItem.id ? (
+                                {editingRiskEventId === eventItem.id &&
+                                canEditRiskEvents ? (
                                   <div className="row g-2 w-100">
                                     <div className="col-12">
                                       <label className="form-label mb-1">
@@ -4859,55 +5553,63 @@ export function ProjectDetails() {
                                         </span>
                                       </div>
                                     </div>
-                                    <div className="task-row-actions">
-                                      <button
-                                        type="button"
-                                        className="btn btn-outline-primary btn-sm"
-                                        onClick={() =>
-                                          startEditRiskEvent(eventItem)
-                                        }
-                                      >
-                                        <i className="bi bi-pencil" />
-                                      </button>
-                                      {confirmDeleteRiskEventId ===
-                                      eventItem.id ? (
-                                        <span className="confirm-inline confirm-inline-sm">
+                                    {(canEditRiskEvents ||
+                                      canDeleteRiskEvents) && (
+                                      <div className="task-row-actions">
+                                        {canEditRiskEvents && (
                                           <button
                                             type="button"
-                                            className="btn btn-danger btn-sm"
+                                            className="btn btn-outline-primary btn-sm"
                                             onClick={() =>
-                                              handleDeleteRiskEvent(
-                                                eventItem.id,
-                                                risk.id,
-                                              )
+                                              startEditRiskEvent(eventItem)
                                             }
                                           >
-                                            Yes
+                                            <i className="bi bi-pencil" />
                                           </button>
-                                          <button
-                                            type="button"
-                                            className="btn btn-outline-secondary btn-sm"
-                                            onClick={() =>
-                                              setConfirmDeleteRiskEventId(null)
-                                            }
-                                          >
-                                            No
-                                          </button>
-                                        </span>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          className="btn btn-outline-danger btn-sm"
-                                          onClick={() =>
-                                            setConfirmDeleteRiskEventId(
-                                              eventItem.id,
-                                            )
-                                          }
-                                        >
-                                          <i className="bi bi-trash" />
-                                        </button>
-                                      )}
-                                    </div>
+                                        )}
+                                        {canDeleteRiskEvents &&
+                                          (confirmDeleteRiskEventId ===
+                                          eventItem.id ? (
+                                            <span className="confirm-inline confirm-inline-sm">
+                                              <button
+                                                type="button"
+                                                className="btn btn-danger btn-sm"
+                                                onClick={() =>
+                                                  handleDeleteRiskEvent(
+                                                    eventItem.id,
+                                                    risk.id,
+                                                  )
+                                                }
+                                              >
+                                                Yes
+                                              </button>
+                                              <button
+                                                type="button"
+                                                className="btn btn-outline-secondary btn-sm"
+                                                onClick={() =>
+                                                  setConfirmDeleteRiskEventId(
+                                                    null,
+                                                  )
+                                                }
+                                              >
+                                                No
+                                              </button>
+                                            </span>
+                                          ) : (
+                                            <button
+                                              type="button"
+                                              className="btn btn-outline-danger btn-sm"
+                                              onClick={() =>
+                                                setConfirmDeleteRiskEventId(
+                                                  eventItem.id,
+                                                )
+                                              }
+                                            >
+                                              <i className="bi bi-trash" />
+                                            </button>
+                                          ))}
+                                      </div>
+                                    )}
                                   </>
                                 )}
                               </div>
@@ -4921,48 +5623,66 @@ export function ProjectDetails() {
               })}
             </div>
           )}
+            </>
+          )}
         </section>
       )}
 
       {/* ── Resources Section ── */}
-      {activeTab === "resources" && (
+      {activeTab === "resources" && canAccessResourcesTab && (
         <section className="tasks-section">
           <div className="tasks-section-header">
             <h2>
               <i className="bi bi-box-seam me-2" />
               Resources
             </h2>
-            <button
-              type="button"
-              className="btn btn-info text-white btn-sm"
-              onClick={() => setShowCreateResourceReq((prev) => !prev)}
-            >
-              <i
-                className={`bi ${showCreateResourceReq ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-              />
-              {showCreateResourceReq ? "Cancel" : "Request Resource"}
-            </button>
+            {canCreateResourceRequests && (
+              <button
+                type="button"
+                className="btn btn-info text-white btn-sm"
+                onClick={() => setShowCreateResourceReq((prev) => !prev)}
+              >
+                <i
+                  className={`bi ${showCreateResourceReq ? "bi-x-circle" : "bi-plus-lg"} me-1`}
+                />
+                {showCreateResourceReq ? "Cancel" : "Request Resource"}
+              </button>
+            )}
           </div>
 
-          {showCreateResourceReq && (
+          {!canViewResourceRequests ? (
+            <AccessDeniedState
+              title="Resource requests are restricted"
+              description="You can access this tab, but your role does not include Resources.Requests.View to display requests."
+            />
+          ) : null}
+
+          {canCreateResourceRequests && showCreateResourceReq && (
             <div className="task-create-card">
               <h3 className="h6 mb-3">Request a Resource</h3>
               <form className="row g-3" onSubmit={handleCreateResourceReq}>
                 <div className="col-12 col-md-4">
                   <label className="form-label">Resource</label>
-                  <select
-                    className="form-select"
-                    name="resourceId"
-                    value={newResourceReq.resourceId}
-                    onChange={handleNewResourceReqChange}
-                  >
-                    <option value="">— None —</option>
-                    {allResources.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name || r.id}
-                      </option>
-                    ))}
-                  </select>
+                  {canViewResources ? (
+                    <select
+                      className="form-select"
+                      name="resourceId"
+                      value={newResourceReq.resourceId}
+                      onChange={handleNewResourceReqChange}
+                    >
+                      <option value="">— None —</option>
+                      {allResources.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name || r.id}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="alert alert-light border mb-0 py-2 px-3" role="status">
+                      <i className="bi bi-shield-lock me-2" />
+                      Resource list is hidden because Resources.View is not granted.
+                    </div>
+                  )}
                 </div>
                 <div className="col-12 col-md-4">
                   <label className="form-label">Resource Type</label>
@@ -4971,7 +5691,7 @@ export function ProjectDetails() {
                     name="resourceType"
                     value={newResourceReq.resourceType}
                     onChange={handleNewResourceReqChange}
-                    disabled={!!newResourceReq.resourceId}
+                    disabled={canViewResources && !!newResourceReq.resourceId}
                   >
                     {Object.entries(ResourceType).map(([k, v]) => (
                       <option key={k} value={k}>
@@ -5016,21 +5736,21 @@ export function ProjectDetails() {
             </div>
           )}
 
-          {resourceRequestsLoading ? (
+          {canViewResourceRequests && resourceRequestsLoading ? (
             <div className="text-center py-4">
               <div
                 className="spinner-border spinner-border-sm text-info"
                 role="status"
               />
             </div>
-          ) : resourceRequests.length === 0 ? (
+          ) : canViewResourceRequests && resourceRequests.length === 0 ? (
             <div className="tasks-table-wrap">
               <div className="tasks-empty-message">
                 <i className="bi bi-inbox" />
                 No resource requests yet. Click "Request Resource" to add one.
               </div>
             </div>
-          ) : (
+          ) : canViewResourceRequests ? (
             <div className="tasks-table-wrap">
               <table className="tasks-table">
                 <thead>
@@ -5046,7 +5766,16 @@ export function ProjectDetails() {
                 <tbody>
                   {resourceRequests.map((req) => (
                     <tr key={req.id}>
-                      <td>{getResourceName(req.resourceId)}</td>
+                      <td>
+                        {canViewResources ? (
+                          getResourceName(req.resourceId)
+                        ) : (
+                          <span className="text-muted">
+                            <i className="bi bi-shield-lock me-1" />
+                            Restricted
+                          </span>
+                        )}
+                      </td>
                       <td>
                         <span
                           className="task-row-badge"
@@ -5074,36 +5803,37 @@ export function ProjectDetails() {
                       </td>
                       <td>
                         <div className="task-row-actions">
-                          {confirmDeleteReqId === req.id ? (
-                            <span className="confirm-inline confirm-inline-sm">
-                              <span className="confirm-inline-text">
-                                Delete?
+                          {canDeleteResourceRequests &&
+                            (confirmDeleteReqId === req.id ? (
+                              <span className="confirm-inline confirm-inline-sm">
+                                <span className="confirm-inline-text">
+                                  Delete?
+                                </span>
+                                <button
+                                  type="button"
+                                  className="btn btn-danger btn-sm"
+                                  onClick={() => handleDeleteResourceReq(req.id)}
+                                >
+                                  Yes
+                                </button>
+                                <button
+                                  type="button"
+                                  className="btn btn-outline-secondary btn-sm"
+                                  onClick={() => setConfirmDeleteReqId(null)}
+                                >
+                                  No
+                                </button>
                               </span>
+                            ) : (
                               <button
                                 type="button"
-                                className="btn btn-danger btn-sm"
-                                onClick={() => handleDeleteResourceReq(req.id)}
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => setConfirmDeleteReqId(req.id)}
+                                title="Delete"
                               >
-                                Yes
+                                <i className="bi bi-trash" />
                               </button>
-                              <button
-                                type="button"
-                                className="btn btn-outline-secondary btn-sm"
-                                onClick={() => setConfirmDeleteReqId(null)}
-                              >
-                                No
-                              </button>
-                            </span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => setConfirmDeleteReqId(req.id)}
-                              title="Delete"
-                            >
-                              <i className="bi bi-trash" />
-                            </button>
-                          )}
+                            ))}
                         </div>
                       </td>
                     </tr>
@@ -5111,32 +5841,41 @@ export function ProjectDetails() {
                 </tbody>
               </table>
             </div>
-          )}
+          ) : null}
         </section>
       )}
 
       {/* ── Finance Section ── */}
-      {activeTab === "finance" && (
+      {activeTab === "finance" && canAccessFinanceTab && (
         <section className="tasks-section">
           <div className="tasks-section-header">
             <h2>
               <i className="bi bi-cash-coin me-2" />
               Finance
             </h2>
-            <button
-              type="button"
-              className="btn btn-info text-white btn-sm"
-              onClick={() => setShowCreateBudget((prev) => !prev)}
-              disabled={availableBudgetCategoryEntries.length === 0}
-            >
-              <i
-                className={`bi ${showCreateBudget ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-              />
-              {showCreateBudget ? "Cancel" : "New Budget"}
-            </button>
+            {canCreateBudgets && (
+              <button
+                type="button"
+                className="btn btn-info text-white btn-sm"
+                onClick={() => setShowCreateBudget((prev) => !prev)}
+                disabled={availableBudgetCategoryEntries.length === 0}
+              >
+                <i
+                  className={`bi ${showCreateBudget ? "bi-x-circle" : "bi-plus-lg"} me-1`}
+                />
+                {showCreateBudget ? "Cancel" : "New Budget"}
+              </button>
+            )}
           </div>
 
-          {showCreateBudget && (
+          {!canViewBudgets ? (
+            <AccessDeniedState
+              title="Finance budgets are restricted"
+              description="You can access this tab, but your role does not include Finance.Budgets.View to display budget data."
+            />
+          ) : (
+            <>
+          {canCreateBudgets && showCreateBudget && (
             <div className="task-create-card">
               <h3 className="h6 mb-3">Create Budget</h3>
               {availableBudgetCategoryEntries.length === 0 ? (
@@ -5365,7 +6104,7 @@ export function ProjectDetails() {
                   </thead>
                   <tbody>
                     {budgets.map((b) =>
-                      editingBudgetId === b.id ? (
+                      editingBudgetId === b.id && canEditBudgets ? (
                         <tr key={b.id} className="phase-edit-row">
                           <td>
                             <select
@@ -5447,48 +6186,55 @@ export function ProjectDetails() {
                           <td>${(b.forecastAmount ?? 0).toLocaleString()}</td>
                           <td>
                             <div className="task-row-actions">
-                              {confirmDeleteBudgetId === b.id ? (
-                                <span className="confirm-inline confirm-inline-sm">
-                                  <span className="confirm-inline-text">
-                                    Delete?
+                              {canDeleteBudgets &&
+                                (confirmDeleteBudgetId === b.id ? (
+                                  <span className="confirm-inline confirm-inline-sm">
+                                    <span className="confirm-inline-text">
+                                      Delete?
+                                    </span>
+                                    <button
+                                      type="button"
+                                      className="btn btn-danger btn-sm"
+                                      onClick={() => handleDeleteBudget(b.id)}
+                                    >
+                                      Yes
+                                    </button>
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-secondary btn-sm"
+                                      onClick={() =>
+                                        setConfirmDeleteBudgetId(null)
+                                      }
+                                    >
+                                      No
+                                    </button>
                                   </span>
-                                  <button
-                                    type="button"
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => handleDeleteBudget(b.id)}
-                                  >
-                                    Yes
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-secondary btn-sm"
-                                    onClick={() =>
-                                      setConfirmDeleteBudgetId(null)
-                                    }
-                                  >
-                                    No
-                                  </button>
-                                </span>
-                              ) : (
+                                ) : null)}
+
+                              {confirmDeleteBudgetId !== b.id && (
                                 <>
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-primary btn-sm"
-                                    onClick={() => startEditBudget(b)}
-                                    title="Edit"
-                                  >
-                                    <i className="bi bi-pencil" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-danger btn-sm"
-                                    onClick={() =>
-                                      setConfirmDeleteBudgetId(b.id)
-                                    }
-                                    title="Delete"
-                                  >
-                                    <i className="bi bi-trash" />
-                                  </button>
+                                  {canEditBudgets && (
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-primary btn-sm"
+                                      onClick={() => startEditBudget(b)}
+                                      title="Edit"
+                                    >
+                                      <i className="bi bi-pencil" />
+                                    </button>
+                                  )}
+                                  {canDeleteBudgets && (
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-danger btn-sm"
+                                      onClick={() =>
+                                        setConfirmDeleteBudgetId(b.id)
+                                      }
+                                      title="Delete"
+                                    >
+                                      <i className="bi bi-trash" />
+                                    </button>
+                                  )}
                                 </>
                               )}
                             </div>
@@ -5499,6 +6245,8 @@ export function ProjectDetails() {
                   </tbody>
                 </table>
               </div>
+            </>
+          )}
             </>
           )}
         </section>

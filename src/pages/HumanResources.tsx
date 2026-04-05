@@ -1,4 +1,7 @@
 import { useNavigate } from 'react-router-dom';
+import { useHrPermissions } from '../hooks/useHrPermissions';
+import { HR_ROUTE_PERMISSION_KEYS } from '../config/hrPermissions';
+import { AccessDeniedState } from '../Components/AccessDeniedState';
 
 const hrModules = [
   {
@@ -7,6 +10,7 @@ const hrModules = [
     description: 'Manage organization departments and structure.',
     path: '/dashboard/hr/departments',
     gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    permissions: HR_ROUTE_PERMISSION_KEYS.DEPARTMENTS,
   },
   {
     icon: 'bi-briefcase',
@@ -14,6 +18,7 @@ const hrModules = [
     description: 'Manage job positions and roles.',
     path: '/dashboard/hr/positions',
     gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    permissions: HR_ROUTE_PERMISSION_KEYS.POSITIONS,
   },
   {
     icon: 'bi-people-fill',
@@ -21,6 +26,7 @@ const hrModules = [
     description: 'View and manage employee profiles and records.',
     path: '/dashboard/hr/employees',
     gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    permissions: HR_ROUTE_PERMISSION_KEYS.EMPLOYEES,
   },
   {
     icon: 'bi-clock-history',
@@ -28,6 +34,7 @@ const hrModules = [
     description: 'Track check-ins, check-outs, and attendance records.',
     path: '/dashboard/hr/attendance',
     gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    permissions: HR_ROUTE_PERMISSION_KEYS.ATTENDANCE,
   },
   {
     icon: 'bi-calendar2-week',
@@ -35,6 +42,7 @@ const hrModules = [
     description: 'Configure leave type policies and allowances.',
     path: '/dashboard/hr/leave-types',
     gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    permissions: HR_ROUTE_PERMISSION_KEYS.LEAVE_TYPES,
   },
   {
     icon: 'bi-envelope-paper',
@@ -42,6 +50,7 @@ const hrModules = [
     description: 'Review, approve, and manage leave requests.',
     path: '/dashboard/hr/leave-requests',
     gradient: 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
+    permissions: HR_ROUTE_PERMISSION_KEYS.LEAVE_REQUESTS,
   },
   {
     icon: 'bi-pie-chart',
@@ -49,11 +58,15 @@ const hrModules = [
     description: 'View leave balance breakdown per employee.',
     path: '/dashboard/hr/leave-balances',
     gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+    permissions: HR_ROUTE_PERMISSION_KEYS.LEAVE_BALANCES,
   },
 ];
 
 export function HumanResources() {
   const navigate = useNavigate();
+  const { canAny } = useHrPermissions();
+
+  const visibleModules = hrModules.filter((module) => canAny([...module.permissions]));
 
   return (
     <div style={{ padding: '2rem', background: '#f8f9fa', minHeight: '100vh' }}>
@@ -72,7 +85,7 @@ export function HumanResources() {
         gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
         gap: '1.5rem',
       }}>
-        {hrModules.map(mod => (
+        {visibleModules.map(mod => (
           <div
             key={mod.path}
             onClick={() => navigate(mod.path)}
@@ -121,6 +134,13 @@ export function HumanResources() {
           </div>
         ))}
       </div>
+
+      {visibleModules.length === 0 && (
+        <AccessDeniedState
+          title="No HR module access"
+          description="Your role does not currently grant access to the available HR modules in this workspace."
+        />
+      )}
     </div>
   );
 }

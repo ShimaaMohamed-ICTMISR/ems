@@ -3,15 +3,22 @@ import { useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
 import type { CreateMeetingDto } from '../../services/meetingService';
 import hrService, { type Employee, type Department } from '../../services/hrProjectManagementService';
+import { useMeetingPermissions } from '../../hooks/useMeetingPermissions';
+import { MEETING_PERMISSION_KEYS } from '../../config/meetingPermissions';
 import './meetings.css';
 
 function parseNestedList<T>(res: { data?: { data?: { data?: T[] } | T[] } }): T[] {
   const innerData = res.data?.data;
-  return Array.isArray(innerData?.data)
-    ? innerData.data
-    : Array.isArray(innerData)
-      ? innerData
-      : [];
+
+  if (Array.isArray(innerData)) {
+    return innerData;
+  }
+
+  if (innerData && Array.isArray(innerData.data)) {
+    return innerData.data;
+  }
+
+  return [];
 }
 
 type ParticipantAddMode = 'users' | 'department';
@@ -38,8 +45,16 @@ export function CreateMeeting() {
   const [employeeById, setEmployeeById] = useState<Record<string, Employee>>({});
   const [bulkAdding, setBulkAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const {
+    canAny,
+    isLoaded: permissionsLoaded,
+    isLoading: permissionsLoading,
+  } = useMeetingPermissions();
+  const canCreateMeeting = canAny([...MEETING_PERMISSION_KEYS.CREATE]);
 
   useEffect(() => {
+    if (!canCreateMeeting) return;
+
     hrService
       .getDepartments({ isActive: true })
       .then((res) => {
@@ -49,9 +64,13 @@ export function CreateMeeting() {
         console.error('Failed to load departments:', err);
         setDepartments([]);
       });
-  }, []);
+  }, [canCreateMeeting]);
 
   useEffect(() => {
+    if (!canCreateMeeting) {
+      return;
+    }
+
     if (participantAddMode !== 'users') {
       return;
     }
@@ -75,7 +94,7 @@ export function CreateMeeting() {
         console.error('Failed to load employees for participants dropdown:', err);
         setEmployees([]);
       });
-  }, [participantAddMode, employeeListDepartmentFilter]);
+  }, [canCreateMeeting, participantAddMode, employeeListDepartmentFilter]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,6 +168,38 @@ export function CreateMeeting() {
       setBulkAdding(false);
     }
   };
+
+  if (!permissionsLoaded || permissionsLoading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+        <div className="text-center">
+          <div className="spinner-border text-secondary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted mt-3">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canCreateMeeting) {
+    return (
+      <div className="text-center py-5">
+        <div className="mb-4">
+          <i className="bi bi-shield-lock display-1 text-warning opacity-75"></i>
+        </div>
+        <h4 className="text-muted mb-2">Unauthorized</h4>
+        <p className="text-muted mb-4">You do not have permission to create meetings.</p>
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => navigate('/dashboard/meetings')}
+        >
+          <i className="bi bi-arrow-left me-2"></i>
+          Back to Meetings
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="meetings-page">

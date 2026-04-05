@@ -3,6 +3,10 @@ import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { AppLayout } from "../layout/AppLayout";
 import Login from "../pages/Login";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { PermissionRoute } from "./PermissionRoute";
+import { MEETING_PERMISSION_KEYS } from "../config/meetingPermissions";
+import { HR_PERMISSION_KEYS, HR_ROUTE_PERMISSION_KEYS } from "../config/hrPermissions";
+import { PM_PERMISSION_KEYS, PM_ROUTE_PERMISSION_KEYS } from "../config/projectManagementPermissions";
 import {
   Dashboard,
   Notifications,
@@ -68,59 +72,287 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <Dashboard /> },
       { path: "notifications", element: <Notifications /> },
-      { path: "hr", element: <HumanResources /> },
+      {
+        path: "hr",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.HR_HOME]}>
+            <HumanResources />
+          </PermissionRoute>
+        ),
+      },
       // Departments
-      { path: "hr/departments", element: <Departments /> },
-      { path: "hr/departments/create", element: <CreateDepartment /> },
-      { path: "hr/departments/:id/edit", element: <EditDepartment /> },
+      {
+        path: "hr/departments",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.DEPARTMENTS]}>
+            <Departments />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "hr/departments/create",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.DEPARTMENTS.CREATE]}>
+            <CreateDepartment />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "hr/departments/:id/edit",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.DEPARTMENTS.EDIT]}>
+            <EditDepartment />
+          </PermissionRoute>
+        ),
+      },
       // Positions
-      { path: "hr/positions", element: <Positions /> },
-      { path: "hr/positions/create", element: <CreatePosition /> },
-      { path: "hr/positions/:id/edit", element: <EditPosition /> },
+      {
+        path: "hr/positions",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.POSITIONS]}>
+            <Positions />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "hr/positions/create",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.POSITIONS.CREATE]}>
+            <CreatePosition />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "hr/positions/:id/edit",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.POSITIONS.EDIT]}>
+            <EditPosition />
+          </PermissionRoute>
+        ),
+      },
       // Employees
-      { path: "hr/employees", element: <Employees /> },
-      { path: "hr/employees/create", element: <CreateEmployee /> },
-      { path: "hr/employees/:id/edit", element: <EditEmployee /> },
+      {
+        path: "hr/employees",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.EMPLOYEES]}>
+            <Employees />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "hr/employees/create",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.EMPLOYEES.CREATE]}>
+            <CreateEmployee />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "hr/employees/:id/edit",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.EMPLOYEES.EDIT]}>
+            <EditEmployee />
+          </PermissionRoute>
+        ),
+      },
       // Attendance
-      { path: "hr/attendance", element: <Attendance /> },
+      {
+        path: "hr/attendance",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.ATTENDANCE]}>
+            <Attendance />
+          </PermissionRoute>
+        ),
+      },
       // Leave Types
-      { path: "hr/leave-types", element: <LeaveTypes /> },
-      { path: "hr/leave-types/create", element: <CreateLeaveType /> },
+      {
+        path: "hr/leave-types",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.LEAVE_TYPES]}>
+            <LeaveTypes />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "hr/leave-types/create",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.LEAVE_TYPES.CREATE]}>
+            <CreateLeaveType />
+          </PermissionRoute>
+        ),
+      },
       // Leave Requests
-      { path: "hr/leave-requests", element: <LeaveRequests /> },
-      { path: "hr/leave-requests/create", element: <CreateLeaveRequest /> },
+      {
+        path: "hr/leave-requests",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.LEAVE_REQUESTS]}>
+            <LeaveRequests />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "hr/leave-requests/create",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.LEAVE_REQUESTS.CREATE]}>
+            <CreateLeaveRequest />
+          </PermissionRoute>
+        ),
+      },
       // Leave Balances
-      { path: "hr/leave-balances", element: <LeaveBalances /> },
-      { path: "portfolios", element: <Portfolios /> },
-      { path: "project-management", element: <ProjectManagement /> },
-      { path: "project-management/quick-tasks", element: <QuickTasks /> },
-      { path: "project-management/portfolios", element: <Portfolios /> },
-      { path: "project-management/resources", element: <Resources /> },
+      {
+        path: "hr/leave-balances",
+        element: (
+          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.LEAVE_BALANCES]}>
+            <LeaveBalances />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "portfolios",
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_ROUTE_PERMISSION_KEYS.PORTFOLIOS]}
+          >
+            <Portfolios />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "project-management",
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_ROUTE_PERMISSION_KEYS.HOME]}
+          >
+            <ProjectManagement />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "project-management/quick-tasks",
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_ROUTE_PERMISSION_KEYS.QUICK_TASKS]}
+          >
+            <QuickTasks />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "project-management/portfolios",
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_ROUTE_PERMISSION_KEYS.PORTFOLIOS]}
+          >
+            <Portfolios />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "project-management/resources",
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_ROUTE_PERMISSION_KEYS.RESOURCES]}
+          >
+            <Resources />
+          </PermissionRoute>
+        ),
+      },
       {
         path: "project-management/resource-requests",
-        element: <ResourceRequests />,
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_ROUTE_PERMISSION_KEYS.RESOURCE_REQUESTS]}
+          >
+            <ResourceRequests />
+          </PermissionRoute>
+        ),
       },
-      { path: "projects/create", element: <CreateProject /> },
+      {
+        path: "projects/create",
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_PERMISSION_KEYS.PROJECTS.CREATE]}
+          >
+            <CreateProject />
+          </PermissionRoute>
+        ),
+      },
       {
         path: "portfolios/:portfolioId/projects/:projectId",
-        element: <ProjectDetails />,
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_ROUTE_PERMISSION_KEYS.PROJECT_DETAILS]}
+          >
+            <ProjectDetails />
+          </PermissionRoute>
+        ),
       },
       {
         path: "portfolios/:portfolioId/projects/:projectId/documents",
-        element: <ProjectDocuments />,
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_ROUTE_PERMISSION_KEYS.PROJECT_DOCUMENTS]}
+          >
+            <ProjectDocuments />
+          </PermissionRoute>
+        ),
       },
       {
         path: "portfolios/:portfolioId/projects/:projectId/tasks/:taskId",
-        element: <TaskDetails />,
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_ROUTE_PERMISSION_KEYS.TASK_DETAILS]}
+          >
+            <TaskDetails />
+          </PermissionRoute>
+        ),
       },
       {
         path: "tasks/:taskId",
-        element: <TaskDetails />,
+        element: (
+          <PermissionRoute
+            scope="projectManagement"
+            anyOf={[...PM_ROUTE_PERMISSION_KEYS.TASK_DETAILS]}
+          >
+            <TaskDetails />
+          </PermissionRoute>
+        ),
       },
       // Meetings
-      { path: "meetings", element: <MeetingsList /> },
-      { path: "meetings/create", element: <CreateMeeting /> },
-      { path: "meetings/:id", element: <MeetingDetails /> },
+      {
+        path: "meetings",
+        element: (
+          <PermissionRoute anyOf={[...MEETING_PERMISSION_KEYS.VIEW]}>
+            <MeetingsList />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "meetings/create",
+        element: (
+          <PermissionRoute anyOf={[...MEETING_PERMISSION_KEYS.CREATE]}>
+            <CreateMeeting />
+          </PermissionRoute>
+        ),
+      },
+      {
+        path: "meetings/:id",
+        element: (
+          <PermissionRoute anyOf={[...MEETING_PERMISSION_KEYS.VIEW]}>
+            <MeetingDetails />
+          </PermissionRoute>
+        ),
+      },
       // Voting
       {
         path: "voting",

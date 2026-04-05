@@ -69,6 +69,55 @@ meetingClient.interceptors.request.use(
   }
 );
 
+const toPermissionList = (payload: unknown): string[] => {
+  if (Array.isArray(payload)) {
+    return payload
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object') {
+          const typedItem = item as {
+            permissionCode?: string;
+            code?: string;
+            key?: string;
+            permission?: string;
+            name?: string;
+          };
+
+          return (
+            typedItem.permissionCode ||
+            typedItem.code ||
+            typedItem.key ||
+            typedItem.permission ||
+            typedItem.name ||
+            ''
+          );
+        }
+
+        return '';
+      })
+      .filter(Boolean);
+  }
+
+  if (payload && typeof payload === 'object') {
+    const typedPayload = payload as {
+      permissions?: unknown;
+      data?: unknown;
+      items?: unknown;
+    };
+
+    const fromPermissions = toPermissionList(typedPayload.permissions);
+    if (fromPermissions.length > 0) return fromPermissions;
+
+    const fromData = toPermissionList(typedPayload.data);
+    if (fromData.length > 0) return fromData;
+
+    const fromItems = toPermissionList(typedPayload.items);
+    if (fromItems.length > 0) return fromItems;
+  }
+
+  return [];
+};
+
 // ============= INTERFACES =============
 
 export type MeetingStatus = 'DRAFT' | 'SCHEDULED' | 'CANCELLED';
@@ -205,6 +254,12 @@ export const checkServiceHealth = async (): Promise<{ status: 'healthy' | 'unhea
       message: `Service check failed: ${error.message || 'Unknown error'}` 
     };
   }
+};
+
+export const getMeetingPermissions = async (): Promise<string[]> => {
+  const response = await meetingClient.get('/permissions');
+  const permissions = toPermissionList(response.data);
+  return Array.from(new Set(permissions));
 };
 
 // ============= MEETING ENDPOINTS =============

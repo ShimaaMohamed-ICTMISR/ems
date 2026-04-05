@@ -28,6 +28,7 @@ export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     try {
       const response = await apiClient.post<LoginResponse>('/Auth/login', credentials);
+      console.log('Login response:', response.data);
       return response.data;
     } catch (error: any) {
       const errorMessage =

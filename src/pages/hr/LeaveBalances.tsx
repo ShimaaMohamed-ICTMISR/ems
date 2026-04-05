@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import type { Employee } from '../../services/hrProjectManagementService';
 import hrService from '../../services/hrProjectManagementService';
+import { useHrPermissions } from '../../hooks/useHrPermissions';
+import { HR_PERMISSION_KEYS } from '../../config/hrPermissions';
+import { AccessDeniedState } from '../../Components/AccessDeniedState';
 import '../styles/LeaveRequests.css';
 
 export default function LeaveBalances() {
@@ -10,8 +13,12 @@ export default function LeaveBalances() {
     const [balances, setBalances] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const { canAny } = useHrPermissions();
+    const canViewLeaveBalances = canAny([...HR_PERMISSION_KEYS.LEAVE_BALANCES.VIEW]);
 
     useEffect(() => {
+        if (!canViewLeaveBalances) return;
+
         hrService.getEmployees().then(r => {
             console.log('--- LEAVE BALANCES: FETCHING EMPLOYEES ---');
             console.log('Raw API Response:', r);
@@ -21,12 +28,24 @@ export default function LeaveBalances() {
         }).catch((err) => {
             console.error('Error fetching employees:', err);
         });
-    }, []);
+    }, [canViewLeaveBalances]);
 
     useEffect(() => {
+        if (!canViewLeaveBalances) return;
         if (!selectedEmployee) return;
         fetchBalances();
-    }, [selectedEmployee, year]);
+    }, [selectedEmployee, year, canViewLeaveBalances]);
+
+    if (!canViewLeaveBalances) {
+        return (
+            <div className="leave-balances-container">
+                <AccessDeniedState
+                    title="Leave balances are restricted"
+                    description="You do not have permission to view leave balances."
+                />
+            </div>
+        );
+    }
 
     const fetchBalances = async () => {
         setLoading(true);

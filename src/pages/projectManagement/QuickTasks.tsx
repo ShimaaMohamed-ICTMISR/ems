@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import { PM_PERMISSION_KEYS } from "../../config/projectManagementPermissions";
+import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
 import taskService, {
   type Task,
 } from "../../services/projectManagementServices/taskService";
@@ -39,12 +42,20 @@ const priorityColor: Record<number, string> = {
 
 export function QuickTasks() {
   const navigate = useNavigate();
+  const { canAny } = useProjectManagementPermissions();
+  const canViewQuickTasks = canAny([...PM_PERMISSION_KEYS.TASKS.VIEW]);
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
+    if (!canViewQuickTasks) {
+      setTasks([]);
+      setLoading(false);
+      return;
+    }
+
     async function fetchQuickTasks() {
       try {
         setLoading(true);
@@ -67,7 +78,7 @@ export function QuickTasks() {
     }
 
     fetchQuickTasks();
-  }, []);
+  }, [canViewQuickTasks]);
 
   const filteredTasks = useMemo(() => {
     const lowerSearch = search.trim().toLowerCase();
@@ -93,6 +104,37 @@ export function QuickTasks() {
 
     return { total, done, inProgress, blocked };
   }, [tasks]);
+
+  if (!canViewQuickTasks) {
+    return (
+      <div className="quick-tasks-page">
+        <section className="quick-tasks-hero">
+          <div>
+            <p className="quick-tasks-kicker">Project Management</p>
+            <h1 className="quick-tasks-title">Quick Tasks</h1>
+            <p className="quick-tasks-subtitle">
+              Independent tasks in one workspace, with status and execution focus.
+            </p>
+          </div>
+          <div className="quick-tasks-hero-actions">
+            <button
+              type="button"
+              className="btn btn-outline-light"
+              onClick={() => navigate("/dashboard/project-management")}
+            >
+              <i className="bi bi-arrow-left me-2" />
+              Back to Dashboard
+            </button>
+          </div>
+        </section>
+
+        <AccessDeniedState
+          title="Quick tasks are restricted"
+          description="You do not have permission to view tasks. Please contact your administrator if this access is required."
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="quick-tasks-page">

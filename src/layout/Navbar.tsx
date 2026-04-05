@@ -7,7 +7,11 @@ import { authService } from "../services/authService";
 import notificationService from "../services/notificationService";
 import NotificationSidebar from "../pages/notifications/NotificationSidebar.tsx";
 
-export function Navbar() {
+interface NavbarProps {
+  onSidebarToggle?: () => void;
+}
+
+export function Navbar({ onSidebarToggle }: NavbarProps) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
@@ -72,6 +76,15 @@ export function Navbar() {
     }
   };
 
+  const handleSidebarToggle = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (typeof window !== "undefined" && window.innerWidth < 992) {
+      return;
+    }
+
+    event.preventDefault();
+    onSidebarToggle?.();
+  };
+
   return (
     <>
       <nav
@@ -80,56 +93,69 @@ export function Navbar() {
       >
         <div
           className="container-fluid px-4 navbar-shell"
-          style={{ position: "relative", minHeight: "64px" }}
+          style={{ minHeight: "64px" }}
         >
-          {/* Hamburger for mobile */}
-          <button
-            className="btn btn-link text-white d-lg-none p-0 mobile-sidebar-toggle"
-            type="button"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#appSidebar"
-            aria-controls="appSidebar"
-            aria-label="Toggle navigation"
-          >
-            <i className="bi bi-list fs-3"></i>
-          </button>
+          <div className="d-flex align-items-center gap-2 gap-sm-3 navbar-left-group">
+            {/* Sidebar toggle for mobile */}
+            <button
+              className="btn btn-link text-white p-0 mobile-sidebar-toggle d-lg-none"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#appSidebar"
+              aria-controls="appSidebar"
+              aria-label="Toggle navigation"
+              onClick={handleSidebarToggle}
+            >
+              <i className="bi bi-list fs-3"></i>
+            </button>
 
-          {/* Page Title */}
-          <div
-            className="navbar-brand mb-0 d-flex align-items-center"
-            style={{ minHeight: "50px", maxWidth: "min(44vw, 320px)" }}
-          >
-            <i
-              className="bi bi-stack me-2"
-              style={{
-                color: "#06b6d4",
-                fontSize: "clamp(1rem, 2.2vw, 1.6rem)",
-              }}
-            ></i>
-            <div className="d-flex flex-column lh-sm" style={{ minWidth: 0 }}>
-              <span
-                className="text-white fw-bold"
+            {/* Sidebar toggle for desktop */}
+            <button
+              className="btn btn-link text-white p-0 mobile-sidebar-toggle d-none d-lg-inline-flex"
+              type="button"
+              aria-label="Toggle sidebar"
+              onClick={handleSidebarToggle}
+            >
+              <i className="bi bi-list fs-3"></i>
+            </button>
+
+            {/* Page Title */}
+            <div
+              className="navbar-brand mb-0 d-flex align-items-center navbar-brand-block"
+              style={{ minHeight: "50px", maxWidth: "min(44vw, 320px)" }}
+            >
+              <i
+                className="bi bi-stack me-2"
                 style={{
-                  fontSize: "clamp(1rem, 2vw, 1.35rem)",
-                  letterSpacing: "0.02em",
+                  color: "#06b6d4",
+                  fontSize: "clamp(1rem, 2.2vw, 1.6rem)",
                 }}
-              >
-                EMS
-              </span>
-              <small
-                className="text-white-50"
-                style={{
-                  fontSize: "clamp(0.68rem, 1.1vw, 0.78rem)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Management System
-              </small>
+              ></i>
+              <div className="d-flex flex-column lh-sm" style={{ minWidth: 0 }}>
+                <span
+                  className="text-white fw-bold"
+                  style={{
+                    fontSize: "clamp(1rem, 2vw, 1.35rem)",
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  EMS
+                </span>
+                <small
+                  className="text-white-50"
+                  style={{
+                    fontSize: "clamp(0.68rem, 1.1vw, 0.78rem)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Management System
+                </small>
+              </div>
             </div>
           </div>
 
           {/* Actions */}
-          <div className="d-flex align-items-center gap-3 ms-auto">
+          <div className="d-flex align-items-center gap-2 gap-sm-3 ms-auto navbar-actions">
             <button
               className="btn btn-link text-white position-relative p-0 icon-bounce"
               type="button"
@@ -221,14 +247,6 @@ export function Navbar() {
             </div>
           </div>
         </div>
-        <style>{`
-          @media (max-width: 991.98px) {
-            .navbar-shell {
-              min-height: 64px;
-              padding-left: 56px !important;
-            }
-          }
-        `}</style>
       </nav>
 
       <NotificationSidebar

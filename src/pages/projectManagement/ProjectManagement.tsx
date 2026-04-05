@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
@@ -16,6 +16,12 @@ import {
   PriorityLevel,
   TaskStatus as TaskStatusEnum,
 } from "../../config/enums";
+import {
+  PM_PERMISSION_KEYS,
+  PM_ROUTE_PERMISSION_KEYS,
+} from "../../config/projectManagementPermissions";
+import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
+import { AccessDeniedState } from "../../Components/AccessDeniedState";
 import ".././styles/ProjectManagement.css";
 
 interface DashboardStats {
@@ -27,6 +33,32 @@ interface DashboardStats {
 
 export function ProjectManagement() {
   const navigate = useNavigate();
+  const { canAny, hasAnyProjectManagementAccess } =
+    useProjectManagementPermissions();
+
+  const canViewPortfolioStats = canAny([...PM_PERMISSION_KEYS.PORTFOLIOS.VIEW]);
+  const canViewProjectStats = canAny([...PM_PERMISSION_KEYS.PROJECTS.VIEW]);
+  const canViewResourceStats = canAny([...PM_PERMISSION_KEYS.RESOURCES.VIEW]);
+  const canViewRequestStats = canAny([
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.VIEW,
+  ]);
+
+  const canViewPortfolios = canAny([...PM_ROUTE_PERMISSION_KEYS.PORTFOLIOS]);
+  const canAccessResourcesDashboardCard = canAny([
+    ...PM_PERMISSION_KEYS.RESOURCES.VIEW,
+    ...PM_PERMISSION_KEYS.RESOURCES.CREATE,
+    ...PM_PERMISSION_KEYS.RESOURCES.EDIT,
+    ...PM_PERMISSION_KEYS.RESOURCES.DELETE,
+  ]);
+  const canAccessResourceRequestsDashboardCard = canAny([
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.VIEW,
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.CREATE,
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.EDIT,
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.DELETE,
+  ]);
+  const canCreateQuickTask = canAny([...PM_PERMISSION_KEYS.TASKS.CREATE]);
+  const canViewQuickTasks = canAny([...PM_PERMISSION_KEYS.TASKS.VIEW]);
+
   const [stats, setStats] = useState<DashboardStats>({
     totalPortfolios: 0,
     totalProjects: 0,
@@ -61,7 +93,7 @@ export function ProjectManagement() {
 
   useEffect(() => {
     async function fetchEmployees() {
-      if (!showCreateTaskModal || employees.length > 0) {
+      if (!canCreateQuickTask || !showCreateTaskModal || employees.length > 0) {
         return;
       }
 
@@ -80,33 +112,45 @@ export function ProjectManagement() {
     }
 
     fetchEmployees();
-  }, [showCreateTaskModal, employees.length]);
+  }, [canCreateQuickTask, showCreateTaskModal, employees.length]);
 
   useEffect(() => {
     async function fetchStats() {
+      const nextStats: DashboardStats = {
+        totalPortfolios: 0,
+        totalProjects: 0,
+        totalResources: 0,
+        activeRequests: 0,
+      };
+
       try {
         setLoading(true);
-        const [portfolios, resources, requests] = await Promise.all([
-          portfolioService.getPortfolios(),
-          resourceService.getAll(),
-          resourceRequestService.getAll(),
+
+        await Promise.all([
+          canViewPortfolioStats || canViewProjectStats
+            ? portfolioService.getPortfolios().then((portfolios) => {
+                nextStats.totalPortfolios = portfolios.length;
+                nextStats.totalProjects = portfolios.reduce(
+                  (sum, portfolio) => sum + (portfolio.projects?.length || 0),
+                  0,
+                );
+              })
+            : Promise.resolve(),
+          canViewResourceStats
+            ? resourceService.getAll().then((resources) => {
+                nextStats.totalResources = resources.length;
+              })
+            : Promise.resolve(),
+          canViewRequestStats
+            ? resourceRequestService.getAll().then((requests) => {
+                nextStats.activeRequests = requests.filter(
+                  (request) => request.status === 0 || request.status === 1,
+                ).length;
+              })
+            : Promise.resolve(),
         ]);
 
-        const totalProjects = portfolios.reduce(
-          (sum, p) => sum + (p.projects?.length || 0),
-          0,
-        );
-
-        const activeRequests = requests.filter(
-          (r) => r.status === 0 || r.status === 1,
-        ).length;
-
-        setStats({
-          totalPortfolios: portfolios.length,
-          totalProjects,
-          totalResources: resources.length,
-          activeRequests,
-        });
+        setStats(nextStats);
       } catch (error) {
         console.error("Failed to load dashboard stats", error);
       } finally {
@@ -114,64 +158,108 @@ export function ProjectManagement() {
       }
     }
 
+    if (!hasAnyProjectManagementAccess) {
+      setLoading(false);
+      return;
+    }
+
     fetchStats();
-  }, []);
+  }, [
+    canViewPortfolioStats,
+    canViewProjectStats,
+    canViewRequestStats,
+    canViewResourceStats,
+    hasAnyProjectManagementAccess,
+  ]);
 
-  const navCards = [
-    {
-      icon: "bi-briefcase-fill",
-      title: "Portfolios",
-      description: "Manage project portfolios and grouped initiatives",
-      path: "/dashboard/project-management/portfolios",
-      color: "#0ea5e9",
-    },
-    {
-      icon: "bi-box-seam",
-      title: "Resources",
-      description: "Manage people, teams, and equipment allocations",
-      path: "/dashboard/project-management/resources",
-      color: "#8b5cf6",
-    },
-    {
-      icon: "bi-send-check",
-      title: "Resource Requests",
-      description: "Review and approve resource allocation requests",
-      path: "/dashboard/project-management/resource-requests",
-      color: "#f59e0b",
-    },
-  ];
+  const navCards = useMemo(
+    () =>
+      [
+        {
+          icon: "bi-briefcase-fill",
+          title: "Portfolios",
+          description: "Manage project portfolios and grouped initiatives",
+          path: "/dashboard/project-management/portfolios",
+          color: "#0ea5e9",
+          visible: canViewPortfolios,
+        },
+        {
+          icon: "bi-box-seam",
+          title: "Resources",
+          description: "Manage people, teams, and equipment allocations",
+          path: "/dashboard/project-management/resources",
+          color: "#8b5cf6",
+          visible: canAccessResourcesDashboardCard,
+        },
+        {
+          icon: "bi-send-check",
+          title: "Resource Requests",
+          description: "Review and approve resource allocation requests",
+          path: "/dashboard/project-management/resource-requests",
+          color: "#f59e0b",
+          visible: canAccessResourceRequestsDashboardCard,
+        },
+      ].filter((card) => card.visible),
+    [
+      canViewPortfolios,
+      canAccessResourcesDashboardCard,
+      canAccessResourceRequestsDashboardCard,
+    ],
+  );
 
-  const statWidgets = [
-    {
-      label: "Total Portfolios",
-      value: stats.totalPortfolios,
-      icon: "bi-briefcase",
-      color: "#0ea5e9",
-    },
-    {
-      label: "Total Projects",
-      value: stats.totalProjects,
-      icon: "bi-kanban",
-      color: "#10b981",
-    },
-    {
-      label: "Resources",
-      value: stats.totalResources,
-      icon: "bi-box-seam",
-      color: "#8b5cf6",
-    },
-    {
-      label: "Active Requests",
-      value: stats.activeRequests,
-      icon: "bi-send-check",
-      color: "#f59e0b",
-    },
-  ];
+  const statWidgets = useMemo(
+    () =>
+      [
+        {
+          label: "Total Portfolios",
+          value: stats.totalPortfolios,
+          icon: "bi-briefcase",
+          color: "#0ea5e9",
+          visible: canViewPortfolioStats,
+        },
+        {
+          label: "Total Projects",
+          value: stats.totalProjects,
+          icon: "bi-kanban",
+          color: "#10b981",
+          visible: canViewProjectStats,
+        },
+        {
+          label: "Resources",
+          value: stats.totalResources,
+          icon: "bi-box-seam",
+          color: "#8b5cf6",
+          visible: canViewResourceStats,
+        },
+        {
+          label: "Active Requests",
+          value: stats.activeRequests,
+          icon: "bi-send-check",
+          color: "#f59e0b",
+          visible: canViewRequestStats,
+        },
+      ].filter((widget) => widget.visible),
+    [
+      canViewPortfolioStats,
+      canViewProjectStats,
+      canViewRequestStats,
+      canViewResourceStats,
+      stats.activeRequests,
+      stats.totalPortfolios,
+      stats.totalProjects,
+      stats.totalResources,
+    ],
+  );
 
   async function handleCreateIndependentTask(
     event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
+
+    if (!canCreateQuickTask) {
+      toast.error("You do not have permission to create tasks.");
+      return;
+    }
 
     if (!newTask.title.trim()) {
       toast.error("Task title is required.");
@@ -231,6 +319,17 @@ export function ProjectManagement() {
     }
   }
 
+  if (!hasAnyProjectManagementAccess) {
+    return (
+      <div className="pm-dashboard-page">
+        <AccessDeniedState
+          title="No Project Management Access"
+          description="You do not have permission to access any Project Management module. Please contact your administrator."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="pm-dashboard-page">
       {/* Hero */}
@@ -247,26 +346,33 @@ export function ProjectManagement() {
 
       {/* Stat Widgets */}
       <section className="pm-stat-grid">
-        {statWidgets.map((w) => (
-          <div key={w.label} className="pm-stat-card">
-            <div
-              className="pm-stat-icon"
-              style={{ background: `${w.color}20`, color: w.color }}
-            >
-              <i className={`bi ${w.icon}`} />
-            </div>
-            <div className="pm-stat-info">
-              <span className="pm-stat-label">{w.label}</span>
-              <span className="pm-stat-value">
-                {loading ? (
-                  <span className="spinner-border spinner-border-sm" />
-                ) : (
-                  w.value
-                )}
-              </span>
-            </div>
+        {statWidgets.length === 0 ? (
+          <div className="pm-info-note">
+            <i className="bi bi-info-circle me-2" />
+            You do not have permission to view dashboard metrics.
           </div>
-        ))}
+        ) : (
+          statWidgets.map((w) => (
+            <div key={w.label} className="pm-stat-card">
+              <div
+                className="pm-stat-icon"
+                style={{ background: `${w.color}20`, color: w.color }}
+              >
+                <i className={`bi ${w.icon}`} />
+              </div>
+              <div className="pm-stat-info">
+                <span className="pm-stat-label">{w.label}</span>
+                <span className="pm-stat-value">
+                  {loading ? (
+                    <span className="spinner-border spinner-border-sm" />
+                  ) : (
+                    w.value
+                  )}
+                </span>
+              </div>
+            </div>
+          ))
+        )}
       </section>
 
       {/* Quick Navigation */}
@@ -275,50 +381,63 @@ export function ProjectManagement() {
           <i className="bi bi-grid me-2" />
           Quick Navigation
         </h2>
-        <div className="pm-nav-grid">
-          {navCards.map((card) => (
-            <button
-              key={card.title}
-              type="button"
-              className="pm-nav-card"
-              onClick={() => navigate(card.path)}
-            >
-              <div
-                className="pm-nav-card-icon"
-                style={{ background: `${card.color}15`, color: card.color }}
+        {navCards.length === 0 ? (
+          <div className="pm-info-note">
+            <i className="bi bi-info-circle me-2" />
+            No module navigation is available for your current permissions.
+          </div>
+        ) : (
+          <div className="pm-nav-grid">
+            {navCards.map((card) => (
+              <button
+                key={card.title}
+                type="button"
+                className="pm-nav-card"
+                onClick={() => navigate(card.path)}
               >
-                <i className={`bi ${card.icon}`} />
-              </div>
-              <div className="pm-nav-card-body">
-                <h3 className="pm-nav-card-title">{card.title}</h3>
-                <p className="pm-nav-card-desc">{card.description}</p>
-              </div>
-              <i className="bi bi-chevron-right pm-nav-card-arrow" />
-            </button>
-          ))}
-        </div>
+                <div
+                  className="pm-nav-card-icon"
+                  style={{ background: `${card.color}15`, color: card.color }}
+                >
+                  <i className={`bi ${card.icon}`} />
+                </div>
+                <div className="pm-nav-card-body">
+                  <h3 className="pm-nav-card-title">{card.title}</h3>
+                  <p className="pm-nav-card-desc">{card.description}</p>
+                </div>
+                <i className="bi bi-chevron-right pm-nav-card-arrow" />
+              </button>
+            ))}
+          </div>
+        )}
 
-        <div className="pm-quick-actions-row">
-          <button
-            type="button"
-            className="pm-quick-action-btn pm-quick-action-create"
-            onClick={() => setShowCreateTaskModal(true)}
-          >
-            <i className="bi bi-lightning-charge-fill me-2" />
-            Quick Task
-          </button>
+        {(canCreateQuickTask || canViewQuickTasks) && (
+          <div className="pm-quick-actions-row">
+            {canCreateQuickTask && (
+              <button
+                type="button"
+                className="pm-quick-action-btn pm-quick-action-create"
+                onClick={() => setShowCreateTaskModal(true)}
+              >
+                <i className="bi bi-lightning-charge-fill me-2" />
+                Quick Task
+              </button>
+            )}
 
-          <button
-            type="button"
-            className="pm-quick-action-btn pm-quick-action-show"
-            onClick={() =>
-              navigate("/dashboard/project-management/quick-tasks")
-            }
-          >
-            <i className="bi bi-list-check me-2" />
-            View Quick Tasks
-          </button>
-        </div>
+            {canViewQuickTasks && (
+              <button
+                type="button"
+                className="pm-quick-action-btn pm-quick-action-show"
+                onClick={() =>
+                  navigate("/dashboard/project-management/quick-tasks")
+                }
+              >
+                <i className="bi bi-list-check me-2" />
+                View Quick Tasks
+              </button>
+            )}
+          </div>
+        )}
       </section>
 
       {/* Future Widgets Placeholder */}
@@ -351,7 +470,7 @@ export function ProjectManagement() {
         </div>
       </section>
 
-      {showCreateTaskModal && (
+      {showCreateTaskModal && canCreateQuickTask && (
         <div
           className="pm-task-modal-backdrop"
           role="presentation"

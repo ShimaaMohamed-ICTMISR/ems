@@ -12,6 +12,9 @@ import documentService, {
   type DocumentUpdateDTO,
 } from "../../services/projectManagementServices/documentService";
 import { DocumentType } from "../../config/enums";
+import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import { PM_PERMISSION_KEYS } from "../../config/projectManagementPermissions";
+import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
 import type { RootState } from "../../store/store";
 import ".././styles/ProjectDocuments.css";
 
@@ -89,7 +92,19 @@ function trimExtension(fileName: string): string {
 export function ProjectDocuments() {
   const navigate = useNavigate();
   const { portfolioId, projectId } = useParams();
+  const { canAny } = useProjectManagementPermissions();
   const authUser = useSelector((state: RootState) => state.auth.user);
+
+  const canViewDocuments = canAny([...PM_PERMISSION_KEYS.DOCUMENTS.VIEW]);
+  const canCreateDocuments = canAny([...PM_PERMISSION_KEYS.DOCUMENTS.CREATE]);
+  const canEditDocuments = canAny([...PM_PERMISSION_KEYS.DOCUMENTS.EDIT]);
+  const canDeleteDocuments = canAny([...PM_PERMISSION_KEYS.DOCUMENTS.DELETE]);
+  const canAccessDocumentsWorkspace = canAny([
+    ...PM_PERMISSION_KEYS.DOCUMENTS.VIEW,
+    ...PM_PERMISSION_KEYS.DOCUMENTS.CREATE,
+    ...PM_PERMISSION_KEYS.DOCUMENTS.EDIT,
+    ...PM_PERMISSION_KEYS.DOCUMENTS.DELETE,
+  ]);
 
   const [project, setProject] = useState<Project | null>(null);
   const [documents, setDocuments] = useState<ProjectDocument[]>([]);
@@ -113,6 +128,28 @@ export function ProjectDocuments() {
   console.log("Document List:", documents);
 
   useEffect(() => {
+    if (!canCreateDocuments && showCreate) {
+      setShowCreate(false);
+    }
+
+    if (!canEditDocuments && editingId) {
+      setEditingId(null);
+      setSelectedEditFile(null);
+    }
+
+    if (!canDeleteDocuments && confirmDeleteId) {
+      setConfirmDeleteId(null);
+    }
+  }, [
+    canCreateDocuments,
+    canDeleteDocuments,
+    canEditDocuments,
+    confirmDeleteId,
+    editingId,
+    showCreate,
+  ]);
+
+  useEffect(() => {
     async function load() {
       if (!projectId) {
         setLoading(false);
@@ -123,7 +160,9 @@ export function ProjectDocuments() {
         setLoading(true);
         const [projectData, docsData] = await Promise.all([
           projectService.getProjectById(projectId),
-          documentService.getDocuments(projectId),
+          canViewDocuments
+            ? documentService.getDocuments(projectId)
+            : Promise.resolve([]),
         ]);
         setProject(projectData);
         setDocuments(docsData);
@@ -136,7 +175,7 @@ export function ProjectDocuments() {
     }
 
     load();
-  }, [projectId]);
+  }, [projectId, canViewDocuments]);
 
   const sortedDocuments = useMemo(
     () =>
@@ -196,6 +235,11 @@ export function ProjectDocuments() {
     e.preventDefault();
     if (!projectId) return;
 
+    if (!canCreateDocuments) {
+      toast.error("You do not have permission to create documents.");
+      return;
+    }
+
     if (!createForm.name.trim()) {
       toast.error("Document name is required.");
       return;
@@ -253,6 +297,11 @@ export function ProjectDocuments() {
   async function handleUpdate(doc: ProjectDocument) {
     if (!projectId) return;
 
+    if (!canEditDocuments) {
+      toast.error("You do not have permission to edit documents.");
+      return;
+    }
+
     if (!editForm.name.trim()) {
       toast.error("Document name is required.");
       return;
@@ -304,6 +353,11 @@ export function ProjectDocuments() {
   async function handleDelete(id: string) {
     if (!projectId) return;
 
+    if (!canDeleteDocuments) {
+      toast.error("You do not have permission to delete documents.");
+      return;
+    }
+
     try {
       await documentService.deleteDocumentById(id);
       toast.success("Document deleted.");
@@ -340,16 +394,18 @@ export function ProjectDocuments() {
         </div>
 
         <div className="project-documents-actions">
-          <button
-            type="button"
-            className="btn btn-light"
-            onClick={() => setShowCreate((prev) => !prev)}
-          >
-            <i
-              className={`bi ${showCreate ? "bi-x-circle" : "bi-plus-lg"} me-2`}
-            />
-            {showCreate ? "Close Form" : "New Document"}
-          </button>
+          {canCreateDocuments && (
+            <button
+              type="button"
+              className="btn btn-light"
+              onClick={() => setShowCreate((prev) => !prev)}
+            >
+              <i
+                className={`bi ${showCreate ? "bi-x-circle" : "bi-plus-lg"} me-2`}
+              />
+              {showCreate ? "Close Form" : "New Document"}
+            </button>
+          )}
           <button
             type="button"
             className="btn btn-outline-light"
@@ -365,7 +421,14 @@ export function ProjectDocuments() {
         </div>
       </section>
 
-      {showCreate && (
+      {!canAccessDocumentsWorkspace && (
+        <AccessDeniedState
+          title="Documents workspace is restricted"
+          description="Your role does not include any project document permissions for this workspace."
+        />
+      )}
+
+      {canCreateDocuments && showCreate && (
         <section className="project-document-form-card mb-4">
           <h2 className="h6 mb-3">Add Document</h2>
           <form className="row g-3" onSubmit={handleCreate}>
@@ -463,7 +526,12 @@ export function ProjectDocuments() {
         </section>
       )}
 
-      {sortedDocuments.length === 0 ? (
+      {!canViewDocuments ? (
+        <AccessDeniedState
+          title="Project documents are restricted"
+          description="You do not have permission to view project documents. Please contact your administrator if you need access."
+        />
+      ) : sortedDocuments.length === 0 ? (
         <section className="project-documents-empty">
           <i className="bi bi-folder2-open" />
           <h2 className="h6 mt-2">No documents yet</h2>
@@ -640,43 +708,46 @@ export function ProjectDocuments() {
                 </div>
 
                 <div className="project-document-actions">
-                  <button
-                    type="button"
-                    className="btn btn-outline-primary btn-sm"
-                    onClick={() => startEdit(doc)}
-                  >
-                    <i className="bi bi-pencil-square me-1" />
-                    Edit
-                  </button>
-
-                  {confirmDeleteId === doc.id ? (
-                    <span className="confirm-inline confirm-inline-sm">
-                      <span className="confirm-inline-text">Delete?</span>
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleDelete(doc.id)}
-                      >
-                        Yes
-                      </button>
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary btn-sm"
-                        onClick={() => setConfirmDeleteId(null)}
-                      >
-                        No
-                      </button>
-                    </span>
-                  ) : (
+                  {canEditDocuments && (
                     <button
                       type="button"
-                      className="btn btn-outline-danger btn-sm"
-                      onClick={() => setConfirmDeleteId(doc.id)}
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={() => startEdit(doc)}
                     >
-                      <i className="bi bi-trash me-1" />
-                      Delete
+                      <i className="bi bi-pencil-square me-1" />
+                      Edit
                     </button>
                   )}
+
+                  {canDeleteDocuments &&
+                    (confirmDeleteId === doc.id ? (
+                      <span className="confirm-inline confirm-inline-sm">
+                        <span className="confirm-inline-text">Delete?</span>
+                        <button
+                          type="button"
+                          className="btn btn-danger btn-sm"
+                          onClick={() => handleDelete(doc.id)}
+                        >
+                          Yes
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary btn-sm"
+                          onClick={() => setConfirmDeleteId(null)}
+                        >
+                          No
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => setConfirmDeleteId(doc.id)}
+                      >
+                        <i className="bi bi-trash me-1" />
+                        Delete
+                      </button>
+                    ))}
                 </div>
               </article>
             ),

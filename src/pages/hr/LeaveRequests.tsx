@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { LeaveRequest } from '../../services/hrProjectManagementService';
 import hrService from '../../services/hrProjectManagementService';
+import { useHrPermissions } from '../../hooks/useHrPermissions';
+import { HR_PERMISSION_KEYS } from '../../config/hrPermissions';
+import { AccessDeniedState } from '../../Components/AccessDeniedState';
 import '../styles/LeaveRequests.css';
 
 export default function LeaveRequests() {
@@ -10,8 +13,20 @@ export default function LeaveRequests() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [statusFilter, setStatusFilter] = useState('');
+    const { canAny } = useHrPermissions();
+    const canViewLeaveRequests = canAny([...HR_PERMISSION_KEYS.LEAVE_REQUESTS.VIEW]);
+    const canCreateLeaveRequest = canAny([...HR_PERMISSION_KEYS.LEAVE_REQUESTS.CREATE]);
+    const canEditLeaveRequest = canAny([...HR_PERMISSION_KEYS.LEAVE_REQUESTS.EDIT]);
+    const canDeleteLeaveRequest = canAny([...HR_PERMISSION_KEYS.LEAVE_REQUESTS.DELETE]);
 
-    useEffect(() => { fetchRequests(); }, [statusFilter]);
+    useEffect(() => {
+        if (!canViewLeaveRequests) {
+            setLoading(false);
+            return;
+        }
+
+        fetchRequests();
+    }, [statusFilter, canViewLeaveRequests]);
 
     const fetchRequests = async () => {
         try {
@@ -27,6 +42,11 @@ export default function LeaveRequests() {
     };
 
     const handleStatusUpdate = async (id: string, status: string) => {
+        if (!canEditLeaveRequest) {
+            alert('You do not have permission to update leave requests.');
+            return;
+        }
+
         const comments = status === 'REJECTED' ? prompt('Enter rejection reason:') : '';
         try {
             await hrService.updateLeaveRequest(id, { status, approverComments: comments || undefined });
@@ -36,6 +56,11 @@ export default function LeaveRequests() {
     };
 
     const handleCancel = async (id: string) => {
+        if (!canDeleteLeaveRequest && !canEditLeaveRequest) {
+            alert('You do not have permission to cancel leave requests.');
+            return;
+        }
+
         if (!confirm('Cancel this leave request?')) return;
         try {
             await hrService.cancelLeaveRequest(id);
@@ -44,7 +69,7 @@ export default function LeaveRequests() {
         } catch (err: any) { alert(err.response?.data?.message || 'Failed to cancel'); }
     };
 
-    if (loading) {
+    if (loading && canViewLeaveRequests) {
         return (
             <div className="departments-loading">
                 <div className="spinner-border text-primary" role="status"><span className="visually-hidden">Loading...</span></div>
@@ -60,60 +85,75 @@ export default function LeaveRequests() {
                     <h1 className="page-title"><i className="bi bi-envelope-paper me-3"></i>Leave Requests</h1>
                     <p className="page-subtitle">Review and manage leave requests</p>
                 </div>
-                <button className="btn btn-primary btn-lg" onClick={() => navigate('/dashboard/hr/leave-requests/create')}>
-                    <i className="bi bi-plus-circle me-2"></i>New Request
-                </button>
+                {canCreateLeaveRequest && (
+                    <button className="btn btn-primary btn-lg" onClick={() => navigate('/dashboard/hr/leave-requests/create')}>
+                        <i className="bi bi-plus-circle me-2"></i>New Request
+                    </button>
+                )}
             </div>
 
-            <div className="leave-requests-controls">
-                <select className="form-select" style={{ maxWidth: 200, borderRadius: 8 }} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-                    <option value="">All Statuses</option>
-                    <option value="PENDING">Pending</option>
-                    <option value="APPROVED">Approved</option>
-                    <option value="REJECTED">Rejected</option>
-                    <option value="CANCELLED">Cancelled</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="COMPLETED">Completed</option>
-                </select>
-            </div>
+            {canViewLeaveRequests ? (
+                <>
+                    <div className="leave-requests-controls">
+                        <select className="form-select" style={{ maxWidth: 200, borderRadius: 8 }} value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
+                            <option value="">All Statuses</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="APPROVED">Approved</option>
+                            <option value="REJECTED">Rejected</option>
+                            <option value="CANCELLED">Cancelled</option>
+                            <option value="IN_PROGRESS">In Progress</option>
+                            <option value="COMPLETED">Completed</option>
+                        </select>
+                    </div>
 
-            {error && <div className="alert alert-danger"><i className="bi bi-exclamation-circle me-2"></i>{error}</div>}
+                    {error && <div className="alert alert-danger"><i className="bi bi-exclamation-circle me-2"></i>{error}</div>}
 
-            <div className="lr-table-wrapper">
-                <table className="lr-table">
-                    <thead>
-                        <tr><th>Employee</th><th>Leave Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Reason</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                        {requests.length > 0 ? requests.map(r => (
-                            <tr key={r.id}>
-                                <td>{r.employee ? `${r.employee.firstName} ${r.employee.lastName}` : r.employeeId?.substring(0, 8) + '...'}</td>
-                                <td>{r.leaveType?.name || r.leaveTypeId?.substring(0, 8) + '...'}</td>
-                                <td>{new Date(r.startDate).toLocaleDateString()}</td>
-                                <td>{new Date(r.endDate).toLocaleDateString()}</td>
-                                <td><strong>{r.daysRequested}</strong></td>
-                                <td><span className={`status-badge status-${r.status}`}>{r.status}</span></td>
-                                <td style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.reason || '—'}</td>
-                                <td>
-                                    <div className="action-btns">
-                                        {r.status === 'PENDING' && (
-                                            <>
-                                                <button className="btn btn-sm btn-success" onClick={() => handleStatusUpdate(r.id, 'APPROVED')} title="Approve"><i className="bi bi-check-lg"></i></button>
-                                                <button className="btn btn-sm btn-danger" onClick={() => handleStatusUpdate(r.id, 'REJECTED')} title="Reject"><i className="bi bi-x-lg"></i></button>
-                                            </>
-                                        )}
-                                        {(r.status === 'PENDING' || r.status === 'APPROVED') && (
-                                            <button className="btn btn-sm btn-outline-secondary" onClick={() => handleCancel(r.id)} title="Cancel"><i className="bi bi-slash-circle"></i></button>
-                                        )}
-                                    </div>
-                                </td>
-                            </tr>
-                        )) : (
-                            <tr><td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: '#95a5a6' }}>No leave requests found</td></tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                    <div className="lr-table-wrapper">
+                        <table className="lr-table">
+                            <thead>
+                                <tr><th>Employee</th><th>Leave Type</th><th>Start</th><th>End</th><th>Days</th><th>Status</th><th>Reason</th><th>Actions</th></tr>
+                            </thead>
+                            <tbody>
+                                {requests.length > 0 ? requests.map(r => (
+                                    <tr key={r.id}>
+                                        <td>{r.employee ? `${r.employee.firstName} ${r.employee.lastName}` : r.employeeId?.substring(0, 8) + '...'}</td>
+                                        <td>{r.leaveType?.name || r.leaveTypeId?.substring(0, 8) + '...'}</td>
+                                        <td>{new Date(r.startDate).toLocaleDateString()}</td>
+                                        <td>{new Date(r.endDate).toLocaleDateString()}</td>
+                                        <td><strong>{r.daysRequested}</strong></td>
+                                        <td><span className={`status-badge status-${r.status}`}>{r.status}</span></td>
+                                        <td style={{ maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.reason || '—'}</td>
+                                        <td>
+                                            <div className="action-btns">
+                                                {r.status === 'PENDING' && (
+                                                    <>
+                                                        {canEditLeaveRequest && (
+                                                            <button className="btn btn-sm btn-success" onClick={() => handleStatusUpdate(r.id, 'APPROVED')} title="Approve"><i className="bi bi-check-lg"></i></button>
+                                                        )}
+                                                        {canEditLeaveRequest && (
+                                                            <button className="btn btn-sm btn-danger" onClick={() => handleStatusUpdate(r.id, 'REJECTED')} title="Reject"><i className="bi bi-x-lg"></i></button>
+                                                        )}
+                                                    </>
+                                                )}
+                                                {(canDeleteLeaveRequest || canEditLeaveRequest) && (r.status === 'PENDING' || r.status === 'APPROVED') && (
+                                                    <button className="btn btn-sm btn-outline-secondary" onClick={() => handleCancel(r.id)} title="Cancel"><i className="bi bi-slash-circle"></i></button>
+                                                )}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )) : (
+                                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: '3rem', color: '#95a5a6' }}>No leave requests found</td></tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </>
+            ) : (
+                <AccessDeniedState
+                    title="Leave requests are restricted"
+                    description="You do not have permission to view leave requests."
+                />
+            )}
         </div>
     );
 }
