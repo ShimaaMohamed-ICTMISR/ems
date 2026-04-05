@@ -1,9 +1,13 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import * as meetingService from '../../services/meetingService';
-import type { Meeting } from '../../services/meetingService';
-import hrService, { type Employee } from '../../services/hrProjectManagementService';
-import './meetings.css';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import * as meetingService from "../../services/meetingService";
+import type { Meeting } from "../../services/meetingService";
+import hrService, {
+  type Employee,
+} from "../../services/hrProjectManagementService";
+import { useMeetingPermissions } from "../../hooks/useMeetingPermissions";
+import { MEETING_PERMISSION_KEYS } from "../../config/meetingPermissions";
+import "./meetings.css";
 
 export function MeetingDetails() {
   const { id } = useParams<{ id: string }>();
@@ -12,26 +16,44 @@ export function MeetingDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const {
+    canAny,
+    isLoaded: permissionsLoaded,
+    isLoading: permissionsLoading,
+  } = useMeetingPermissions();
+  const canViewMeeting = canAny([...MEETING_PERMISSION_KEYS.VIEW]);
 
   useEffect(() => {
+    if (!permissionsLoaded || !canViewMeeting) {
+      return;
+    }
+
     if (id) {
       loadMeeting();
     }
-  }, [id]);
+  }, [id, permissionsLoaded, canViewMeeting]);
 
   useEffect(() => {
+    if (!permissionsLoaded || !canViewMeeting) {
+      return;
+    }
+
     hrService
       .getEmployees()
       .then((res) => {
         const innerData = res.data?.data;
-        const list = Array.isArray(innerData?.data) ? innerData.data : Array.isArray(innerData) ? innerData : [];
+        const list = Array.isArray(innerData?.data)
+          ? innerData.data
+          : Array.isArray(innerData)
+            ? innerData
+            : [];
         setEmployees(list);
       })
       .catch((err) => {
-        console.error('Failed to load employees for meeting details:', err);
+        console.error("Failed to load employees for meeting details:", err);
         setEmployees([]);
       });
-  }, []);
+  }, [permissionsLoaded, canViewMeeting]);
 
   const getEmployeeDisplay = (userId: string) => {
     const emp = employees.find((e) => e.id === userId);
@@ -41,14 +63,14 @@ export function MeetingDetails() {
 
   const loadMeeting = async () => {
     if (!id) return;
-    
+
     try {
       setLoading(true);
       const data = await meetingService.getMeetingById(id);
       setMeeting(data);
       setError(null);
     } catch (err) {
-      setError('Failed to load meeting details');
+      setError("Failed to load meeting details");
       console.error(err);
     } finally {
       setLoading(false);
@@ -57,28 +79,72 @@ export function MeetingDetails() {
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'SCHEDULED': return 'bg-success';
-      case 'DRAFT': return 'bg-warning text-dark';
-      case 'CANCELLED': return 'bg-danger';
-      default: return 'bg-secondary';
+      case "SCHEDULED":
+        return "bg-success";
+      case "DRAFT":
+        return "bg-warning text-dark";
+      case "CANCELLED":
+        return "bg-danger";
+      default:
+        return "bg-secondary";
     }
   };
 
+  if (!permissionsLoaded || permissionsLoading) {
+    return (
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "400px" }}
+      >
+        <div className="text-center">
+          <div className="spinner-border text-secondary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted mt-3">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canViewMeeting) {
+    return (
+      <div className="text-center py-5">
+        <div className="mb-4">
+          <i className="bi bi-shield-lock display-1 text-warning opacity-75"></i>
+        </div>
+        <h4 className="text-muted mb-2">Unauthorized</h4>
+        <p className="text-muted mb-4">
+          You do not have permission to view meetings.
+        </p>
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => navigate("/dashboard/meetings")}
+        >
+          <i className="bi bi-arrow-left me-2"></i>
+          Back to Meetings
+        </button>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "400px" }}
+      >
         <div className="text-center">
           <div className="spinner-border text-secondary" role="status">
             <span className="visually-hidden">Loading...</span>
@@ -96,10 +162,12 @@ export function MeetingDetails() {
           <i className="bi bi-exclamation-triangle display-1 text-warning opacity-50"></i>
         </div>
         <h4 className="text-muted mb-3">Meeting Not Found</h4>
-        <p className="text-muted mb-4">{error || 'The meeting you are looking for does not exist.'}</p>
-        <button 
+        <p className="text-muted mb-4">
+          {error || "The meeting you are looking for does not exist."}
+        </p>
+        <button
           className="btn btn-secondary btn-lg"
-          onClick={() => navigate('/dashboard/meetings')}
+          onClick={() => navigate("/dashboard/meetings")}
         >
           <i className="bi bi-arrow-left me-2"></i>
           Back to Meetings
@@ -118,7 +186,9 @@ export function MeetingDetails() {
             {meeting.title}
           </h2>
           <div className="d-flex align-items-center gap-3">
-            <span className={`badge px-3 py-2 ${getStatusBadgeClass(meeting.status)}`}>
+            <span
+              className={`badge px-3 py-2 ${getStatusBadgeClass(meeting.status)}`}
+            >
               {meeting.status}
             </span>
             <span className="text-muted">
@@ -127,9 +197,9 @@ export function MeetingDetails() {
             </span>
           </div>
         </div>
-        <button 
-          className="btn btn-outline-secondary" 
-          onClick={() => navigate('/dashboard/meetings')}
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => navigate("/dashboard/meetings")}
         >
           <i className="bi bi-arrow-left me-2"></i>
           Back to Meetings
@@ -157,23 +227,33 @@ export function MeetingDetails() {
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <div className="d-flex align-items-center">
-                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 time-circle" style={{ width: '40px', height: '40px' }}>
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center me-3 time-circle"
+                      style={{ width: "40px", height: "40px" }}
+                    >
                       <i className="bi bi-calendar-event"></i>
                     </div>
                     <div>
                       <h6 className="mb-1 fw-semibold text-dark">Start Time</h6>
-                      <p className="text-muted mb-0">{formatDateTime(meeting.startTime)}</p>
+                      <p className="text-muted mb-0">
+                        {formatDateTime(meeting.startTime)}
+                      </p>
                     </div>
                   </div>
                 </div>
                 <div className="col-md-6 mb-3">
                   <div className="d-flex align-items-center">
-                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 time-circle" style={{ width: '40px', height: '40px' }}>
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center me-3 time-circle"
+                      style={{ width: "40px", height: "40px" }}
+                    >
                       <i className="bi bi-calendar-x"></i>
                     </div>
                     <div>
                       <h6 className="mb-1 fw-semibold text-dark">End Time</h6>
-                      <p className="text-muted mb-0">{formatDateTime(meeting.endTime)}</p>
+                      <p className="text-muted mb-0">
+                        {formatDateTime(meeting.endTime)}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -186,9 +266,9 @@ export function MeetingDetails() {
                     Zoom Meeting
                   </h6>
                   <div className="d-flex flex-wrap gap-3 align-items-center">
-                    <a 
-                      href={meeting.zoomJoinUrl} 
-                      target="_blank" 
+                    <a
+                      href={meeting.zoomJoinUrl}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="btn btn-dark btn-lg"
                     >
@@ -198,12 +278,14 @@ export function MeetingDetails() {
                     <div className="text-muted small">
                       {meeting.zoomMeetingId && (
                         <div className="mb-1">
-                          <strong>Meeting ID:</strong> <code>{meeting.zoomMeetingId}</code>
+                          <strong>Meeting ID:</strong>{" "}
+                          <code>{meeting.zoomMeetingId}</code>
                         </div>
                       )}
                       {meeting.zoomPassword && (
                         <div>
-                          <strong>Password:</strong> <code>{meeting.zoomPassword}</code>
+                          <strong>Password:</strong>{" "}
+                          <code>{meeting.zoomPassword}</code>
                         </div>
                       )}
                     </div>
@@ -227,7 +309,10 @@ export function MeetingDetails() {
                   {meeting.participants.map((participant) => (
                     <div key={participant.id} className="col-md-6">
                       <div className="d-flex align-items-center p-3 bg-light rounded-3">
-                        <div className="rounded-circle d-flex align-items-center justify-content-center me-3 participant-circle" style={{ width: '40px', height: '40px' }}>
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center me-3 participant-circle"
+                          style={{ width: "40px", height: "40px" }}
+                        >
                           <i className="bi bi-person-fill text-white"></i>
                         </div>
                         <div className="flex-grow-1">
@@ -235,7 +320,10 @@ export function MeetingDetails() {
                             {getEmployeeDisplay(participant.userId)}
                           </h6>
                           <small className="text-muted">
-                            Added {new Date(participant.createdAt).toLocaleDateString()}
+                            Added{" "}
+                            {new Date(
+                              participant.createdAt,
+                            ).toLocaleDateString()}
                           </small>
                         </div>
                       </div>
@@ -260,9 +348,9 @@ export function MeetingDetails() {
                   {meeting.organizers.map((organizer) => (
                     <div key={organizer.id} className="col-md-6">
                       <div className="d-flex align-items-center p-3 bg-light rounded-3">
-                        <div 
+                        <div
                           className="rounded-circle d-flex align-items-center justify-content-center me-3 bg-dark"
-                          style={{ width: '40px', height: '40px' }}
+                          style={{ width: "40px", height: "40px" }}
                         >
                           <i className="bi bi-person-badge-fill text-white"></i>
                         </div>
@@ -291,8 +379,18 @@ export function MeetingDetails() {
               </div>
               <div className="card-body p-4">
                 {meeting.agendaItems.map((item, index) => (
-                  <div key={item.id} className="d-flex align-items-center p-3 mb-3 bg-light rounded-3">
-                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 agenda-number text-white" style={{ width: '32px', height: '32px', fontSize: '14px' }}>
+                  <div
+                    key={item.id}
+                    className="d-flex align-items-center p-3 mb-3 bg-light rounded-3"
+                  >
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center me-3 agenda-number text-white"
+                      style={{
+                        width: "32px",
+                        height: "32px",
+                        fontSize: "14px",
+                      }}
+                    >
                       {index + 1}
                     </div>
                     <div className="flex-grow-1">
@@ -348,8 +446,14 @@ export function MeetingDetails() {
               </div>
               <div className="card-body p-4">
                 {meeting.actionItems.map((item) => (
-                  <div key={item.id} className="d-flex align-items-start p-3 mb-3 bg-light rounded-3">
-                    <div className="rounded-circle d-flex align-items-center justify-content-center me-3 mt-1 action-circle" style={{ width: '32px', height: '32px' }}>
+                  <div
+                    key={item.id}
+                    className="d-flex align-items-start p-3 mb-3 bg-light rounded-3"
+                  >
+                    <div
+                      className="rounded-circle d-flex align-items-center justify-content-center me-3 mt-1 action-circle"
+                      style={{ width: "32px", height: "32px" }}
+                    >
                       <i className="bi bi-check text-white"></i>
                     </div>
                     <div className="flex-grow-1">
@@ -369,8 +473,10 @@ export function MeetingDetails() {
                         )}
                       </div>
                     </div>
-                    <span className={`badge ${item.status === 'COMPLETED' ? 'bg-success' : item.status === 'IN_PROGRESS' ? 'bg-warning text-dark' : 'bg-secondary'}`}>
-                      {item.status.replace('_', ' ')}
+                    <span
+                      className={`badge ${item.status === "COMPLETED" ? "bg-success" : item.status === "IN_PROGRESS" ? "bg-warning text-dark" : "bg-secondary"}`}
+                    >
+                      {item.status.replace("_", " ")}
                     </span>
                   </div>
                 ))}
@@ -396,7 +502,7 @@ export function MeetingDetails() {
                 </div>
                 <p className="text-muted mb-0 ms-4">{meeting.createdBy}</p>
               </div>
-              
+
               <div className="mb-4">
                 <div className="d-flex align-items-center mb-2">
                   <i className="bi bi-calendar-plus me-2 text-dark"></i>
@@ -406,7 +512,7 @@ export function MeetingDetails() {
                   {new Date(meeting.createdAt).toLocaleString()}
                 </p>
               </div>
-              
+
               <div>
                 <div className="d-flex align-items-center mb-2">
                   <i className="bi bi-pencil me-2 text-dark"></i>

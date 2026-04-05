@@ -105,6 +105,17 @@
   margin-bottom: 1rem;
 }
 
+.pm-info-note {
+  grid-column: 1 / -1;
+  background: #fff;
+  border: 1px solid #dbe4ef;
+  border-left: 4px solid #38bdf8;
+  border-radius: 12px;
+  color: #334155;
+  padding: 0.85rem 1rem;
+  font-weight: 500;
+}
+
 /* ─── Navigation Cards ─── */
 
 .pm-nav-section {

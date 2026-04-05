@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import {
+  PM_PERMISSION_KEYS,
+  PM_ROUTE_PERMISSION_KEYS,
+} from "../../config/projectManagementPermissions";
+import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
 import {
   resourceRequestService,
   resourceService,
@@ -28,6 +34,21 @@ const typeColor: Record<number, string> = {
 };
 
 export function ResourceRequests() {
+  const { canAny } = useProjectManagementPermissions();
+
+  const hasResourceRequestsAccess = canAny([
+    ...PM_ROUTE_PERMISSION_KEYS.RESOURCE_REQUESTS,
+  ]);
+  const canViewRequests = canAny([
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.VIEW,
+  ]);
+  const canApproveOrReject =
+    canAny([...PM_PERMISSION_KEYS.APPROVALS.RESOURCE_REQUESTS]) ||
+    canAny([...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.EDIT]);
+  const canDeleteRequests = canAny([
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.DELETE,
+  ]);
+
   const [requests, setRequests] = useState<ResourceRequest[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -47,10 +68,23 @@ export function ResourceRequests() {
   );
 
   useEffect(() => {
+    if (!hasResourceRequestsAccess) {
+      setLoading(false);
+      return;
+    }
+
     fetchAll();
-  }, []);
+  }, [hasResourceRequestsAccess, canViewRequests]);
 
   async function fetchAll() {
+    if (!canViewRequests) {
+      setRequests([]);
+      setResources([]);
+      setProjects([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const [reqData, resData, projData] = await Promise.all([
@@ -82,6 +116,11 @@ export function ResourceRequests() {
   }
 
   async function submitAction() {
+    if (!canApproveOrReject) {
+      toast.error("You do not have permission to approve or reject requests.");
+      return;
+    }
+
     if (!actionId || !actionType) return;
     try {
       setActioning(true);
@@ -104,6 +143,11 @@ export function ResourceRequests() {
   }
 
   async function handleDelete(id: string) {
+    if (!canDeleteRequests) {
+      toast.error("You do not have permission to delete requests.");
+      return;
+    }
+
     try {
       await resourceRequestService.delete(id);
       toast.success("Request deleted.");
@@ -128,6 +172,17 @@ export function ResourceRequests() {
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  if (!hasResourceRequestsAccess) {
+    return (
+      <div className="rr-page">
+        <AccessDeniedState
+          title="No Resource Requests Access"
+          description="You do not have permission to access resource requests."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="rr-page">
       {/* Hero */}
@@ -142,7 +197,13 @@ export function ResourceRequests() {
       </div>
 
       {/* Table */}
-      {loading ? (
+      {!canViewRequests ? (
+        <div className="alert alert-info" role="status">
+          <i className="bi bi-info-circle me-2" />
+          You can access this module, but you do not have permission to view
+          resource requests.
+        </div>
+      ) : loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-info" role="status" />
         </div>
@@ -251,26 +312,27 @@ export function ResourceRequests() {
                       </span>
                     ) : (
                       <div className="rr-row-actions">
-                        {(req.status === 0 || req.status === 1) && (
-                          <>
-                            <button
-                              type="button"
-                              className="btn btn-outline-success btn-sm"
-                              onClick={() => startAction(req.id, "approve")}
-                              title="Approve"
-                            >
-                              <i className="bi bi-check-circle" />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => startAction(req.id, "reject")}
-                              title="Reject"
-                            >
-                              <i className="bi bi-x-circle" />
-                            </button>
-                          </>
-                        )}
+                        {canApproveOrReject &&
+                          (req.status === 0 || req.status === 1) && (
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn-outline-success btn-sm"
+                                onClick={() => startAction(req.id, "approve")}
+                                title="Approve"
+                              >
+                                <i className="bi bi-check-circle" />
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => startAction(req.id, "reject")}
+                                title="Reject"
+                              >
+                                <i className="bi bi-x-circle" />
+                              </button>
+                            </>
+                          )}
                         <button
                           type="button"
                           className="btn btn-outline-light btn-sm"
@@ -279,14 +341,16 @@ export function ResourceRequests() {
                         >
                           <i className="bi bi-eye" />
                         </button>
-                        <button
-                          type="button"
-                          className="btn btn-outline-danger btn-sm"
-                          onClick={() => setConfirmDeleteId(req.id)}
-                          title="Delete"
-                        >
-                          <i className="bi bi-trash" />
-                        </button>
+                        {canDeleteRequests && (
+                          <button
+                            type="button"
+                            className="btn btn-outline-danger btn-sm"
+                            onClick={() => setConfirmDeleteId(req.id)}
+                            title="Delete"
+                          >
+                            <i className="bi bi-trash" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </td>

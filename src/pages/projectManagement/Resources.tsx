@@ -1,6 +1,12 @@
 import { useEffect, useState, useCallback } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import toast from "react-hot-toast";
+import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import {
+  PM_PERMISSION_KEYS,
+  PM_ROUTE_PERMISSION_KEYS,
+} from "../../config/projectManagementPermissions";
+import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
 import {
   resourceService,
   resourceRequestService,
@@ -23,6 +29,14 @@ const initialForm = {
 };
 
 export function Resources() {
+  const { canAny } = useProjectManagementPermissions();
+
+  const hasResourcesAccess = canAny([...PM_ROUTE_PERMISSION_KEYS.RESOURCES]);
+  const canViewResources = canAny([...PM_PERMISSION_KEYS.RESOURCES.VIEW]);
+  const canCreateResource = canAny([...PM_PERMISSION_KEYS.RESOURCES.CREATE]);
+  const canEditResource = canAny([...PM_PERMISSION_KEYS.RESOURCES.EDIT]);
+  const canDeleteResource = canAny([...PM_PERMISSION_KEYS.RESOURCES.DELETE]);
+
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -47,38 +61,57 @@ export function Resources() {
     4: "#6b7280",
   };
 
-  const openDetail = useCallback(async (r: Resource) => {
-    setDetailResource(r);
-    setDetailRequests([]);
-    setDetailRequestsLoading(true);
-    try {
-      const [allRequests, allProjects] = await Promise.all([
-        resourceRequestService.getAll(),
-        projectService.getProjects(),
-      ]);
-      const projectMap = new Map(
-        allProjects.map((p: Project) => [p.id, p.name || "Unnamed Project"]),
-      );
-      const matched = allRequests
-        .filter((req: ResourceRequest) => req.resourceId === r.id)
-        .map((req: ResourceRequest) => ({
-          ...req,
-          projectName:
-            projectMap.get(req.projectId ?? "") || req.projectId || "—",
-        }));
-      setDetailRequests(matched);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setDetailRequestsLoading(false);
-    }
-  }, []);
+  const openDetail = useCallback(
+    async (r: Resource) => {
+      if (!canViewResources) {
+        toast.error("You do not have permission to view resource details.");
+        return;
+      }
+
+      setDetailResource(r);
+      setDetailRequests([]);
+      setDetailRequestsLoading(true);
+      try {
+        const [allRequests, allProjects] = await Promise.all([
+          resourceRequestService.getAll(),
+          projectService.getProjects(),
+        ]);
+        const projectMap = new Map(
+          allProjects.map((p: Project) => [p.id, p.name || "Unnamed Project"]),
+        );
+        const matched = allRequests
+          .filter((req: ResourceRequest) => req.resourceId === r.id)
+          .map((req: ResourceRequest) => ({
+            ...req,
+            projectName:
+              projectMap.get(req.projectId ?? "") || req.projectId || "—",
+          }));
+        setDetailRequests(matched);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setDetailRequestsLoading(false);
+      }
+    },
+    [canViewResources],
+  );
 
   useEffect(() => {
+    if (!hasResourcesAccess) {
+      setLoading(false);
+      return;
+    }
+
     fetchResources();
-  }, []);
+  }, [hasResourcesAccess, canViewResources]);
 
   async function fetchResources() {
+    if (!canViewResources) {
+      setResources([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const data = await resourceService.getAll();
@@ -107,6 +140,12 @@ export function Resources() {
 
   async function handleCreate(e: FormEvent) {
     e.preventDefault();
+
+    if (!canCreateResource) {
+      toast.error("You do not have permission to create resources.");
+      return;
+    }
+
     if (!form.name.trim()) {
       toast.error("Resource name is required.");
       return;
@@ -134,6 +173,11 @@ export function Resources() {
   }
 
   function startEdit(r: Resource) {
+    if (!canEditResource) {
+      toast.error("You do not have permission to edit resources.");
+      return;
+    }
+
     setEditingId(r.id);
     setEditForm({
       name: r.name || "",
@@ -144,6 +188,11 @@ export function Resources() {
   }
 
   async function handleUpdate(r: Resource) {
+    if (!canEditResource) {
+      toast.error("You do not have permission to edit resources.");
+      return;
+    }
+
     if (!editForm.name.trim()) {
       toast.error("Resource name is required.");
       return;
@@ -170,6 +219,11 @@ export function Resources() {
   }
 
   async function handleDelete(id: string) {
+    if (!canDeleteResource) {
+      toast.error("You do not have permission to delete resources.");
+      return;
+    }
+
     try {
       await resourceService.delete(id);
       toast.success("Resource deleted.");
@@ -189,6 +243,17 @@ export function Resources() {
     3: "#10b981",
   };
 
+  if (!hasResourcesAccess) {
+    return (
+      <div className="resources-page">
+        <AccessDeniedState
+          title="No Resources Access"
+          description="You do not have permission to access the resources section."
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="resources-page">
       {/* Hero */}
@@ -202,21 +267,23 @@ export function Resources() {
           </p>
         </div>
         <div className="resources-hero-actions">
-          <button
-            type="button"
-            className="btn btn-light"
-            onClick={() => setShowCreate((prev) => !prev)}
-          >
-            <i
-              className={`bi ${showCreate ? "bi-x-circle" : "bi-plus-lg"} me-2`}
-            />
-            {showCreate ? "Cancel" : "New Resource"}
-          </button>
+          {canCreateResource && (
+            <button
+              type="button"
+              className="btn btn-light"
+              onClick={() => setShowCreate((prev) => !prev)}
+            >
+              <i
+                className={`bi ${showCreate ? "bi-x-circle" : "bi-plus-lg"} me-2`}
+              />
+              {showCreate ? "Cancel" : "New Resource"}
+            </button>
+          )}
         </div>
       </section>
 
       {/* Create Form */}
-      {showCreate && (
+      {showCreate && canCreateResource && (
         <section className="resource-form-card mb-3">
           <h3 className="h6 mb-3">Create New Resource</h3>
           <form className="row g-3" onSubmit={handleCreate}>
@@ -405,7 +472,13 @@ export function Resources() {
       )}
 
       {/* Table */}
-      {loading ? (
+      {!canViewResources ? (
+        <div className="alert alert-info" role="status">
+          <i className="bi bi-info-circle me-2" />
+          You can access this section, but you do not have permission to view
+          existing resources.
+        </div>
+      ) : loading ? (
         <div className="text-center py-5">
           <div className="spinner-border text-info" role="status" />
           <p className="mt-3 mb-0" style={{ color: "#6c757d" }}>
@@ -557,30 +630,36 @@ export function Resources() {
                           </span>
                         ) : (
                           <>
-                            <button
-                              type="button"
-                              className="btn btn-outline-primary btn-sm"
-                              onClick={() => startEdit(r)}
-                              title="Edit"
-                            >
-                              <i className="bi bi-pencil" />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-info btn-sm"
-                              onClick={() => openDetail(r)}
-                              title="View"
-                            >
-                              <i className="bi bi-eye" />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => setConfirmDeleteId(r.id)}
-                              title="Delete"
-                            >
-                              <i className="bi bi-trash" />
-                            </button>
+                            {canEditResource && (
+                              <button
+                                type="button"
+                                className="btn btn-outline-primary btn-sm"
+                                onClick={() => startEdit(r)}
+                                title="Edit"
+                              >
+                                <i className="bi bi-pencil" />
+                              </button>
+                            )}
+                            {canViewResources && (
+                              <button
+                                type="button"
+                                className="btn btn-outline-info btn-sm"
+                                onClick={() => openDetail(r)}
+                                title="View"
+                              >
+                                <i className="bi bi-eye" />
+                              </button>
+                            )}
+                            {canDeleteResource && (
+                              <button
+                                type="button"
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => setConfirmDeleteId(r.id)}
+                                title="Delete"
+                              >
+                                <i className="bi bi-trash" />
+                              </button>
+                            )}
                           </>
                         )}
                       </div>

@@ -1,21 +1,38 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import * as meetingService from '../../services/meetingService';
-import type { Meeting, MeetingStatus } from '../../services/meetingService';
-import './meetings.css';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import * as meetingService from "../../services/meetingService";
+import type { Meeting, MeetingStatus } from "../../services/meetingService";
+import { useMeetingPermissions } from "../../hooks/useMeetingPermissions";
+import { MEETING_PERMISSION_KEYS } from "../../config/meetingPermissions";
+import "./meetings.css";
 
 export function MeetingsList() {
   const navigate = useNavigate();
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [statusFilter] = useState<MeetingStatus | 'ALL'>('ALL');
+  const [statusFilter] = useState<MeetingStatus | "ALL">("ALL");
   const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
+  const {
+    canAny,
+    isLoaded: permissionsLoaded,
+    isLoading: permissionsLoading,
+  } = useMeetingPermissions();
+
+  const canViewMeetings = canAny([...MEETING_PERMISSION_KEYS.VIEW]);
+  const canCreateMeeting = canAny([...MEETING_PERMISSION_KEYS.CREATE]);
+  const canDeleteMeeting = canAny([...MEETING_PERMISSION_KEYS.DELETE]);
 
   useEffect(() => {
+    if (!permissionsLoaded) return;
+    if (!canViewMeetings) {
+      setLoading(false);
+      return;
+    }
+
     loadMeetings();
-  }, []);
+  }, [permissionsLoaded, canViewMeetings]);
 
   const loadMeetings = async (isRetry = false) => {
     try {
@@ -24,32 +41,45 @@ export function MeetingsList() {
       } else {
         setLoading(true);
       }
-      
+
       const data = await meetingService.getMeetings();
-      console.log('Meetings loaded:', data);
+      console.log("Meetings loaded:", data);
       setMeetings(Array.isArray(data) ? data : []);
       setError(null);
       setRetryCount(0); // Reset retry count on success
     } catch (err: any) {
-      console.error('Error loading meetings:', err);
-      
+      console.error("Error loading meetings:", err);
+
       // More detailed error handling
       if (err?.response?.status === 401) {
-        setError('Authentication failed: Service ticket is missing or invalid. Please contact support.');
+        setError(
+          "Authentication failed: Service ticket is missing or invalid. Please contact support.",
+        );
       } else if (err?.response?.status === 500) {
-        setError('Meeting service is experiencing technical difficulties. The backend team has been notified. Please try again in a few minutes.');
+        setError(
+          "Meeting service is experiencing technical difficulties. The backend team has been notified. Please try again in a few minutes.",
+        );
       } else if (err?.response?.status === 503) {
-        setError('Meeting service is temporarily unavailable for maintenance. Please try again later.');
+        setError(
+          "Meeting service is temporarily unavailable for maintenance. Please try again later.",
+        );
       } else if (err?.response?.status === 404) {
-        setError('Meeting service endpoint not found. Please contact support.');
-      } else if (err?.code === 'NETWORK_ERROR' || err?.message?.includes('Network Error')) {
-        setError('Unable to connect to meeting service. Please check your internet connection and try again.');
-      } else if (err?.code === 'ECONNREFUSED') {
-        setError('Meeting service is not responding. Please try again later.');
+        setError("Meeting service endpoint not found. Please contact support.");
+      } else if (
+        err?.code === "NETWORK_ERROR" ||
+        err?.message?.includes("Network Error")
+      ) {
+        setError(
+          "Unable to connect to meeting service. Please check your internet connection and try again.",
+        );
+      } else if (err?.code === "ECONNREFUSED") {
+        setError("Meeting service is not responding. Please try again later.");
       } else {
-        setError(`Failed to load meetings: ${err?.message || 'Unknown error'}. Please try again or contact support if the issue persists.`);
+        setError(
+          `Failed to load meetings: ${err?.message || "Unknown error"}. Please try again or contact support if the issue persists.`,
+        );
       }
-      
+
       // Set empty array so the UI can still render
       setMeetings([]);
     } finally {
@@ -61,10 +91,10 @@ export function MeetingsList() {
   const handleRetry = async () => {
     const newRetryCount = retryCount + 1;
     setRetryCount(newRetryCount);
-    
+
     // Exponential backoff: wait longer between retries
     const delay = Math.min(1000 * Math.pow(2, newRetryCount - 1), 10000);
-    
+
     if (newRetryCount <= 3) {
       setTimeout(() => {
         loadMeetings(true);
@@ -75,40 +105,77 @@ export function MeetingsList() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this meeting?')) return;
-    
+    if (!confirm("Are you sure you want to delete this meeting?")) return;
+
     try {
       await meetingService.deleteMeeting(id);
       loadMeetings();
     } catch (err) {
-      console.error('Failed to delete meeting:', err);
-      alert('Failed to delete meeting');
+      console.error("Failed to delete meeting:", err);
+      alert("Failed to delete meeting");
     }
   };
 
   const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return date.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   const getStatusBadgeClass = (status: MeetingStatus) => {
     switch (status) {
-      case 'SCHEDULED': return 'bg-success';
-      case 'DRAFT': return 'bg-warning text-dark';
-      case 'CANCELLED': return 'bg-danger';
-      default: return 'bg-secondary';
+      case "SCHEDULED":
+        return "bg-success";
+      case "DRAFT":
+        return "bg-warning text-dark";
+      case "CANCELLED":
+        return "bg-danger";
+      default:
+        return "bg-secondary";
     }
   };
 
+  if (!permissionsLoaded || permissionsLoading) {
+    return (
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "400px" }}
+      >
+        <div className="text-center">
+          <div className="spinner-border text-secondary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted mt-3">Checking permissions...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canViewMeetings) {
+    return (
+      <div className="text-center py-5">
+        <div className="mb-4">
+          <i className="bi bi-shield-lock display-1 text-warning opacity-75"></i>
+        </div>
+        <h4 className="text-muted mb-2">Unauthorized</h4>
+        <p className="text-muted mb-0">
+          You do not have permission to view meetings.
+        </p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "400px" }}
+      >
         <div className="text-center">
           <div className="spinner-border text-secondary" role="status">
             <span className="visually-hidden">Loading...</span>
@@ -120,16 +187,20 @@ export function MeetingsList() {
   }
 
   // Client-side filtering
-  const filteredMeetings = statusFilter === 'ALL' 
-    ? meetings 
-    : meetings.filter(m => m.status === statusFilter);
+  const filteredMeetings =
+    statusFilter === "ALL"
+      ? meetings
+      : meetings.filter((m) => m.status === statusFilter);
 
   // Debug logging for filters
-  console.log('Filter Debug:', {
+  console.log("Filter Debug:", {
     statusFilter,
     totalMeetings: meetings.length,
     filteredMeetings: filteredMeetings.length,
-    meetingStatuses: meetings.map(m => ({ title: m.title, status: m.status }))
+    meetingStatuses: meetings.map((m) => ({
+      title: m.title,
+      status: m.status,
+    })),
   });
 
   return (
@@ -148,22 +219,21 @@ export function MeetingsList() {
             )}
           </h2>
           <p className="text-muted mb-0">
-            {error 
-              ? "Service unavailable - working in offline mode" 
-              : "Schedule and manage team meetings"
-            }
+            {error
+              ? "Service unavailable - working in offline mode"
+              : "Schedule and manage team meetings"}
           </p>
         </div>
-        <button
-          className="btn btn-meetings-primary btn-lg shadow-sm"
-          onClick={() => navigate('/dashboard/meetings/create')}
-        >
-          <i className="bi bi-plus-circle me-2"></i>
-          Create Meeting
-        </button>
+        {canCreateMeeting && (
+          <button
+            className="btn btn-meetings-primary btn-lg shadow-sm"
+            onClick={() => navigate("/dashboard/meetings/create")}
+          >
+            <i className="bi bi-plus-circle me-2"></i>
+            Create Meeting
+          </button>
+        )}
       </div>
-
-      
 
       {error && (
         <div className="alert alert-warning border-0 shadow-sm" role="alert">
@@ -183,27 +253,31 @@ export function MeetingsList() {
                 <div className="alert alert-info border-0 mt-2 mb-0 py-2">
                   <small>
                     <i className="bi bi-info-circle me-1"></i>
-                    If the issue persists, the backend service may be down. 
-                    You can still create meetings offline - they will sync when the service is restored.
+                    If the issue persists, the backend service may be down. You
+                    can still create meetings offline - they will sync when the
+                    service is restored.
                   </small>
                 </div>
               )}
             </div>
             <div className="d-flex gap-2">
-              <button 
+              <button
                 className="btn btn-outline-warning btn-sm"
                 onClick={handleRetry}
                 disabled={isRetrying}
               >
                 {isRetrying ? (
                   <>
-                    <span className="spinner-border spinner-border-sm me-1" role="status"></span>
+                    <span
+                      className="spinner-border spinner-border-sm me-1"
+                      role="status"
+                    ></span>
                     Retrying...
                   </>
                 ) : (
                   <>
                     <i className="bi bi-arrow-clockwise me-1"></i>
-                    Retry {retryCount >= 3 ? 'Now' : `(${retryCount + 1}/3)`}
+                    Retry {retryCount >= 3 ? "Now" : `(${retryCount + 1}/3)`}
                   </>
                 )}
               </button>
@@ -222,7 +296,9 @@ export function MeetingsList() {
                   <h5 className="card-title mb-0 fw-bold text-dark">
                     {meeting.title}
                   </h5>
-                  <span className={`badge ${getStatusBadgeClass(meeting.status)} px-3 py-2`}>
+                  <span
+                    className={`badge ${getStatusBadgeClass(meeting.status)} px-3 py-2`}
+                  >
                     {meeting.status}
                   </span>
                 </div>
@@ -253,9 +329,9 @@ export function MeetingsList() {
                 <div className="mt-auto pt-2">
                   {meeting.zoomJoinUrl && (
                     <div className="mb-3">
-                      <a 
-                        href={meeting.zoomJoinUrl} 
-                        target="_blank" 
+                      <a
+                        href={meeting.zoomJoinUrl}
+                        target="_blank"
                         rel="noopener noreferrer"
                         className="btn btn-primary btn-sm w-100"
                       >
@@ -268,12 +344,14 @@ export function MeetingsList() {
                   <div className="d-flex align-items-center gap-2">
                     <button
                       className="btn btn-sm btn-outline-primary flex-fill"
-                      onClick={() => navigate(`/dashboard/meetings/${meeting.id}`)}
+                      onClick={() =>
+                        navigate(`/dashboard/meetings/${meeting.id}`)
+                      }
                     >
                       <i className="bi bi-eye me-1"></i>
                       View Details
                     </button>
-                    {meeting.status !== 'CANCELLED' && (
+                    {canDeleteMeeting && meeting.status !== "CANCELLED" && (
                       <button
                         className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center"
                         style={{ width: 40, height: 36, padding: 0 }}
@@ -302,33 +380,37 @@ export function MeetingsList() {
             )}
           </div>
           <h4 className="text-muted mb-3">
-            {error ? 'Service Unavailable' : 'No meetings found'}
+            {error ? "Service Unavailable" : "No meetings found"}
           </h4>
           <p className="text-muted mb-4">
-            {error 
+            {error
               ? "The meeting service is currently unavailable, but you can still create meetings offline"
-              : statusFilter === 'ALL' 
-                ? "You haven't created any meetings yet" 
-                : `No ${statusFilter.toLowerCase()} meetings found`
-            }
+              : statusFilter === "ALL"
+                ? "You haven't created any meetings yet"
+                : `No ${statusFilter.toLowerCase()} meetings found`}
           </p>
           <div className="d-flex gap-3 justify-content-center">
-            <button 
-              className="btn btn-primary btn-lg"
-              onClick={() => navigate('/dashboard/meetings/create')}
-            >
-              <i className="bi bi-plus-circle me-2"></i>
-              {error ? 'Create Meeting Offline' : 'Create Your First Meeting'}
-            </button>
+            {canCreateMeeting && (
+              <button
+                className="btn btn-primary btn-lg"
+                onClick={() => navigate("/dashboard/meetings/create")}
+              >
+                <i className="bi bi-plus-circle me-2"></i>
+                {error ? "Create Meeting Offline" : "Create Your First Meeting"}
+              </button>
+            )}
             {error && (
-              <button 
+              <button
                 className="btn btn-outline-primary btn-lg"
                 onClick={handleRetry}
                 disabled={isRetrying}
               >
                 {isRetrying ? (
                   <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <span
+                      className="spinner-border spinner-border-sm me-2"
+                      role="status"
+                    ></span>
                     Checking Service...
                   </>
                 ) : (
