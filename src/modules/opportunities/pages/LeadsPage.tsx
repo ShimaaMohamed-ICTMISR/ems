@@ -54,6 +54,17 @@ export function LeadsPage() {
     estimatedValue: undefined,
     notes: '',
   });
+  const [createTouched, setCreateTouched] = useState(false);
+  const [createErrors, setCreateErrors] = useState<{
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    company?: string;
+    title?: string;
+    source?: string;
+    estimatedValue?: string;
+  }>({});
 
   const [qualifyModalOpen, setQualifyModalOpen] = useState(false);
   const [qualifyLeadId, setQualifyLeadId] = useState<string | null>(null);
@@ -96,21 +107,57 @@ export function LeadsPage() {
   const handleCreateLead = async (e: React.FormEvent) => {
     e.preventDefault();
     resetAlerts();
+    setCreateTouched(true);
     try {
       setActionLoading(true);
+      const nextErrors: typeof createErrors = {};
+      const firstName = String(createForm.firstName ?? '').trim();
+      const lastName = String(createForm.lastName ?? '').trim();
+      if (!firstName) nextErrors.firstName = 'First name is required.';
+      if (!lastName) nextErrors.lastName = 'Last name is required.';
+
+      const email = String(createForm.email ?? '').trim();
+      if (!email) nextErrors.email = 'Email is required.';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = 'Please enter a valid email address.';
+
+      const phone = String(createForm.phone ?? '').trim();
+      if (!phone) nextErrors.phone = 'Phone is required.';
+
+      const company = String(createForm.company ?? '').trim();
+      if (!company) nextErrors.company = 'Company is required.';
+
+      const title = String(createForm.title ?? '').trim();
+      if (!title) nextErrors.title = 'Job title is required.';
+
+      const source = String(createForm.source ?? '').trim();
+      if (!source) nextErrors.source = 'Source is required.';
+
+      const est =
+        createForm.estimatedValue !== undefined && createForm.estimatedValue !== null
+          ? Number(createForm.estimatedValue)
+          : undefined;
+      if (est === undefined) nextErrors.estimatedValue = 'Estimated value is required.';
+      else if (!Number.isFinite(est) || est < 0) nextErrors.estimatedValue = 'Estimated value must be 0 or more.';
+
+      const notes = String(createForm.notes ?? '').trim();
+
+      if (Object.keys(nextErrors).length > 0) {
+        setCreateErrors(nextErrors);
+        setError('Please fix the highlighted fields.');
+        return;
+      }
+      setCreateErrors({});
+
       const payload: CreateLeadDto = {
-        firstName: createForm.firstName,
-        lastName: createForm.lastName,
-        email: createForm.email || undefined,
-        phone: createForm.phone || undefined,
-        company: createForm.company || undefined,
-        title: createForm.title || undefined,
-        source: createForm.source,
-        estimatedValue:
-          createForm.estimatedValue !== undefined && createForm.estimatedValue !== null
-            ? Number(createForm.estimatedValue)
-            : undefined,
-        notes: createForm.notes || undefined,
+        firstName,
+        lastName,
+        email,
+        phone,
+        company,
+        title,
+        source: source as LeadSource,
+        estimatedValue: est,
+        notes: notes || undefined,
       };
       await createLead(payload);
       setCreating(false);
@@ -125,6 +172,8 @@ export function LeadsPage() {
         estimatedValue: undefined,
         notes: '',
       });
+      setCreateTouched(false);
+      setCreateErrors({});
       setSuccess('Lead created successfully.');
       await loadLeads();
     } catch (err: unknown) {
@@ -178,9 +227,25 @@ export function LeadsPage() {
     resetAlerts();
     try {
       setActionLoading(true);
+      const opportunityName = String(convertForm.opportunityName ?? '').trim();
+      if (!opportunityName) {
+        setError('Opportunity name is required.');
+        return;
+      }
+      const amount = Number(convertForm.amount);
+      if (!Number.isFinite(amount) || amount < 0) {
+        setError('Expected budget must be a valid number (0 or more).');
+        return;
+      }
+      const expectedCloseDate = String(convertForm.expectedCloseDate ?? '');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(expectedCloseDate) || Number.isNaN(new Date(`${expectedCloseDate}T00:00:00Z`).getTime())) {
+        setError('Expected close date must be a valid date.');
+        return;
+      }
       await convertLeadToOpportunity(convertLeadId, {
         ...convertForm,
-        amount: Number(convertForm.amount) || 0,
+        opportunityName,
+        amount,
         conversionReason: convertForm.conversionReason || undefined,
       });
       setConvertModalOpen(false);
@@ -392,66 +457,119 @@ export function LeadsPage() {
               </div>
               <form onSubmit={handleCreateLead}>
                 <div className="modal-body">
+                  {error && (
+                    <div className="alert alert-danger py-2" role="alert">
+                      <i className="bi bi-exclamation-triangle me-2"></i>
+                      {error}
+                    </div>
+                  )}
                   <div className="row g-3">
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">First name *</label>
                       <input
-                        className="form-control"
+                        className={`form-control ${createTouched && createErrors.firstName ? 'is-invalid' : ''}`}
                         value={createForm.firstName}
-                        onChange={(e) => setCreateForm({ ...createForm, firstName: e.target.value })}
+                        onChange={(e) => {
+                          setCreateForm({ ...createForm, firstName: e.target.value });
+                          if (createErrors.firstName) {
+                            setCreateErrors((p) => ({ ...p, firstName: undefined }));
+                          }
+                        }}
                         required
                       />
+                      {createTouched && createErrors.firstName && (
+                        <div className="invalid-feedback">{createErrors.firstName}</div>
+                      )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Last name *</label>
                       <input
-                        className="form-control"
+                        className={`form-control ${createTouched && createErrors.lastName ? 'is-invalid' : ''}`}
                         value={createForm.lastName}
-                        onChange={(e) => setCreateForm({ ...createForm, lastName: e.target.value })}
+                        onChange={(e) => {
+                          setCreateForm({ ...createForm, lastName: e.target.value });
+                          if (createErrors.lastName) {
+                            setCreateErrors((p) => ({ ...p, lastName: undefined }));
+                          }
+                        }}
                         required
                       />
+                      {createTouched && createErrors.lastName && (
+                        <div className="invalid-feedback">{createErrors.lastName}</div>
+                      )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Email</label>
                       <input
                         type="email"
-                        className="form-control"
+                        className={`form-control ${createTouched && createErrors.email ? 'is-invalid' : ''}`}
                         value={createForm.email ?? ''}
-                        onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                        onChange={(e) => {
+                          setCreateForm({ ...createForm, email: e.target.value });
+                          if (createErrors.email) {
+                            setCreateErrors((p) => ({ ...p, email: undefined }));
+                          }
+                        }}
+                        required
                       />
+                      {createTouched && createErrors.email && (
+                        <div className="invalid-feedback">{createErrors.email}</div>
+                      )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Phone</label>
                       <input
-                        className="form-control"
+                        className={`form-control ${createTouched && createErrors.phone ? 'is-invalid' : ''}`}
                         value={createForm.phone ?? ''}
-                        onChange={(e) => setCreateForm({ ...createForm, phone: e.target.value })}
+                        onChange={(e) => {
+                          setCreateForm({ ...createForm, phone: e.target.value });
+                          if (createErrors.phone) setCreateErrors((p) => ({ ...p, phone: undefined }));
+                        }}
+                        required
                       />
+                      {createTouched && createErrors.phone && (
+                        <div className="invalid-feedback">{createErrors.phone}</div>
+                      )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Company</label>
                       <input
-                        className="form-control"
+                        className={`form-control ${createTouched && createErrors.company ? 'is-invalid' : ''}`}
                         value={createForm.company ?? ''}
-                        onChange={(e) => setCreateForm({ ...createForm, company: e.target.value })}
+                        onChange={(e) => {
+                          setCreateForm({ ...createForm, company: e.target.value });
+                          if (createErrors.company) setCreateErrors((p) => ({ ...p, company: undefined }));
+                        }}
+                        required
                       />
+                      {createTouched && createErrors.company && (
+                        <div className="invalid-feedback">{createErrors.company}</div>
+                      )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Job title</label>
                       <input
-                        className="form-control"
+                        className={`form-control ${createTouched && createErrors.title ? 'is-invalid' : ''}`}
                         value={createForm.title ?? ''}
-                        onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+                        onChange={(e) => {
+                          setCreateForm({ ...createForm, title: e.target.value });
+                          if (createErrors.title) setCreateErrors((p) => ({ ...p, title: undefined }));
+                        }}
+                        required
                       />
+                      {createTouched && createErrors.title && (
+                        <div className="invalid-feedback">{createErrors.title}</div>
+                      )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Source</label>
                       <select
-                        className="form-select"
+                        className={`form-select ${createTouched && createErrors.source ? 'is-invalid' : ''}`}
                         value={createForm.source}
                         onChange={(e) =>
                           setCreateForm({ ...createForm, source: e.target.value as LeadSource })
                         }
+                        required
                       >
                         {SOURCE_OPTIONS.map((o) => (
                           <option key={o.value} value={o.value}>
@@ -459,12 +577,15 @@ export function LeadsPage() {
                           </option>
                         ))}
                       </select>
+                      {createTouched && createErrors.source && (
+                        <div className="invalid-feedback">{createErrors.source}</div>
+                      )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Estimated value</label>
                       <input
                         type="number"
-                        className="form-control"
+                        className={`form-control ${createTouched && createErrors.estimatedValue ? 'is-invalid' : ''}`}
                         min={0}
                         value={createForm.estimatedValue ?? ''}
                         onChange={(e) =>
@@ -473,7 +594,11 @@ export function LeadsPage() {
                             estimatedValue: e.target.value ? Number(e.target.value) : undefined,
                           })
                         }
+                        required
                       />
+                      {createTouched && createErrors.estimatedValue && (
+                        <div className="invalid-feedback">{createErrors.estimatedValue}</div>
+                      )}
                     </div>
                     <div className="col-12">
                       <label className="form-label fw-semibold">Notes</label>
@@ -481,7 +606,9 @@ export function LeadsPage() {
                         className="form-control"
                         rows={3}
                         value={createForm.notes ?? ''}
-                        onChange={(e) => setCreateForm({ ...createForm, notes: e.target.value })}
+                        onChange={(e) => {
+                          setCreateForm({ ...createForm, notes: e.target.value });
+                        }}
                       />
                     </div>
                   </div>

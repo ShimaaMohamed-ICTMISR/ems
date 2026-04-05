@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import type { PollEligibility } from '../types/voting.types';
-import { createEligibility } from '../api/votingApi';
 import hrService, {
   type Employee as HrEmployee,
   type Department,
 } from '../../../services/hrProjectManagementService';
+import { notificationService } from '../../../services/notificationService';
 
 interface PollEligibilityProps {
   pollId: string;
@@ -15,22 +15,35 @@ interface PollEligibilityProps {
 
 type RuleMode = 'employee' | 'department';
 
-function parseNestedList<T>(res: { data?: { data?: { data?: T[] } | T[] } }): T[] {
-  const innerData = res.data?.data;
-  return Array.isArray(innerData?.data)
-    ? innerData.data
-    : Array.isArray(innerData)
-      ? innerData
-      : [];
+function parseNestedList<T>(res: { data?: any }): T[] {
+  const root = res.data;
+  const layer1 = root?.data;
+  const layer2 = layer1?.data;
+
+  const candidates = [
+    layer2,
+    layer1,
+    root,
+    layer1?.employees,
+    layer1?.departments,
+    layer2?.employees,
+    layer2?.departments,
+  ];
+
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate as T[];
+  }
+  return [];
 }
 
 export function PollEligibilityComponent({
   pollId,
   eligibility: _eligibility,
-  onEligibilityChange,
+  onEligibilityChange: _onEligibilityChange,
   readOnly = false,
 }: PollEligibilityProps) {
   void _eligibility;
+  void _onEligibilityChange;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,17 +113,33 @@ export function PollEligibilityComponent({
     setError(null);
   }, [ruleMode]);
 
+  /** Notify users only — does not call the voting service eligibility endpoint. */
   const handleAddRule = async () => {
     if (ruleMode === 'employee') {
       if (!selectedEmployee) return;
       setError(null);
       setLoading(true);
       try {
-        await createEligibility(pollId, { userId: selectedEmployee.id });
+        await notificationService.createNotification({
+          userId: selectedEmployee.id,
+          channel: 'IN_APP',
+          category: 'TRANSACTIONAL',
+          priority: 'NORMAL',
+          subject: 'You can vote in a poll',
+          bodyText:
+            'You have been invited to vote in this poll. Open this notification to cast your vote.',
+          sourceEvent: 'PollEligibilityAssigned',
+          sourceEntityId: pollId,
+          sourceEntityType: 'Poll',
+          metadata: {
+            pollId,
+            employeeId: selectedEmployee.id,
+            action: 'vote',
+          },
+        });
         setSelectedEmployee(null);
-        onEligibilityChange();
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to add eligibility');
+        setError(e instanceof Error ? e.message : 'Failed to send notification');
       } finally {
         setLoading(false);
       }
@@ -118,14 +147,51 @@ export function PollEligibilityComponent({
     }
 
     if (!selectedDepartmentRuleId) return;
+    const departmentId = selectedDepartmentRuleId;
     setError(null);
     setLoading(true);
     try {
-      await createEligibility(pollId, { departmentId: selectedDepartmentRuleId });
+      const res = await hrService.getEmployees({ departmentId });
+      const deptEmployees = parseNestedList<HrEmployee>(res);
+      const byId = new Map<string, HrEmployee>();
+      for (const emp of deptEmployees) {
+        if (emp?.id) byId.set(emp.id, emp);
+      }
+      const people = [...byId.values()];
+      if (people.length === 0) {
+        setError('No employees found for this department to notify.');
+        return;
+      }
+      const results = await Promise.allSettled(
+        people.map((emp) =>
+          notificationService.createNotification({
+            userId: emp.id,
+            channel: 'IN_APP',
+            category: 'TRANSACTIONAL',
+            priority: 'NORMAL',
+            subject: 'You can vote in a poll',
+            bodyText:
+              'Your team was notified about this poll. Open this notification to cast your vote.',
+            sourceEvent: 'PollEligibilityAssigned',
+            sourceEntityId: pollId,
+            sourceEntityType: 'Poll',
+            metadata: {
+              pollId,
+              departmentId,
+              employeeId: emp.id,
+              action: 'vote',
+            },
+          })
+        )
+      );
+      const failed = results.filter((r) => r.status === 'rejected').length;
+      if (failed > 0) {
+        console.warn('Some department notifications failed:', failed);
+        setError(`${failed} notification(s) could not be sent. Others may have succeeded.`);
+      }
       setSelectedDepartmentRuleId('');
-      onEligibilityChange();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to add eligibility');
+      setError(e instanceof Error ? e.message : 'Failed to send notifications');
     } finally {
       setLoading(false);
     }
@@ -147,7 +213,10 @@ export function PollEligibilityComponent({
 
       {!readOnly && (
         <div className="border-top pt-4">
-          <h6 className="mb-3">Add Eligibility Rule</h6>
+          <h6 className="mb-1">Add Eligibility Rule</h6>
+          <p className="small text-muted mb-3">
+            Sends in-app notifications only. Does not call the poll eligibility API.
+          </p>
 
           <div className="mb-3">
             <label className="form-label small text-muted mb-1">Rule applies to</label>
@@ -221,7 +290,7 @@ export function PollEligibilityComponent({
                             <strong>Selected:</strong> {selectedEmployee.firstName}{' '}
                             {selectedEmployee.lastName}
                             <div>
-                              <small>Only this employee will be able to vote</small>
+                              <small>They will receive a notification invite to vote (no eligibility API call).</small>
                             </div>
                           </div>
                         </div>
@@ -251,8 +320,8 @@ export function PollEligibilityComponent({
                     {selectedDepartmentRuleId && (
                       <div className="alert alert-info">
                         <i className="bi bi-info-circle me-2"></i>
-                        <strong>Department rule:</strong> all employees in this department can vote
-                        (subject to API behavior).
+                        <strong>Department:</strong> notifications will be sent to employees in this
+                        department (no eligibility API call).
                       </div>
                     )}
                   </>

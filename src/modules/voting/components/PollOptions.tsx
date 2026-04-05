@@ -1,11 +1,6 @@
 import { useState } from 'react';
 import type { PollOption } from '../types/voting.types';
-import {
-  createPollOption,
-  bulkCreatePollOptions,
-  updatePollOption,
-  deletePollOption,
-} from '../api/votingApi';
+import { createPollOption, updatePollOption, deletePollOption } from '../api/votingApi';
 
 function asText(value: unknown): string {
   if (value == null) return '';
@@ -39,7 +34,6 @@ export function PollOptions({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
-  const [bulkText, setBulkText] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
 
@@ -53,27 +47,6 @@ export function PollOptions({
       onOptionsChange(created);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to add option');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleBulkAdd = async () => {
-    const lines = bulkText
-      .split('\n')
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (lines.length === 0) return;
-    setError(null);
-    setLoading(true);
-    try {
-      await bulkCreatePollOptions(pollId, {
-        options: lines.map((title, i) => ({ title, displayOrder: i })),
-      });
-      setBulkText('');
-      onOptionsChange();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to add options');
     } finally {
       setLoading(false);
     }
@@ -213,23 +186,6 @@ export function PollOptions({
               disabled={loading || !newTitle.trim()}
             >
               Add option
-            </button>
-          </div>
-          <div className="mb-2">
-            <textarea
-              className="form-control form-control-sm"
-              rows={3}
-              placeholder="Or add multiple (one per line)"
-              value={bulkText}
-              onChange={(e) => setBulkText(e.target.value)}
-            />
-            <button
-              type="button"
-              className="btn btn-outline-secondary btn-sm mt-1"
-              onClick={handleBulkAdd}
-              disabled={loading || !bulkText.trim()}
-            >
-              Add all
             </button>
           </div>
         </div>

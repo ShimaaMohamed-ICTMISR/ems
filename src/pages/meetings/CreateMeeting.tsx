@@ -1,28 +1,19 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import * as meetingService from "../../services/meetingService";
-import type { CreateMeetingDto } from "../../services/meetingService";
-import hrService, {
-  type Employee,
-  type Department,
-} from "../../services/hrProjectManagementService";
-import { useMeetingPermissions } from "../../hooks/useMeetingPermissions";
-import { MEETING_PERMISSION_KEYS } from "../../config/meetingPermissions";
-import "./meetings.css";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import * as meetingService from '../../services/meetingService';
+import type { CreateMeetingDto } from '../../services/meetingService';
+import hrService, { type Employee, type Department } from '../../services/hrProjectManagementService';
+import { validateCreateMeeting, validateMeetingTitle, validateMeetingTimes, validateDescription, sanitizeText } from '../../utils/meetingValidation';
+import './meetings.css';
 
-function parseNestedList<T>(res: {
-  data?: { data?: { data?: T[] } | T[] };
-}): T[] {
-  const innerData = res.data?.data;
-
-  if (Array.isArray(innerData)) {
-    return innerData;
+function parseNestedList<T>(res: { data?: any }): T[] {
+  const root = res.data;
+  const layer1 = root?.data;
+  const layer2 = layer1?.data;
+  const candidates = [layer2, layer1, root, layer1?.employees, layer1?.departments, layer2?.employees, layer2?.departments];
+  for (const candidate of candidates) {
+    if (Array.isArray(candidate)) return candidate as T[];
   }
-
-  if (innerData && Array.isArray(innerData.data)) {
-    return innerData.data;
-  }
-
   return [];
 }
 
@@ -48,18 +39,13 @@ export function CreateMeeting() {
   /** When adding by department: target department for bulk add. */
   const [bulkDepartmentId, setBulkDepartmentId] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
-  /** Keeps labels for participants if the dropdown list is refetched under another department filter. */
-  const [employeeById, setEmployeeById] = useState<Record<string, Employee>>(
-    {},
-  );
+  const [employeeById, setEmployeeById] = useState<Record<string, Employee>>({});
   const [bulkAdding, setBulkAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const {
-    canAny,
-    isLoaded: permissionsLoaded,
-    isLoading: permissionsLoading,
-  } = useMeetingPermissions();
-  const canCreateMeeting = canAny([...MEETING_PERMISSION_KEYS.CREATE]);
+  
+  // Validation states
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!canCreateMeeting) return;
@@ -108,30 +94,76 @@ export function CreateMeeting() {
       });
   }, [canCreateMeeting, participantAddMode, employeeListDepartmentFilter]);
 
+  // Validation helper functions
+  const validateField = (field: string, value: string) => {
+    let error: string | null = null;
+    
+    switch (field) {
+      case 'title':
+        error = validateMeetingTitle(value);
+        break;
+      case 'description':
+        error = validateDescription(value);
+        break;
+      case 'times':
+        if (formData.startTime && formData.endTime) {
+          error = validateMeetingTimes(formData.startTime, formData.endTime);
+        }
+        break;
+    }
+    
+    setFieldErrors(prev => ({
+      ...prev,
+      [field]: error || ''
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       setSubmitting(true);
-
+      setValidationErrors([]);
+      
+      // Validate the form data
+      const validation = validateCreateMeeting({
+        title: formData.title,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        description: formData.description
+      });
+      
+      if (!validation.isValid) {
+        setValidationErrors(validation.errors);
+        return;
+      }
+      
       // Convert datetime-local format to ISO 8601 with timezone
       const startTime = new Date(formData.startTime).toISOString();
       const endTime = new Date(formData.endTime).toISOString();
 
       const meetingData: CreateMeetingDto = {
-        ...formData,
+        title: sanitizeText(formData.title),
+        description: formData.description ? sanitizeText(formData.description) : undefined,
         startTime,
         endTime,
-        participants: participants.map((userId) => ({ userId })),
       };
-
-      console.log("Sending meeting data:", meetingData);
-
-      await meetingService.createMeeting(meetingData);
-      navigate("/dashboard/meetings");
+      if (participants.length > 0) {
+        meetingData.participants = participants.map((userId) => ({ userId }));
+      }
+      
+      console.log('Sending meeting data:', meetingData);
+      
+      const createdMeeting = await meetingService.createMeeting(meetingData);
+      navigate(`/dashboard/meetings/${createdMeeting.id}/external-invites`);
     } catch (err) {
-      console.error("Failed to create meeting:", err);
-      alert("Failed to create meeting");
+      console.error('Failed to create meeting:', err);
+      const message =
+        (err as any)?.response?.data?.message ||
+        (err as any)?.response?.data?.error ||
+        (err as Error)?.message ||
+        'Failed to create meeting';
+      setValidationErrors([message]);
     } finally {
       setSubmitting(false);
     }
@@ -250,6 +282,21 @@ export function CreateMeeting() {
               </h5>
             </div>
             <div className="card-body p-4">
+              {/* Validation Errors */}
+              {validationErrors.length > 0 && (
+                <div className="alert alert-danger mb-4">
+                  <h6 className="alert-heading mb-2">
+                    <i className="bi bi-exclamation-triangle me-2"></i>
+                    Please fix the following errors:
+                  </h6>
+                  <ul className="mb-0">
+                    {validationErrors.map((error, index) => (
+                      <li key={index}>{error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
                   <label className="form-label fw-semibold">
@@ -258,14 +305,22 @@ export function CreateMeeting() {
                   </label>
                   <input
                     type="text"
-                    className="form-control form-control-lg border-0 shadow-sm"
+                    className={`form-control form-control-lg border-0 shadow-sm ${fieldErrors.title ? 'is-invalid' : ''}`}
                     placeholder="Enter meeting title..."
                     value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, title: e.target.value });
+                      validateField('title', e.target.value);
+                    }}
+                    onBlur={(e) => validateField('title', e.target.value)}
                     required
                   />
+                  {fieldErrors.title && (
+                    <div className="invalid-feedback d-block">
+                      <i className="bi bi-exclamation-circle me-1"></i>
+                      {fieldErrors.title}
+                    </div>
+                  )}
                 </div>
 
                 <div className="mb-4">
@@ -274,14 +329,25 @@ export function CreateMeeting() {
                     Description
                   </label>
                   <textarea
-                    className="form-control border-0 shadow-sm"
+                    className={`form-control border-0 shadow-sm ${fieldErrors.description ? 'is-invalid' : ''}`}
                     rows={4}
                     placeholder="Add meeting description or agenda..."
                     value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setFormData({ ...formData, description: e.target.value });
+                      validateField('description', e.target.value);
+                    }}
+                    onBlur={(e) => validateField('description', e.target.value)}
                   />
+                  {fieldErrors.description && (
+                    <div className="invalid-feedback d-block">
+                      <i className="bi bi-exclamation-circle me-1"></i>
+                      {fieldErrors.description}
+                    </div>
+                  )}
+                  <small className="text-muted">
+                    {formData.description?.length || 0}/1000 characters
+                  </small>
                 </div>
 
                 <div className="row">
@@ -292,11 +358,19 @@ export function CreateMeeting() {
                     </label>
                     <input
                       type="datetime-local"
-                      className="form-control border-0 shadow-sm"
+                      className={`form-control border-0 shadow-sm ${fieldErrors.times ? 'is-invalid' : ''}`}
                       value={formData.startTime}
-                      onChange={(e) =>
-                        setFormData({ ...formData, startTime: e.target.value })
-                      }
+                      onChange={(e) => {
+                        setFormData({ ...formData, startTime: e.target.value });
+                        if (formData.endTime) {
+                          validateField('times', e.target.value);
+                        }
+                      }}
+                      onBlur={() => {
+                        if (formData.endTime) {
+                          validateField('times', formData.startTime);
+                        }
+                      }}
                       required
                     />
                   </div>
@@ -307,14 +381,31 @@ export function CreateMeeting() {
                     </label>
                     <input
                       type="datetime-local"
-                      className="form-control border-0 shadow-sm"
+                      className={`form-control border-0 shadow-sm ${fieldErrors.times ? 'is-invalid' : ''}`}
                       value={formData.endTime}
-                      onChange={(e) =>
-                        setFormData({ ...formData, endTime: e.target.value })
-                      }
+                      min={formData.startTime || undefined}
+                      onChange={(e) => {
+                        setFormData({ ...formData, endTime: e.target.value });
+                        if (formData.startTime) {
+                          validateField('times', e.target.value);
+                        }
+                      }}
+                      onBlur={() => {
+                        if (formData.startTime) {
+                          validateField('times', formData.endTime);
+                        }
+                      }}
                       required
                     />
                   </div>
+                  {fieldErrors.times && (
+                    <div className="col-12">
+                      <div className="text-danger mb-3">
+                        <i className="bi bi-exclamation-circle me-1"></i>
+                        {fieldErrors.times}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mb-4">

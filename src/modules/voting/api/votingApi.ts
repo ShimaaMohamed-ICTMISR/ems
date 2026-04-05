@@ -12,32 +12,28 @@ import type {
   VoteRequest,
 } from '../types/voting.types';
 
-const RAW_BASE_URL = import.meta.env.DEV 
-  ? '/api/voting'  // Use proxy in development
-  : (import.meta.env.VITE_API_BASE_URL ?? 
-     import.meta.env.VITE_VOTING_API_BASE_URL ?? 
-     'https://ems-voting-service.onrender.com');
+const BASE_URL = (
+  import.meta.env.VITE_VOTING_API_BASE_URL ??
+  import.meta.env.VITE_API_BASE_URL ??
+  'https://ems-voting-service.onrender.com/api'
+).replace(/\/+$/, '');
 
-// Normalize: لو الـ env فيه /api في الآخر، نشيلها
-const BASE_URL = RAW_BASE_URL.replace(/\/api\/?$/, '');
+/** Voting service ticket — do not use global VITE_SERVICE_TICKET (other services may differ). */
+const VOTING_TICKET_DEFAULT = 'TEST-SECRET-TICKET-2026';
 
 function getServiceTicket(): string {
-  return (
-    (import.meta.env.VITE_SERVICE_TICKET as string | undefined) ??
-    localStorage.getItem('voting-service-ticket') ??
-    ''
-  );
+  const fromEnv = (import.meta.env.VITE_VOTING_SERVICE_TICKET as string | undefined)?.trim();
+  if (fromEnv) return fromEnv;
+  const fromStorage = localStorage.getItem('voting-service-ticket')?.trim();
+  if (fromStorage) return fromStorage;
+  return VOTING_TICKET_DEFAULT;
 }
 
 function getHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
+  return {
     'Content-Type': 'application/json',
+    'X-Service-Ticket': getServiceTicket(),
   };
-  const ticket = getServiceTicket();
-  if (ticket) {
-    headers['X-Service-Ticket'] = ticket;
-  }
-  return headers;
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
@@ -60,8 +56,10 @@ async function handleResponse<T>(res: Response): Promise<T> {
         lower.includes('service ticket')
       ) {
         throw new Error(
-          'Voting API requires a valid X-Service-Ticket. Check .env.local (VITE_SERVICE_TICKET) and ensure the backend is running at ' +
-            (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001') +
+          'Voting API requires a valid X-Service-Ticket. Check .env.local (VITE_VOTING_SERVICE_TICKET, default ' +
+            VOTING_TICKET_DEFAULT +
+            ') and ensure the backend is running at ' +
+            (import.meta.env.VITE_VOTING_API_BASE_URL ?? import.meta.env.VITE_API_BASE_URL ?? 'https://ems-voting-service.onrender.com/api') +
             '.'
         );
       }
@@ -82,9 +80,13 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return (data ?? {}) as T;
 }
 
-// Polls
-export async function fetchPolls(): Promise<{ polls: Poll[] }> {
-  const res = await fetch(`${BASE_URL}/polls`, { headers: getHeaders() });
+// Polls — GET /polls?createdBy=<userId> lists polls created by that user (Voting Service API)
+export async function fetchPolls(createdBy?: string): Promise<{ polls: Poll[] }> {
+  const params = new URLSearchParams();
+  if (createdBy) params.set('createdBy', createdBy);
+  const qs = params.toString();
+  const url = qs ? `${BASE_URL}/polls?${qs}` : `${BASE_URL}/polls`;
+  const res = await fetch(url, { headers: getHeaders() });
   const data = await handleResponse<{ polls?: Poll[]; data?: Poll[] } | Poll[]>(res);
   // Support both { polls: [] } and top-level array from backend
   const list = Array.isArray(data)

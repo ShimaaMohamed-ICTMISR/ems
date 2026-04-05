@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { permissionService, type Permission } from '../services/permissionService';
 import './Permissions.css';
 
- 
 export function Permissions() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -15,7 +14,6 @@ export function Permissions() {
   const [totalPages, setTotalPages] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
- 
   // Fetch permissions with pagination
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -38,10 +36,10 @@ export function Permissions() {
         setIsLoading(false);
       }
     };
- 
+
     fetchPermissions();
   }, [pageNumber, pageSize, selectedCategory]);
- 
+
   // Fetch categories on mount
   useEffect(() => {
     const fetchCategories = async () => {
@@ -55,16 +53,15 @@ export function Permissions() {
     fetchCategories();
   }, []);
 
- 
   // Reset to page 1 when category changes
   useEffect(() => {
     setPageNumber(1);
   }, [selectedCategory, pageSize]);
- 
+
   // Filter permissions based on search (client-side)
   const filteredPermissions = permissions.filter((permission) => {
     if (!searchTerm) return true;
-   
+    
     const search = searchTerm.toLowerCase();
     return (
       permission.name?.toLowerCase().includes(search) ||
@@ -75,7 +72,6 @@ export function Permissions() {
     );
   });
 
- 
   if (isLoading) {
     return (
       <div className="permissions-container">
@@ -87,7 +83,7 @@ export function Permissions() {
       </div>
     );
   }
- 
+
   return (
     <div className="permissions-container">
       {/* Header */}
@@ -97,7 +93,7 @@ export function Permissions() {
           <p className="text-muted">Manage system permissions and access controls</p>
         </div>
       </div>
- 
+
       {/* Error Alert */}
       {error && (
         <div className="alert alert-danger alert-dismissible fade show" role="alert">
@@ -107,7 +103,6 @@ export function Permissions() {
         </div>
       )}
 
- 
       {/* Filters and Search */}
       <div className="card shadow-sm mb-4">
         <div className="card-body">
@@ -126,7 +121,6 @@ export function Permissions() {
               </div>
             </div>
 
- 
             <div className="col-md-4">
               <label className="form-label fw-bold">Filter by Category</label>
               <select
@@ -141,7 +135,6 @@ export function Permissions() {
               </select>
             </div>
 
- 
             <div className="col-md-4">
               <label className="form-label fw-bold">Items per page</label>
               <select
@@ -159,7 +152,6 @@ export function Permissions() {
         </div>
       </div>
 
- 
       {/* Results Info */}
       <div className="mb-3 d-flex justify-content-between align-items-center">
         <p className="text-muted small mb-0">
@@ -167,7 +159,6 @@ export function Permissions() {
         </p>
       </div>
 
- 
       {/* Permissions Table */}
       {filteredPermissions.length > 0 ? (
         <>
@@ -186,7 +177,6 @@ export function Permissions() {
                   </div>
                 </div>
 
- 
                 <div className="permission-card-body">
                   <div className="permission-meta">
                     <div className="meta-item">
@@ -213,7 +203,6 @@ export function Permissions() {
                   </div>
                 </div>
 
- 
                 <div className="permission-card-footer">
                   <div className="permission-status">
                     {permission.isActive !== false ? (
@@ -231,7 +220,6 @@ export function Permissions() {
             ))}
           </div>
 
- 
           {/* Pagination Controls */}
           <div className="pagination-controls mt-4">
             <button

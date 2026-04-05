@@ -1,11 +1,14 @@
 import { useEffect, useState, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import type { RootState } from '../../../store/store';
 import { fetchPolls } from '../api/votingApi';
 import { PollCard } from '../components/PollCard';
 import type { Poll } from '../types/voting.types';
 import '../styles/voting.css';
 
 export function PollsDashboard() {
+  const user = useSelector((state: RootState) => state.auth.user);
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -16,14 +19,19 @@ export function PollsDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const { polls: data } = await fetchPolls();
+      if (!user?.id) {
+        setPolls([]);
+        setError('Sign in to view your polls.');
+        return;
+      }
+      const { polls: data } = await fetchPolls(user.id);
       setPolls(data ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load polls');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     load();

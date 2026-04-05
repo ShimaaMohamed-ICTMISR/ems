@@ -36,6 +36,7 @@ import {
   setStoredAssigneeDisplay,
 } from '../utils/opportunityAssigneeStorage';
 import { StageEntriesSection } from '../components/StageEntriesSection';
+import { notificationService } from '../../../services/notificationService';
 
 const STAGE_LABELS: Record<OpportunityStageApi, string> = {
   prospecting: 'Prospecting',
@@ -182,6 +183,21 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
   };  if (!id) {
     return <div className="p-4">Invalid opportunity.</div>;
   }
+
+  const isValidDateOnly = (value: string | undefined): boolean => {
+    if (!value) return false;
+    // Expect yyyy-mm-dd
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+    const d = new Date(`${value}T00:00:00Z`);
+    return !Number.isNaN(d.getTime());
+  };
+
+  const isPastDateOnly = (value: string): boolean => {
+    const today = new Date();
+    const todayOnly = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    const d = new Date(`${value}T00:00:00Z`);
+    return d.getTime() < todayOnly.getTime();
+  };
 
   const openEdit = () => {
     if (!opp) return;
@@ -709,6 +725,10 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  if (!stageOptionsForSelect.includes(stageForm.stage)) {
+                    setError('Please select a valid stage.');
+                    return;
+                  }
                   void run(async () => {
                     await changeOpportunityStage(id, { stage: stageForm.stage });
                     setStageOpen(false);
@@ -783,6 +803,10 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                   e.preventDefault();
                   void run(async () => {
                     const selectedId = assignForm.userId;
+                    if (!selectedId) {
+                      setError('Please select an employee to assign.');
+                      return;
+                    }
                     await assignOpportunity(id, {
                       userId: selectedId,
                       role: 'owner',
@@ -791,6 +815,26 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                     const label = emp
                       ? `${emp.firstName ?? ''} ${emp.lastName ?? ''}`.trim() || emp.email || emp.id
                       : selectedId;
+                    try {
+                      await notificationService.createNotification({
+                        userId: selectedId,
+                        channel: 'IN_APP',
+                        category: 'TRANSACTIONAL',
+                        priority: 'NORMAL',
+                        subject: 'New Opportunity Assignment',
+                        bodyText: `You have been assigned to opportunity "${opportunityDisplayName(opp)}".`,
+                        sourceEvent: 'OpportunityAssigned',
+                        sourceEntityId: id,
+                        sourceEntityType: 'Opportunity',
+                        metadata: {
+                          opportunityId: id,
+                          opportunityName: opportunityDisplayName(opp),
+                        },
+                      });
+                    } catch (notifyError) {
+                      // Do not fail the assignment if notification service is down.
+                      console.warn('Assignment succeeded but notification failed:', notifyError);
+                    }
                     setAssigneeLabelOverride(label);
                     if (id) setStoredAssigneeDisplay(id, selectedId, label);
                     setAssignOpen(false);
@@ -863,6 +907,14 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  if (closeForm.type === 'won' && !eligibleCloseWon) {
+                    setError('Cannot close as Won until there is an approved quote and a signed contract.');
+                    return;
+                  }
+                  if (closeForm.type === 'lost' && !String(closeForm.reason ?? '').trim()) {
+                    setError('Please provide a reason when closing as Lost.');
+                    return;
+                  }
                   void run(async () => {
                     await closeOpportunity(id, closeForm);
                     setCloseOpen(false);
@@ -934,6 +986,22 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  if (!quoteForm.validUntil || !isValidDateOnly(quoteForm.validUntil)) {
+                    setError('Please enter a valid "Valid until" date.');
+                    return;
+                  }
+                  if (!isQuoteDateValid) {
+                    setError('Quote date cannot be earlier than the latest existing quote.');
+                    return;
+                  }
+                  if (
+                    quoteForm.totalAmount !== undefined &&
+                    quoteForm.totalAmount !== null &&
+                    (!Number.isFinite(Number(quoteForm.totalAmount)) || Number(quoteForm.totalAmount) < 0)
+                  ) {
+                    setError('Total amount must be a valid number (0 or more).');
+                    return;
+                  }
                   void run(async () => {
                     await createQuote(id, {
                       validUntil: quoteForm.validUntil,
@@ -1028,6 +1096,30 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
+                  const name = String(editForm.name ?? '').trim();
+                  if (!name) {
+                    setError('Opportunity name is required.');
+                    return;
+                  }
+                  if (
+                    editForm.amount !== undefined &&
+                    editForm.amount !== null &&
+                    (!Number.isFinite(Number(editForm.amount)) || Number(editForm.amount) < 0)
+                  ) {
+                    setError('Amount must be a valid number (0 or more).');
+                    return;
+                  }
+                  if (editForm.expectedCloseDate) {
+                    const d = String(editForm.expectedCloseDate);
+                    if (!isValidDateOnly(d)) {
+                      setError('Expected close date must be a valid date.');
+                      return;
+                    }
+                    if (isPastDateOnly(d)) {
+                      setError('Expected close date cannot be in the past.');
+                      return;
+                    }
+                  }
                   void run(async () => {
                     const payload = buildUpdatePayload(editForm);
                     await updateOpportunity(id, payload);

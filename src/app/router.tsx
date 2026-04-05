@@ -51,7 +51,7 @@ import {
   CreateLeaveRequest,
   LeaveBalances,
 } from "../pages/hr";
-import { MeetingsList, CreateMeeting, MeetingDetails } from "../pages/meetings";
+import { MeetingsList, CreateMeeting, MeetingDetails, MeetingExternalInvites } from "../pages/meetings";
 import { PollsDashboard } from "../modules/voting/pages/PollsDashboard";
 import { CreatePollPage } from "../modules/voting/pages/CreatePollPage";
 import { PollDetailsPage } from "../modules/voting/pages/PollDetailsPage";
@@ -407,6 +407,10 @@ const router = createBrowserRouter([
           </PermissionRoute>
         ),
       },
+      { path: "meetings", element: <MeetingsList /> },
+      { path: "meetings/create", element: <CreateMeeting /> },
+      { path: "meetings/:id", element: <MeetingDetails /> },
+      { path: "meetings/:id/external-invites", element: <MeetingExternalInvites /> },
       // Voting
       {
         path: "voting",

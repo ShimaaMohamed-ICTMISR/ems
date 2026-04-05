@@ -116,9 +116,31 @@ export function OpportunitiesDashboard() {
     try {
       setActionLoading(true);
       setError(null);
+      const name = String(createForm.name ?? '').trim();
+      if (!name) {
+        setError('Name is required.');
+        return;
+      }
+      const amount = Number(createForm.amount);
+      if (!Number.isFinite(amount) || amount < 0) {
+        setError('Amount must be a valid number (0 or more).');
+        return;
+      }
+      const expectedCloseDate = String(createForm.expectedCloseDate ?? '');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(expectedCloseDate) || Number.isNaN(new Date(`${expectedCloseDate}T00:00:00Z`).getTime())) {
+        setError('Expected Close Date must be a valid date.');
+        return;
+      }
+      const currency = String(createForm.currency ?? '').trim();
+      if (currency && currency.length !== 3) {
+        setError('Currency must be a 3-letter code (e.g. USD).');
+        return;
+      }
       await createOpportunity({
         ...createForm,
-        amount: Number(createForm.amount) || 0,
+        name,
+        amount,
+        currency: currency ? currency.toUpperCase() : undefined,
       });
       setCreating(false);
       setCreateForm((prev) => ({
@@ -210,6 +232,10 @@ export function OpportunitiesDashboard() {
     try {
       setActionLoading(true);
       setError(null);
+      if (closeForm.type === 'lost' && !String(closeForm.reason ?? '').trim()) {
+        setError('Please provide a note when closing as Lost.');
+        return;
+      }
       await closeOpportunity(selected.id, closeForm);
       setCloseModalOpen(false);
       setSelected(null);
@@ -271,14 +297,6 @@ export function OpportunitiesDashboard() {
             <i className="bi bi-people me-2" />
             Leads
           </Link>
-          <button
-            type="button"
-            className="btn btn-opportunities-primary btn-lg"
-            onClick={() => setCreating(true)}
-          >
-            <i className="bi bi-plus-circle me-2" />
-            New Opportunity
-          </button>
         </div>
       </div>
 
