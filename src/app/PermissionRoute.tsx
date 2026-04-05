@@ -1,12 +1,12 @@
-import type { ReactNode } from 'react';
-import { useMeetingPermissions } from '../hooks/useMeetingPermissions';
-import { useHrPermissions } from '../hooks/useHrPermissions';
-import { useProjectManagementPermissions } from '../hooks/useProjectManagementPermissions';
+import type { ReactNode } from "react";
+import { useMeetingPermissions } from "../hooks/useMeetingPermissions";
+import { useHrPermissions } from "../hooks/useHrPermissions";
+import { useProjectManagementPermissions } from "../hooks/useProjectManagementPermissions";
 
 interface PermissionRouteProps {
   children: ReactNode;
   anyOf: string[];
-  scope?: 'meeting' | 'hr' | 'projectManagement';
+  scope?: "meeting" | "hr" | "projectManagement";
   title?: string;
   description?: string;
 }
@@ -14,9 +14,9 @@ interface PermissionRouteProps {
 export function PermissionRoute({
   children,
   anyOf,
-  scope = 'meeting',
-  title = 'Unauthorized',
-  description = 'You do not have permission to access this section.',
+  scope = "meeting",
+  title = "Unauthorized",
+  description = "You do not have permission to access this section.",
 }: PermissionRouteProps) {
   const meetingPermissions = useMeetingPermissions();
   const hrPermissions = useHrPermissions();
@@ -24,9 +24,9 @@ export function PermissionRoute({
   const isDev = import.meta.env.DEV;
 
   const activePermissions =
-    scope === 'hr'
+    scope === "hr"
       ? hrPermissions
-      : scope === 'projectManagement'
+      : scope === "projectManagement"
         ? projectManagementPermissions
         : meetingPermissions;
   const { canAny, isLoading, isLoaded, permissions } = activePermissions;
@@ -37,7 +37,10 @@ export function PermissionRoute({
 
   if (!isLoaded || isLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '280px' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "280px" }}
+      >
         <div className="text-center">
           <div className="spinner-border text-secondary" role="status">
             <span className="visually-hidden">Loading...</span>
@@ -58,22 +61,31 @@ export function PermissionRoute({
         <p className="text-muted mb-0">{description}</p>
 
         {isDev && (
-          <details className="text-start mt-4" style={{ maxWidth: '900px', margin: '0 auto' }}>
-            <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+          <details
+            className="text-start mt-4"
+            style={{ maxWidth: "900px", margin: "0 auto" }}
+          >
+            <summary style={{ cursor: "pointer", fontWeight: 600 }}>
               Permission Debug
             </summary>
             <div className="mt-2 p-3 bg-light border rounded small">
-              <p className="mb-2"><strong>Scope:</strong> {scope}</p>
-              <p className="mb-1"><strong>Required (anyOf):</strong></p>
+              <p className="mb-2">
+                <strong>Scope:</strong> {scope}
+              </p>
+              <p className="mb-1">
+                <strong>Required (anyOf):</strong>
+              </p>
               <ul className="mb-2">
                 {permissionChecks.map((item) => (
                   <li key={item.permission}>
-                    {item.permission} {item.granted ? '✅' : '❌'}
+                    {item.permission} {item.granted ? "✅" : "❌"}
                   </li>
                 ))}
               </ul>
-              <p className="mb-1"><strong>Effective permissions ({permissions.length}):</strong></p>
-              <pre className="mb-0" style={{ whiteSpace: 'pre-wrap' }}>
+              <p className="mb-1">
+                <strong>Effective permissions ({permissions.length}):</strong>
+              </p>
+              <pre className="mb-0" style={{ whiteSpace: "pre-wrap" }}>
                 {JSON.stringify(permissions, null, 2)}
               </pre>
             </div>

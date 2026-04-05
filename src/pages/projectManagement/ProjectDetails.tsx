@@ -209,9 +209,7 @@ export function ProjectDetails() {
 
   const canEditProject = canAny([...PM_PERMISSION_KEYS.PROJECTS.EDIT]);
   const canDeleteProject = canAny([...PM_PERMISSION_KEYS.PROJECTS.DELETE]);
-  const canViewTeamMembers = canAny([
-    ...PM_PERMISSION_KEYS.ADMIN.MEMBERS.VIEW,
-  ]);
+  const canViewTeamMembers = canAny([...PM_PERMISSION_KEYS.ADMIN.MEMBERS.VIEW]);
   const canCreateTeamMembers = canAny([
     ...PM_PERMISSION_KEYS.ADMIN.MEMBERS.CREATE,
   ]);
@@ -306,9 +304,7 @@ export function ProjectDetails() {
     canEditResourceRequests ||
     canDeleteResourceRequests;
 
-  const canViewBudgets = canAny([
-    ...PM_PERMISSION_KEYS.FINANCE.BUDGETS.VIEW,
-  ]);
+  const canViewBudgets = canAny([...PM_PERMISSION_KEYS.FINANCE.BUDGETS.VIEW]);
   const canCreateBudgets = canAny([
     ...PM_PERMISSION_KEYS.FINANCE.BUDGETS.CREATE,
   ]);
@@ -318,10 +314,7 @@ export function ProjectDetails() {
   ]);
 
   const canAccessFinanceTab =
-    canViewBudgets ||
-    canCreateBudgets ||
-    canEditBudgets ||
-    canDeleteBudgets;
+    canViewBudgets || canCreateBudgets || canEditBudgets || canDeleteBudgets;
 
   const canViewRisks = canAny([...PM_PERMISSION_KEYS.RISKS.VIEW]);
   const canCreateRisks = canAny([...PM_PERMISSION_KEYS.RISKS.CREATE]);
@@ -906,7 +899,12 @@ export function ProjectDetails() {
   // ── Fetch phases ──
   useEffect(() => {
     async function fetchPhases() {
-      if (!projectId || activeTab !== "phases" || phasesLoaded || !canViewPhases)
+      if (
+        !projectId ||
+        activeTab !== "phases" ||
+        phasesLoaded ||
+        !canViewPhases
+      )
         return;
       try {
         setPhasesLoading(true);
@@ -979,11 +977,7 @@ export function ProjectDetails() {
   // ── Fetch approvals for selected milestone ──
   useEffect(() => {
     async function fetchMilestoneApprovals() {
-      if (
-        !activeTab ||
-        activeTab !== "phases" ||
-        !canViewMilestoneApprovals
-      ) {
+      if (!activeTab || activeTab !== "phases" || !canViewMilestoneApprovals) {
         setMilestoneApprovals([]);
         return;
       }
@@ -1100,7 +1094,12 @@ export function ProjectDetails() {
   // ── Fetch budgets ──
   useEffect(() => {
     async function fetchBudgets() {
-      if (!projectId || activeTab !== "finance" || budgetsLoaded || !canViewBudgets)
+      if (
+        !projectId ||
+        activeTab !== "finance" ||
+        budgetsLoaded ||
+        !canViewBudgets
+      )
         return;
       try {
         setBudgetsLoading(true);
@@ -2910,7 +2909,9 @@ export function ProjectDetails() {
           {canDeleteProject &&
             (confirmDeleteProject ? (
               <span className="confirm-inline">
-                <span className="confirm-inline-text">Delete this project?</span>
+                <span className="confirm-inline-text">
+                  Delete this project?
+                </span>
                 <button
                   type="button"
                   className="btn btn-danger btn-sm"
@@ -3671,7 +3672,8 @@ export function ProjectDetails() {
                               </span>
                             </button>
                             <div className="task-row-actions">
-                              {canDeletePhases && confirmDeletePhaseId === p.id ? (
+                              {canDeletePhases &&
+                              confirmDeletePhaseId === p.id ? (
                                 <span className="confirm-inline confirm-inline-sm">
                                   <button
                                     type="button"
@@ -3841,7 +3843,8 @@ export function ProjectDetails() {
                             key={m.id}
                             className={`hierarchy-item ${selectedMilestoneId === m.id ? "selected" : ""}`}
                           >
-                            {editingMilestoneId === m.id && canEditMilestones ? (
+                            {editingMilestoneId === m.id &&
+                            canEditMilestones ? (
                               <div className="w-100 inline-edit-form">
                                 <div className="inline-edit-field">
                                   <label className="inline-edit-label">
@@ -4328,7 +4331,9 @@ export function ProjectDetails() {
                                     <button
                                       type="button"
                                       className="btn btn-outline-danger btn-sm"
-                                      onClick={() => setConfirmDeleteTaskId(t.id)}
+                                      onClick={() =>
+                                        setConfirmDeleteTaskId(t.id)
+                                      }
                                     >
                                       <i className="bi bi-trash" />
                                     </button>
@@ -4482,9 +4487,7 @@ export function ProjectDetails() {
                                 }
                                 disabled={!currentUserId}
                               >
-                                {showCreateApproval
-                                  ? "Cancel"
-                                  : "Add Approval"}
+                                {showCreateApproval ? "Cancel" : "Add Approval"}
                               </button>
                             )}
                           </div>
@@ -4496,70 +4499,71 @@ export function ProjectDetails() {
                             </p>
                           )}
 
-                          {canCreateMilestoneApprovals && showCreateApproval && (
-                            <div className="detail-approval-form mb-2">
-                              <div className="row g-2">
-                                <div className="col-12 col-md-4">
-                                  <label className="form-label mb-1">
-                                    Status
-                                  </label>
-                                  <select
-                                    className="form-select form-select-sm"
-                                    name="status"
-                                    value={newApprovalForm.status}
-                                    onChange={handleNewApprovalChange}
-                                  >
-                                    {Object.entries(ApprovalStatus).map(
-                                      ([value, label]) => (
-                                        <option key={value} value={value}>
-                                          {label}
-                                        </option>
-                                      ),
-                                    )}
-                                  </select>
-                                </div>
-                                <div className="col-12 col-md-8">
-                                  <label className="form-label mb-1">
-                                    Decided At
-                                  </label>
-                                  <input
-                                    className="form-control form-control-sm"
-                                    type="datetime-local"
-                                    name="decidedAtUtc"
-                                    value={newApprovalForm.decidedAtUtc}
-                                    onChange={handleNewApprovalChange}
-                                  />
-                                </div>
-                                <div className="col-12">
-                                  <label className="form-label mb-1">
-                                    Comments
-                                  </label>
-                                  <textarea
-                                    className="form-control form-control-sm"
-                                    rows={2}
-                                    name="comments"
-                                    value={newApprovalForm.comments}
-                                    onChange={handleNewApprovalChange}
-                                    maxLength={1000}
-                                  />
-                                </div>
-                                <div className="col-12 text-end">
-                                  <button
-                                    type="button"
-                                    className="btn btn-success btn-sm"
-                                    onClick={handleCreateApproval}
-                                    disabled={
-                                      creatingApproval || !currentUserId
-                                    }
-                                  >
-                                    {creatingApproval
-                                      ? "Adding..."
-                                      : "Save Approval"}
-                                  </button>
+                          {canCreateMilestoneApprovals &&
+                            showCreateApproval && (
+                              <div className="detail-approval-form mb-2">
+                                <div className="row g-2">
+                                  <div className="col-12 col-md-4">
+                                    <label className="form-label mb-1">
+                                      Status
+                                    </label>
+                                    <select
+                                      className="form-select form-select-sm"
+                                      name="status"
+                                      value={newApprovalForm.status}
+                                      onChange={handleNewApprovalChange}
+                                    >
+                                      {Object.entries(ApprovalStatus).map(
+                                        ([value, label]) => (
+                                          <option key={value} value={value}>
+                                            {label}
+                                          </option>
+                                        ),
+                                      )}
+                                    </select>
+                                  </div>
+                                  <div className="col-12 col-md-8">
+                                    <label className="form-label mb-1">
+                                      Decided At
+                                    </label>
+                                    <input
+                                      className="form-control form-control-sm"
+                                      type="datetime-local"
+                                      name="decidedAtUtc"
+                                      value={newApprovalForm.decidedAtUtc}
+                                      onChange={handleNewApprovalChange}
+                                    />
+                                  </div>
+                                  <div className="col-12">
+                                    <label className="form-label mb-1">
+                                      Comments
+                                    </label>
+                                    <textarea
+                                      className="form-control form-control-sm"
+                                      rows={2}
+                                      name="comments"
+                                      value={newApprovalForm.comments}
+                                      onChange={handleNewApprovalChange}
+                                      maxLength={1000}
+                                    />
+                                  </div>
+                                  <div className="col-12 text-end">
+                                    <button
+                                      type="button"
+                                      className="btn btn-success btn-sm"
+                                      onClick={handleCreateApproval}
+                                      disabled={
+                                        creatingApproval || !currentUserId
+                                      }
+                                    >
+                                      {creatingApproval
+                                        ? "Adding..."
+                                        : "Save Approval"}
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
+                            )}
 
                           {!canViewMilestoneApprovals ? (
                             <AccessDeniedState
@@ -4945,684 +4949,711 @@ export function ProjectDetails() {
             />
           ) : (
             <>
+              <div className="risk-charts-grid mb-3">
+                <article className="details-card risk-chart-card">
+                  <div className="finance-chart-header">
+                    <h3 className="h6 mb-1">Project Risk Severity Summary</h3>
+                    <p className="mb-0">
+                      Distribution of risks by derived severity from impact and
+                      probability.
+                    </p>
+                  </div>
+                  <div className="finance-chart-body">
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={riskSummaryData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={100}
+                          innerRadius={60}
+                        >
+                          {riskSummaryData.map((entry) => (
+                            <Cell key={entry.key} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </article>
 
-          <div className="risk-charts-grid mb-3">
-            <article className="details-card risk-chart-card">
-              <div className="finance-chart-header">
-                <h3 className="h6 mb-1">Project Risk Severity Summary</h3>
-                <p className="mb-0">
-                  Distribution of risks by derived severity from impact and
-                  probability.
-                </p>
-              </div>
-              <div className="finance-chart-body">
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={riskSummaryData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={100}
-                      innerRadius={60}
-                    >
-                      {riskSummaryData.map((entry) => (
-                        <Cell key={entry.key} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </article>
-
-            <article className="details-card risk-chart-card">
-              <div className="finance-chart-header">
-                <h3 className="h6 mb-1">Events Per Risk</h3>
-                <p className="mb-0">
-                  Number of events linked to each risk. Expanding risks updates
-                  this chart in real time.
-                </p>
-              </div>
-              <div className="finance-chart-body">
-                {canViewRiskEvents ? (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={riskEventsChartData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e6eef5" />
-                      <XAxis
-                        dataKey="name"
-                        interval={0}
-                        angle={-12}
-                        textAnchor="end"
-                        height={58}
-                        tick={{ fontSize: 11 }}
-                      />
-                      <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                      <Tooltip />
-                      <Bar
-                        dataKey="events"
-                        fill="#1b4965"
-                        radius={[6, 6, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <AccessDeniedState
-                    title="Risk events analytics are restricted"
-                    description="You do not have permission to view risk event data."
-                  />
-                )}
-              </div>
-            </article>
-          </div>
-
-          <div className="details-card mb-3">
-            <div className="risk-controls-row">
-              <div className="risk-control-item">
-                <label className="form-label mb-1">Filter by Severity</label>
-                <select
-                  className="form-select"
-                  value={riskSeverityFilter}
-                  onChange={(event) =>
-                    setRiskSeverityFilter(
-                      event.target.value as "all" | "high" | "medium" | "low",
-                    )
-                  }
-                >
-                  <option value="all">All</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
-                </select>
-              </div>
-              <div className="risk-control-item">
-                <label className="form-label mb-1">Sort By</label>
-                <select
-                  className="form-select"
-                  value={riskSortBy}
-                  onChange={(event) =>
-                    setRiskSortBy(
-                      event.target.value as
-                        | "recent"
-                        | "impact"
-                        | "probability"
-                        | "severity",
-                    )
-                  }
-                >
-                  <option value="severity">Severity (Highest First)</option>
-                  <option value="impact">Impact</option>
-                  <option value="probability">Probability</option>
-                  <option value="recent">Recently Created</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {canCreateRisks && showCreateRisk && (
-            <div className="task-create-card mb-3">
-              <h3 className="h6 mb-3">Create Risk</h3>
-              <form className="row g-3" onSubmit={handleCreateRisk}>
-                <div className="col-12">
-                  <label className="form-label">Description *</label>
-                  <textarea
-                    className="form-control"
-                    rows={2}
-                    name="description"
-                    value={newRisk.description}
-                    onChange={handleNewRiskChange}
-                    maxLength={500}
-                    required
-                  />
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label">Probability</label>
-                  <select
-                    className="form-select"
-                    name="probability"
-                    value={newRisk.probability}
-                    onChange={handleNewRiskChange}
-                  >
-                    {Object.entries(RiskProbability).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label">Impact</label>
-                  <select
-                    className="form-select"
-                    name="impact"
-                    value={newRisk.impact}
-                    onChange={handleNewRiskChange}
-                  >
-                    {Object.entries(RiskImpact).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12 col-md-6">
-                  <label className="form-label">Owner ID</label>
-                  <input
-                    className="form-control"
-                    name="ownerId"
-                    value={newRisk.ownerId}
-                    onChange={handleNewRiskChange}
-                    maxLength={100}
-                  />
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Mitigation Plan</label>
-                  <textarea
-                    className="form-control"
-                    rows={2}
-                    name="mitigationPlan"
-                    value={newRisk.mitigationPlan}
-                    onChange={handleNewRiskChange}
-                    maxLength={1000}
-                  />
-                </div>
-                <div className="col-12 text-end">
-                  <button
-                    type="submit"
-                    className="btn btn-success"
-                    disabled={creatingRisk}
-                  >
-                    {creatingRisk ? "Creating..." : "Create Risk"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {risksLoading ? (
-            <div className="text-center py-4">
-              <div
-                className="spinner-border spinner-border-sm text-info"
-                role="status"
-              />
-            </div>
-          ) : displayedRisks.length === 0 ? (
-            <div className="tasks-table-wrap">
-              <div className="tasks-empty-message">
-                <i className="bi bi-inbox" />
-                No risks found for this filter.
-              </div>
-            </div>
-          ) : (
-            <div className="risk-list-wrap">
-              {displayedRisks.map((risk) => {
-                const isExpanded = expandedRiskId === risk.id;
-                const events = riskEventsByRisk[risk.id] || [];
-                const eventsLoading = riskEventsLoadingByRisk[risk.id];
-                const severityBucket = getRiskSeverityBucket(risk);
-
-                return (
-                  <article
-                    key={risk.id}
-                    className="details-card risk-item-card"
-                  >
-                    {editingRiskId === risk.id && canEditRisks ? (
-                      <div className="risk-edit-block">
-                        <div className="row g-2">
-                          <div className="col-12">
-                            <label className="form-label mb-1">
-                              Description *
-                            </label>
-                            <textarea
-                              className="form-control"
-                              rows={2}
-                              name="description"
-                              value={editRiskForm.description}
-                              onChange={handleEditRiskChange}
-                              maxLength={500}
-                              required
-                            />
-                          </div>
-                          <div className="col-12 col-md-4">
-                            <label className="form-label mb-1">
-                              Probability
-                            </label>
-                            <select
-                              className="form-select"
-                              name="probability"
-                              value={editRiskForm.probability}
-                              onChange={handleEditRiskChange}
-                            >
-                              {Object.entries(RiskProbability).map(
-                                ([key, label]) => (
-                                  <option key={key} value={key}>
-                                    {label}
-                                  </option>
-                                ),
-                              )}
-                            </select>
-                          </div>
-                          <div className="col-12 col-md-4">
-                            <label className="form-label mb-1">Impact</label>
-                            <select
-                              className="form-select"
-                              name="impact"
-                              value={editRiskForm.impact}
-                              onChange={handleEditRiskChange}
-                            >
-                              {Object.entries(RiskImpact).map(
-                                ([key, label]) => (
-                                  <option key={key} value={key}>
-                                    {label}
-                                  </option>
-                                ),
-                              )}
-                            </select>
-                          </div>
-                          <div className="col-12 col-md-4">
-                            <label className="form-label mb-1">Owner ID</label>
-                            <input
-                              className="form-control"
-                              name="ownerId"
-                              value={editRiskForm.ownerId}
-                              onChange={handleEditRiskChange}
-                              maxLength={100}
-                            />
-                          </div>
-                          <div className="col-12">
-                            <label className="form-label mb-1">
-                              Mitigation Plan
-                            </label>
-                            <textarea
-                              className="form-control"
-                              rows={2}
-                              name="mitigationPlan"
-                              value={editRiskForm.mitigationPlan}
-                              onChange={handleEditRiskChange}
-                              maxLength={1000}
-                            />
-                          </div>
-                        </div>
-                        <div className="task-row-actions justify-content-end mt-2">
-                          <button
-                            type="button"
-                            className="btn btn-success btn-sm"
-                            onClick={() => handleUpdateRisk(risk)}
-                          >
-                            <i className="bi bi-check-lg" />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-outline-secondary btn-sm"
-                            onClick={() => setEditingRiskId(null)}
-                          >
-                            <i className="bi bi-x-lg" />
-                          </button>
-                        </div>
-                      </div>
+                <article className="details-card risk-chart-card">
+                  <div className="finance-chart-header">
+                    <h3 className="h6 mb-1">Events Per Risk</h3>
+                    <p className="mb-0">
+                      Number of events linked to each risk. Expanding risks
+                      updates this chart in real time.
+                    </p>
+                  </div>
+                  <div className="finance-chart-body">
+                    {canViewRiskEvents ? (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart data={riskEventsChartData}>
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="#e6eef5"
+                          />
+                          <XAxis
+                            dataKey="name"
+                            interval={0}
+                            angle={-12}
+                            textAnchor="end"
+                            height={58}
+                            tick={{ fontSize: 11 }}
+                          />
+                          <YAxis
+                            allowDecimals={false}
+                            tick={{ fontSize: 12 }}
+                          />
+                          <Tooltip />
+                          <Bar
+                            dataKey="events"
+                            fill="#1b4965"
+                            radius={[6, 6, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
                     ) : (
-                      <>
-                        <div className="risk-item-head">
-                          <div className="risk-item-summary">
-                            <h3>{risk.description || "Unnamed risk"}</h3>
-                            <div className="risk-item-meta">
-                              <span
-                                className="task-row-badge"
-                                style={{
-                                  background:
-                                    getRiskSeverityColor(severityBucket),
-                                }}
-                              >
-                                {getRiskSeverityLabel(risk)}
-                              </span>
-                              <span>
-                                Probability:{" "}
-                                {RiskProbability[risk.probability ?? 0]}
-                              </span>
-                              <span>
-                                Impact: {RiskImpact[risk.impact ?? 0]}
-                              </span>
-                              <span>Owner: {risk.ownerId || "N/A"}</span>
+                      <AccessDeniedState
+                        title="Risk events analytics are restricted"
+                        description="You do not have permission to view risk event data."
+                      />
+                    )}
+                  </div>
+                </article>
+              </div>
+
+              <div className="details-card mb-3">
+                <div className="risk-controls-row">
+                  <div className="risk-control-item">
+                    <label className="form-label mb-1">
+                      Filter by Severity
+                    </label>
+                    <select
+                      className="form-select"
+                      value={riskSeverityFilter}
+                      onChange={(event) =>
+                        setRiskSeverityFilter(
+                          event.target.value as
+                            | "all"
+                            | "high"
+                            | "medium"
+                            | "low",
+                        )
+                      }
+                    >
+                      <option value="all">All</option>
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
+                  </div>
+                  <div className="risk-control-item">
+                    <label className="form-label mb-1">Sort By</label>
+                    <select
+                      className="form-select"
+                      value={riskSortBy}
+                      onChange={(event) =>
+                        setRiskSortBy(
+                          event.target.value as
+                            | "recent"
+                            | "impact"
+                            | "probability"
+                            | "severity",
+                        )
+                      }
+                    >
+                      <option value="severity">Severity (Highest First)</option>
+                      <option value="impact">Impact</option>
+                      <option value="probability">Probability</option>
+                      <option value="recent">Recently Created</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {canCreateRisks && showCreateRisk && (
+                <div className="task-create-card mb-3">
+                  <h3 className="h6 mb-3">Create Risk</h3>
+                  <form className="row g-3" onSubmit={handleCreateRisk}>
+                    <div className="col-12">
+                      <label className="form-label">Description *</label>
+                      <textarea
+                        className="form-control"
+                        rows={2}
+                        name="description"
+                        value={newRisk.description}
+                        onChange={handleNewRiskChange}
+                        maxLength={500}
+                        required
+                      />
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Probability</label>
+                      <select
+                        className="form-select"
+                        name="probability"
+                        value={newRisk.probability}
+                        onChange={handleNewRiskChange}
+                      >
+                        {Object.entries(RiskProbability).map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Impact</label>
+                      <select
+                        className="form-select"
+                        name="impact"
+                        value={newRisk.impact}
+                        onChange={handleNewRiskChange}
+                      >
+                        {Object.entries(RiskImpact).map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-12 col-md-6">
+                      <label className="form-label">Owner ID</label>
+                      <input
+                        className="form-control"
+                        name="ownerId"
+                        value={newRisk.ownerId}
+                        onChange={handleNewRiskChange}
+                        maxLength={100}
+                      />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Mitigation Plan</label>
+                      <textarea
+                        className="form-control"
+                        rows={2}
+                        name="mitigationPlan"
+                        value={newRisk.mitigationPlan}
+                        onChange={handleNewRiskChange}
+                        maxLength={1000}
+                      />
+                    </div>
+                    <div className="col-12 text-end">
+                      <button
+                        type="submit"
+                        className="btn btn-success"
+                        disabled={creatingRisk}
+                      >
+                        {creatingRisk ? "Creating..." : "Create Risk"}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+
+              {risksLoading ? (
+                <div className="text-center py-4">
+                  <div
+                    className="spinner-border spinner-border-sm text-info"
+                    role="status"
+                  />
+                </div>
+              ) : displayedRisks.length === 0 ? (
+                <div className="tasks-table-wrap">
+                  <div className="tasks-empty-message">
+                    <i className="bi bi-inbox" />
+                    No risks found for this filter.
+                  </div>
+                </div>
+              ) : (
+                <div className="risk-list-wrap">
+                  {displayedRisks.map((risk) => {
+                    const isExpanded = expandedRiskId === risk.id;
+                    const events = riskEventsByRisk[risk.id] || [];
+                    const eventsLoading = riskEventsLoadingByRisk[risk.id];
+                    const severityBucket = getRiskSeverityBucket(risk);
+
+                    return (
+                      <article
+                        key={risk.id}
+                        className="details-card risk-item-card"
+                      >
+                        {editingRiskId === risk.id && canEditRisks ? (
+                          <div className="risk-edit-block">
+                            <div className="row g-2">
+                              <div className="col-12">
+                                <label className="form-label mb-1">
+                                  Description *
+                                </label>
+                                <textarea
+                                  className="form-control"
+                                  rows={2}
+                                  name="description"
+                                  value={editRiskForm.description}
+                                  onChange={handleEditRiskChange}
+                                  maxLength={500}
+                                  required
+                                />
+                              </div>
+                              <div className="col-12 col-md-4">
+                                <label className="form-label mb-1">
+                                  Probability
+                                </label>
+                                <select
+                                  className="form-select"
+                                  name="probability"
+                                  value={editRiskForm.probability}
+                                  onChange={handleEditRiskChange}
+                                >
+                                  {Object.entries(RiskProbability).map(
+                                    ([key, label]) => (
+                                      <option key={key} value={key}>
+                                        {label}
+                                      </option>
+                                    ),
+                                  )}
+                                </select>
+                              </div>
+                              <div className="col-12 col-md-4">
+                                <label className="form-label mb-1">
+                                  Impact
+                                </label>
+                                <select
+                                  className="form-select"
+                                  name="impact"
+                                  value={editRiskForm.impact}
+                                  onChange={handleEditRiskChange}
+                                >
+                                  {Object.entries(RiskImpact).map(
+                                    ([key, label]) => (
+                                      <option key={key} value={key}>
+                                        {label}
+                                      </option>
+                                    ),
+                                  )}
+                                </select>
+                              </div>
+                              <div className="col-12 col-md-4">
+                                <label className="form-label mb-1">
+                                  Owner ID
+                                </label>
+                                <input
+                                  className="form-control"
+                                  name="ownerId"
+                                  value={editRiskForm.ownerId}
+                                  onChange={handleEditRiskChange}
+                                  maxLength={100}
+                                />
+                              </div>
+                              <div className="col-12">
+                                <label className="form-label mb-1">
+                                  Mitigation Plan
+                                </label>
+                                <textarea
+                                  className="form-control"
+                                  rows={2}
+                                  name="mitigationPlan"
+                                  value={editRiskForm.mitigationPlan}
+                                  onChange={handleEditRiskChange}
+                                  maxLength={1000}
+                                />
+                              </div>
                             </div>
-                          </div>
-                          <div className="task-row-actions">
-                              {canEditRisks && (
+                            <div className="task-row-actions justify-content-end mt-2">
                               <button
                                 type="button"
-                                  className="btn btn-outline-primary btn-sm"
-                                  onClick={() => startEditRisk(risk)}
-                                  title="Edit risk"
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleUpdateRisk(risk)}
                               >
-                                  <i className="bi bi-pencil" />
+                                <i className="bi bi-check-lg" />
                               </button>
-                            )}
-                              {canDeleteRisks &&
-                                (confirmDeleteRiskId === risk.id ? (
-                                  <span className="confirm-inline confirm-inline-sm">
-                                    <button
-                                      type="button"
-                                      className="btn btn-danger btn-sm"
-                                      onClick={() => handleDeleteRisk(risk.id)}
-                                    >
-                                      Yes
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-secondary btn-sm"
-                                      onClick={() => setConfirmDeleteRiskId(null)}
-                                    >
-                                      No
-                                    </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline-secondary btn-sm"
+                                onClick={() => setEditingRiskId(null)}
+                              >
+                                <i className="bi bi-x-lg" />
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="risk-item-head">
+                              <div className="risk-item-summary">
+                                <h3>{risk.description || "Unnamed risk"}</h3>
+                                <div className="risk-item-meta">
+                                  <span
+                                    className="task-row-badge"
+                                    style={{
+                                      background:
+                                        getRiskSeverityColor(severityBucket),
+                                    }}
+                                  >
+                                    {getRiskSeverityLabel(risk)}
                                   </span>
-                                ) : (
+                                  <span>
+                                    Probability:{" "}
+                                    {RiskProbability[risk.probability ?? 0]}
+                                  </span>
+                                  <span>
+                                    Impact: {RiskImpact[risk.impact ?? 0]}
+                                  </span>
+                                  <span>Owner: {risk.ownerId || "N/A"}</span>
+                                </div>
+                              </div>
+                              <div className="task-row-actions">
+                                {canEditRisks && (
                                   <button
                                     type="button"
-                                    className="btn btn-outline-danger btn-sm"
-                                    onClick={() => setConfirmDeleteRiskId(risk.id)}
-                                    title="Delete risk"
+                                    className="btn btn-outline-primary btn-sm"
+                                    onClick={() => startEditRisk(risk)}
+                                    title="Edit risk"
                                   >
-                                    <i className="bi bi-trash" />
+                                    <i className="bi bi-pencil" />
                                   </button>
-                                ))}
-                              {canAccessRiskEvents && (
+                                )}
+                                {canDeleteRisks &&
+                                  (confirmDeleteRiskId === risk.id ? (
+                                    <span className="confirm-inline confirm-inline-sm">
+                                      <button
+                                        type="button"
+                                        className="btn btn-danger btn-sm"
+                                        onClick={() =>
+                                          handleDeleteRisk(risk.id)
+                                        }
+                                      >
+                                        Yes
+                                      </button>
+                                      <button
+                                        type="button"
+                                        className="btn btn-outline-secondary btn-sm"
+                                        onClick={() =>
+                                          setConfirmDeleteRiskId(null)
+                                        }
+                                      >
+                                        No
+                                      </button>
+                                    </span>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      className="btn btn-outline-danger btn-sm"
+                                      onClick={() =>
+                                        setConfirmDeleteRiskId(risk.id)
+                                      }
+                                      title="Delete risk"
+                                    >
+                                      <i className="bi bi-trash" />
+                                    </button>
+                                  ))}
+                                {canAccessRiskEvents && (
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-info btn-sm"
+                                    onClick={() =>
+                                      handleToggleRiskExpansion(risk.id)
+                                    }
+                                    title="Show events"
+                                  >
+                                    <i
+                                      className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`}
+                                    />
+                                    <span className="ms-1">Events</span>
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            <p className="risk-mitigation-text mb-0">
+                              {risk.mitigationPlan ||
+                                "No mitigation plan provided."}
+                            </p>
+                          </>
+                        )}
+
+                        {isExpanded && (
+                          <div className="risk-events-panel">
+                            <div className="risk-events-head">
+                              <h4 className="h6 mb-0">
+                                Linked Events ({events.length})
+                              </h4>
+                              {canCreateRiskEvents && (
                                 <button
                                   type="button"
                                   className="btn btn-outline-info btn-sm"
                                   onClick={() =>
-                                    handleToggleRiskExpansion(risk.id)
+                                    setShowCreateEventForRiskId((prev) =>
+                                      prev === risk.id ? null : risk.id,
+                                    )
                                   }
-                                  title="Show events"
                                 >
-                                  <i
-                                    className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`}
-                                  />
-                                  <span className="ms-1">Events</span>
+                                  {showCreateEventForRiskId === risk.id
+                                    ? "Cancel"
+                                    : "+ Add Event"}
                                 </button>
                               )}
-                          </div>
-                        </div>
-                        <p className="risk-mitigation-text mb-0">
-                          {risk.mitigationPlan ||
-                            "No mitigation plan provided."}
-                        </p>
-                      </>
-                    )}
+                            </div>
 
-                    {isExpanded && (
-                      <div className="risk-events-panel">
-                        <div className="risk-events-head">
-                          <h4 className="h6 mb-0">
-                            Linked Events ({events.length})
-                          </h4>
-                          {canCreateRiskEvents && (
-                            <button
-                              type="button"
-                              className="btn btn-outline-info btn-sm"
-                              onClick={() =>
-                                setShowCreateEventForRiskId((prev) =>
-                                  prev === risk.id ? null : risk.id,
-                                )
-                              }
-                            >
-                              {showCreateEventForRiskId === risk.id
-                                ? "Cancel"
-                                : "+ Add Event"}
-                            </button>
-                          )}
-                        </div>
-
-                        {canCreateRiskEvents &&
-                          showCreateEventForRiskId === risk.id && (
-                          <form
-                            className="row g-2 risk-event-create"
-                            onSubmit={(event) =>
-                              handleCreateRiskEvent(event, risk.id)
-                            }
-                          >
-                            <div className="col-12">
-                              <label className="form-label mb-1">
-                                Incident Description *
-                              </label>
-                              <textarea
-                                className="form-control"
-                                rows={2}
-                                name="incidentDescription"
-                                value={newRiskEvent.incidentDescription}
-                                onChange={handleNewRiskEventChange}
-                                maxLength={1000}
-                                required
-                              />
-                            </div>
-                            <div className="col-12 col-md-4">
-                              <label className="form-label mb-1">Status</label>
-                              <select
-                                className="form-select"
-                                name="status"
-                                value={newRiskEvent.status}
-                                onChange={handleNewRiskEventChange}
-                              >
-                                {Object.entries(RiskEventStatus).map(
-                                  ([key, label]) => (
-                                    <option key={key} value={key}>
-                                      {label}
-                                    </option>
-                                  ),
-                                )}
-                              </select>
-                            </div>
-                            <div className="col-12 col-md-4">
-                              <label className="form-label mb-1">
-                                Occurred Date
-                              </label>
-                              <input
-                                className="form-control"
-                                type="date"
-                                name="occurredAtUtc"
-                                value={newRiskEvent.occurredAtUtc}
-                                onChange={handleNewRiskEventChange}
-                              />
-                            </div>
-                            <div className="col-12 col-md-4 d-flex align-items-end justify-content-end">
-                              <button
-                                type="submit"
-                                className="btn btn-success btn-sm"
-                                disabled={creatingRiskEvent}
-                              >
-                                {creatingRiskEvent
-                                  ? "Creating..."
-                                  : "Create Event"}
-                              </button>
-                            </div>
-                          </form>
-                        )}
-
-                        {!canViewRiskEvents ? (
-                          <AccessDeniedState
-                            title="Risk events are restricted"
-                            description="You do not have permission to view risk events for this risk."
-                          />
-                        ) : eventsLoading ? (
-                          <div className="text-center py-3">
-                            <div
-                              className="spinner-border spinner-border-sm text-info"
-                              role="status"
-                            />
-                          </div>
-                        ) : events.length === 0 ? (
-                          <div className="tasks-empty-message py-3">
-                            No events recorded for this risk.
-                          </div>
-                        ) : (
-                          <div className="risk-events-list">
-                            {events.map((eventItem) => (
-                              <div
-                                key={eventItem.id}
-                                className="risk-event-item"
-                              >
-                                {editingRiskEventId === eventItem.id &&
-                                canEditRiskEvents ? (
-                                  <div className="row g-2 w-100">
-                                    <div className="col-12">
-                                      <label className="form-label mb-1">
-                                        Incident Description *
-                                      </label>
-                                      <textarea
-                                        className="form-control"
-                                        rows={2}
-                                        name="incidentDescription"
-                                        value={
-                                          editRiskEventForm.incidentDescription
-                                        }
-                                        onChange={handleEditRiskEventChange}
-                                        maxLength={1000}
-                                        required
-                                      />
-                                    </div>
-                                    <div className="col-12 col-md-4">
-                                      <label className="form-label mb-1">
-                                        Status
-                                      </label>
-                                      <select
-                                        className="form-select"
-                                        name="status"
-                                        value={editRiskEventForm.status}
-                                        onChange={handleEditRiskEventChange}
-                                      >
-                                        {Object.entries(RiskEventStatus).map(
-                                          ([key, label]) => (
-                                            <option key={key} value={key}>
-                                              {label}
-                                            </option>
-                                          ),
-                                        )}
-                                      </select>
-                                    </div>
-                                    <div className="col-12 col-md-4">
-                                      <label className="form-label mb-1">
-                                        Occurred Date
-                                      </label>
-                                      <input
-                                        className="form-control"
-                                        type="date"
-                                        name="occurredAtUtc"
-                                        value={editRiskEventForm.occurredAtUtc}
-                                        onChange={handleEditRiskEventChange}
-                                      />
-                                    </div>
-                                    <div className="col-12 col-md-4 d-flex align-items-end justify-content-end">
-                                      <div className="task-row-actions">
-                                        <button
-                                          type="button"
-                                          className="btn btn-success btn-sm"
-                                          onClick={() =>
-                                            handleUpdateRiskEvent(eventItem)
-                                          }
-                                        >
-                                          <i className="bi bi-check-lg" />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="btn btn-outline-secondary btn-sm"
-                                          onClick={() =>
-                                            setEditingRiskEventId(null)
-                                          }
-                                        >
-                                          <i className="bi bi-x-lg" />
-                                        </button>
-                                      </div>
-                                    </div>
+                            {canCreateRiskEvents &&
+                              showCreateEventForRiskId === risk.id && (
+                                <form
+                                  className="row g-2 risk-event-create"
+                                  onSubmit={(event) =>
+                                    handleCreateRiskEvent(event, risk.id)
+                                  }
+                                >
+                                  <div className="col-12">
+                                    <label className="form-label mb-1">
+                                      Incident Description *
+                                    </label>
+                                    <textarea
+                                      className="form-control"
+                                      rows={2}
+                                      name="incidentDescription"
+                                      value={newRiskEvent.incidentDescription}
+                                      onChange={handleNewRiskEventChange}
+                                      maxLength={1000}
+                                      required
+                                    />
                                   </div>
-                                ) : (
-                                  <>
-                                    <div className="risk-event-main">
-                                      <strong>
-                                        {eventItem.incidentDescription ||
-                                          "Incident"}
-                                      </strong>
-                                      <div className="risk-event-meta">
-                                        <span className="task-row-badge risk-event-status-badge">
-                                          {RiskEventStatus[
-                                            eventItem.status ?? 0
-                                          ] || "Unknown"}
-                                        </span>
-                                        <span>
-                                          Occurred:{" "}
-                                          {formatDate(eventItem.occurredAtUtc)}
-                                        </span>
-                                      </div>
-                                    </div>
-                                    {(canEditRiskEvents ||
-                                      canDeleteRiskEvents) && (
-                                      <div className="task-row-actions">
-                                        {canEditRiskEvents && (
-                                          <button
-                                            type="button"
-                                            className="btn btn-outline-primary btn-sm"
-                                            onClick={() =>
-                                              startEditRiskEvent(eventItem)
+                                  <div className="col-12 col-md-4">
+                                    <label className="form-label mb-1">
+                                      Status
+                                    </label>
+                                    <select
+                                      className="form-select"
+                                      name="status"
+                                      value={newRiskEvent.status}
+                                      onChange={handleNewRiskEventChange}
+                                    >
+                                      {Object.entries(RiskEventStatus).map(
+                                        ([key, label]) => (
+                                          <option key={key} value={key}>
+                                            {label}
+                                          </option>
+                                        ),
+                                      )}
+                                    </select>
+                                  </div>
+                                  <div className="col-12 col-md-4">
+                                    <label className="form-label mb-1">
+                                      Occurred Date
+                                    </label>
+                                    <input
+                                      className="form-control"
+                                      type="date"
+                                      name="occurredAtUtc"
+                                      value={newRiskEvent.occurredAtUtc}
+                                      onChange={handleNewRiskEventChange}
+                                    />
+                                  </div>
+                                  <div className="col-12 col-md-4 d-flex align-items-end justify-content-end">
+                                    <button
+                                      type="submit"
+                                      className="btn btn-success btn-sm"
+                                      disabled={creatingRiskEvent}
+                                    >
+                                      {creatingRiskEvent
+                                        ? "Creating..."
+                                        : "Create Event"}
+                                    </button>
+                                  </div>
+                                </form>
+                              )}
+
+                            {!canViewRiskEvents ? (
+                              <AccessDeniedState
+                                title="Risk events are restricted"
+                                description="You do not have permission to view risk events for this risk."
+                              />
+                            ) : eventsLoading ? (
+                              <div className="text-center py-3">
+                                <div
+                                  className="spinner-border spinner-border-sm text-info"
+                                  role="status"
+                                />
+                              </div>
+                            ) : events.length === 0 ? (
+                              <div className="tasks-empty-message py-3">
+                                No events recorded for this risk.
+                              </div>
+                            ) : (
+                              <div className="risk-events-list">
+                                {events.map((eventItem) => (
+                                  <div
+                                    key={eventItem.id}
+                                    className="risk-event-item"
+                                  >
+                                    {editingRiskEventId === eventItem.id &&
+                                    canEditRiskEvents ? (
+                                      <div className="row g-2 w-100">
+                                        <div className="col-12">
+                                          <label className="form-label mb-1">
+                                            Incident Description *
+                                          </label>
+                                          <textarea
+                                            className="form-control"
+                                            rows={2}
+                                            name="incidentDescription"
+                                            value={
+                                              editRiskEventForm.incidentDescription
                                             }
+                                            onChange={handleEditRiskEventChange}
+                                            maxLength={1000}
+                                            required
+                                          />
+                                        </div>
+                                        <div className="col-12 col-md-4">
+                                          <label className="form-label mb-1">
+                                            Status
+                                          </label>
+                                          <select
+                                            className="form-select"
+                                            name="status"
+                                            value={editRiskEventForm.status}
+                                            onChange={handleEditRiskEventChange}
                                           >
-                                            <i className="bi bi-pencil" />
-                                          </button>
-                                        )}
-                                        {canDeleteRiskEvents &&
-                                          (confirmDeleteRiskEventId ===
-                                          eventItem.id ? (
-                                            <span className="confirm-inline confirm-inline-sm">
-                                              <button
-                                                type="button"
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() =>
-                                                  handleDeleteRiskEvent(
-                                                    eventItem.id,
-                                                    risk.id,
-                                                  )
-                                                }
-                                              >
-                                                Yes
-                                              </button>
-                                              <button
-                                                type="button"
-                                                className="btn btn-outline-secondary btn-sm"
-                                                onClick={() =>
-                                                  setConfirmDeleteRiskEventId(
-                                                    null,
-                                                  )
-                                                }
-                                              >
-                                                No
-                                              </button>
-                                            </span>
-                                          ) : (
+                                            {Object.entries(
+                                              RiskEventStatus,
+                                            ).map(([key, label]) => (
+                                              <option key={key} value={key}>
+                                                {label}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                        <div className="col-12 col-md-4">
+                                          <label className="form-label mb-1">
+                                            Occurred Date
+                                          </label>
+                                          <input
+                                            className="form-control"
+                                            type="date"
+                                            name="occurredAtUtc"
+                                            value={
+                                              editRiskEventForm.occurredAtUtc
+                                            }
+                                            onChange={handleEditRiskEventChange}
+                                          />
+                                        </div>
+                                        <div className="col-12 col-md-4 d-flex align-items-end justify-content-end">
+                                          <div className="task-row-actions">
                                             <button
                                               type="button"
-                                              className="btn btn-outline-danger btn-sm"
+                                              className="btn btn-success btn-sm"
                                               onClick={() =>
-                                                setConfirmDeleteRiskEventId(
-                                                  eventItem.id,
-                                                )
+                                                handleUpdateRiskEvent(eventItem)
                                               }
                                             >
-                                              <i className="bi bi-trash" />
+                                              <i className="bi bi-check-lg" />
                                             </button>
-                                          ))}
+                                            <button
+                                              type="button"
+                                              className="btn btn-outline-secondary btn-sm"
+                                              onClick={() =>
+                                                setEditingRiskEventId(null)
+                                              }
+                                            >
+                                              <i className="bi bi-x-lg" />
+                                            </button>
+                                          </div>
+                                        </div>
                                       </div>
+                                    ) : (
+                                      <>
+                                        <div className="risk-event-main">
+                                          <strong>
+                                            {eventItem.incidentDescription ||
+                                              "Incident"}
+                                          </strong>
+                                          <div className="risk-event-meta">
+                                            <span className="task-row-badge risk-event-status-badge">
+                                              {RiskEventStatus[
+                                                eventItem.status ?? 0
+                                              ] || "Unknown"}
+                                            </span>
+                                            <span>
+                                              Occurred:{" "}
+                                              {formatDate(
+                                                eventItem.occurredAtUtc,
+                                              )}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        {(canEditRiskEvents ||
+                                          canDeleteRiskEvents) && (
+                                          <div className="task-row-actions">
+                                            {canEditRiskEvents && (
+                                              <button
+                                                type="button"
+                                                className="btn btn-outline-primary btn-sm"
+                                                onClick={() =>
+                                                  startEditRiskEvent(eventItem)
+                                                }
+                                              >
+                                                <i className="bi bi-pencil" />
+                                              </button>
+                                            )}
+                                            {canDeleteRiskEvents &&
+                                              (confirmDeleteRiskEventId ===
+                                              eventItem.id ? (
+                                                <span className="confirm-inline confirm-inline-sm">
+                                                  <button
+                                                    type="button"
+                                                    className="btn btn-danger btn-sm"
+                                                    onClick={() =>
+                                                      handleDeleteRiskEvent(
+                                                        eventItem.id,
+                                                        risk.id,
+                                                      )
+                                                    }
+                                                  >
+                                                    Yes
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    className="btn btn-outline-secondary btn-sm"
+                                                    onClick={() =>
+                                                      setConfirmDeleteRiskEventId(
+                                                        null,
+                                                      )
+                                                    }
+                                                  >
+                                                    No
+                                                  </button>
+                                                </span>
+                                              ) : (
+                                                <button
+                                                  type="button"
+                                                  className="btn btn-outline-danger btn-sm"
+                                                  onClick={() =>
+                                                    setConfirmDeleteRiskEventId(
+                                                      eventItem.id,
+                                                    )
+                                                  }
+                                                >
+                                                  <i className="bi bi-trash" />
+                                                </button>
+                                              ))}
+                                          </div>
+                                        )}
+                                      </>
                                     )}
-                                  </>
-                                )}
+                                  </div>
+                                ))}
                               </div>
-                            ))}
+                            )}
                           </div>
                         )}
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          )}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
             </>
           )}
         </section>
@@ -5678,9 +5709,13 @@ export function ProjectDetails() {
                       ))}
                     </select>
                   ) : (
-                    <div className="alert alert-light border mb-0 py-2 px-3" role="status">
+                    <div
+                      className="alert alert-light border mb-0 py-2 px-3"
+                      role="status"
+                    >
                       <i className="bi bi-shield-lock me-2" />
-                      Resource list is hidden because Resources.View is not granted.
+                      Resource list is hidden because Resources.View is not
+                      granted.
                     </div>
                   )}
                 </div>
@@ -5812,7 +5847,9 @@ export function ProjectDetails() {
                                 <button
                                   type="button"
                                   className="btn btn-danger btn-sm"
-                                  onClick={() => handleDeleteResourceReq(req.id)}
+                                  onClick={() =>
+                                    handleDeleteResourceReq(req.id)
+                                  }
                                 >
                                   Yes
                                 </button>
@@ -5875,378 +5912,396 @@ export function ProjectDetails() {
             />
           ) : (
             <>
-          {canCreateBudgets && showCreateBudget && (
-            <div className="task-create-card">
-              <h3 className="h6 mb-3">Create Budget</h3>
-              {availableBudgetCategoryEntries.length === 0 ? (
-                <div className="tasks-empty-message py-3">
-                  All budget categories are already used in this project.
+              {canCreateBudgets && showCreateBudget && (
+                <div className="task-create-card">
+                  <h3 className="h6 mb-3">Create Budget</h3>
+                  {availableBudgetCategoryEntries.length === 0 ? (
+                    <div className="tasks-empty-message py-3">
+                      All budget categories are already used in this project.
+                    </div>
+                  ) : (
+                    <form className="row g-3" onSubmit={handleCreateBudget}>
+                      <div className="col-12 col-md-3">
+                        <label className="form-label">Category *</label>
+                        <select
+                          className="form-select"
+                          name="category"
+                          value={newBudget.category}
+                          onChange={handleNewBudgetChange}
+                          required
+                        >
+                          {availableBudgetCategoryEntries.map(
+                            ([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      </div>
+                      <div className="col-12 col-md-3">
+                        <label className="form-label">Planned Amount</label>
+                        <input
+                          className="form-control"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          name="plannedAmount"
+                          value={newBudget.plannedAmount}
+                          onChange={handleNewBudgetChange}
+                        />
+                      </div>
+                      <div className="col-12 col-md-3">
+                        <label className="form-label">Actual Amount</label>
+                        <input
+                          className="form-control"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          name="actualAmount"
+                          value={newBudget.actualAmount}
+                          onChange={handleNewBudgetChange}
+                        />
+                      </div>
+                      <div className="col-12 col-md-3">
+                        <label className="form-label">Forecast Amount</label>
+                        <input
+                          className="form-control"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          name="forecastAmount"
+                          value={newBudget.forecastAmount}
+                          onChange={handleNewBudgetChange}
+                        />
+                      </div>
+                      <div className="col-12 d-flex justify-content-end">
+                        <button
+                          type="submit"
+                          className="btn btn-success"
+                          disabled={creatingBudget}
+                        >
+                          {creatingBudget ? "Creating..." : "Create Budget"}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
+
+              {budgetsLoading ? (
+                <div className="text-center py-4">
+                  <div
+                    className="spinner-border spinner-border-sm text-info"
+                    role="status"
+                  />
+                </div>
+              ) : budgets.length === 0 ? (
+                <div className="tasks-table-wrap">
+                  <div className="tasks-empty-message">
+                    <i className="bi bi-inbox" />
+                    No budgets yet. Click "New Budget" to add one.
+                  </div>
                 </div>
               ) : (
-                <form className="row g-3" onSubmit={handleCreateBudget}>
-                  <div className="col-12 col-md-3">
-                    <label className="form-label">Category *</label>
-                    <select
-                      className="form-select"
-                      name="category"
-                      value={newBudget.category}
-                      onChange={handleNewBudgetChange}
-                      required
-                    >
-                      {availableBudgetCategoryEntries.map(([value, label]) => (
-                        <option key={value} value={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="col-12 col-md-3">
-                    <label className="form-label">Planned Amount</label>
-                    <input
-                      className="form-control"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      name="plannedAmount"
-                      value={newBudget.plannedAmount}
-                      onChange={handleNewBudgetChange}
-                    />
-                  </div>
-                  <div className="col-12 col-md-3">
-                    <label className="form-label">Actual Amount</label>
-                    <input
-                      className="form-control"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      name="actualAmount"
-                      value={newBudget.actualAmount}
-                      onChange={handleNewBudgetChange}
-                    />
-                  </div>
-                  <div className="col-12 col-md-3">
-                    <label className="form-label">Forecast Amount</label>
-                    <input
-                      className="form-control"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      name="forecastAmount"
-                      value={newBudget.forecastAmount}
-                      onChange={handleNewBudgetChange}
-                    />
-                  </div>
-                  <div className="col-12 d-flex justify-content-end">
-                    <button
-                      type="submit"
-                      className="btn btn-success"
-                      disabled={creatingBudget}
-                    >
-                      {creatingBudget ? "Creating..." : "Create Budget"}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </div>
-          )}
-
-          {budgetsLoading ? (
-            <div className="text-center py-4">
-              <div
-                className="spinner-border spinner-border-sm text-info"
-                role="status"
-              />
-            </div>
-          ) : budgets.length === 0 ? (
-            <div className="tasks-table-wrap">
-              <div className="tasks-empty-message">
-                <i className="bi bi-inbox" />
-                No budgets yet. Click "New Budget" to add one.
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="finance-charts-grid mb-3">
-                <article className="details-card finance-chart-card">
-                  <div className="finance-chart-header">
-                    <h3 className="h6 mb-1">Budget vs Actual vs Forecast</h3>
-                    <p className="mb-0">
-                      Compare planned budget, current spending, and projected
-                      final cost.
-                    </p>
-                  </div>
-                  <div className="finance-chart-body">
-                    <ResponsiveContainer width="100%" height={320}>
-                      <BarChart
-                        data={budgetChartData}
-                        margin={{ top: 12, right: 12, left: 4, bottom: 0 }}
-                      >
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e6eef5" />
-                        <XAxis dataKey="category" tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip
-                          formatter={(value) =>
-                            currencyFormatter.format(Number(value ?? 0))
-                          }
-                        />
-                        <Legend />
-                        <Bar
-                          dataKey="planned"
-                          name="Planned"
-                          fill="#1b4965"
-                          radius={[6, 6, 0, 0]}
-                        />
-                        <Bar
-                          dataKey="actual"
-                          name="Actual"
-                          fill="#ef8354"
-                          radius={[6, 6, 0, 0]}
-                        />
-                        <Bar
-                          dataKey="forecast"
-                          name="Forecast"
-                          fill="#189ab4"
-                          radius={[6, 6, 0, 0]}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </article>
-
-                <article className="details-card finance-chart-card">
-                  <div className="finance-chart-header">
-                    <h3 className="h6 mb-1">Planned Budget Distribution</h3>
-                    <p className="mb-0">
-                      Allocation of planned budget across categories.
-                    </p>
-                  </div>
-                  <div className="finance-chart-body">
-                    <ResponsiveContainer width="100%" height={320}>
-                      <PieChart>
-                        <Pie
-                          data={budgetDistributionData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={105}
-                        >
-                          {budgetDistributionData.map((entry, index) => (
-                            <Cell
-                              key={`${entry.name}-${index}`}
-                              fill={chartPalette[index % chartPalette.length]}
-                            />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value) =>
-                            currencyFormatter.format(Number(value ?? 0))
-                          }
-                        />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </article>
-              </div>
-
-              <article className="details-card finance-consumption-card mb-3">
-                <h3 className="h6 mb-3">Budget Consumption by Category</h3>
-                <div className="finance-consumption-list">
-                  {budgetConsumptionData.map((item) => {
-                    const boundedPercent = Math.max(
-                      0,
-                      Math.min(item.percent, 100),
-                    );
-                    const overBudget = item.percent > 100;
-
-                    return (
-                      <div key={item.id} className="finance-consumption-item">
-                        <div className="finance-consumption-top">
-                          <span className="finance-consumption-name">
-                            {item.category}
-                          </span>
-                          <span
-                            className={`finance-consumption-percent ${overBudget ? "over" : ""}`}
-                          >
-                            {item.percent.toFixed(1)}%
-                          </span>
-                        </div>
-                        <div
-                          className="finance-consumption-track"
-                          role="progressbar"
-                        >
-                          <span
-                            className={`finance-consumption-fill ${overBudget ? "over" : ""}`}
-                            style={{ width: `${boundedPercent}%` }}
-                          />
-                        </div>
-                        <p className="finance-consumption-meta mb-0">
-                          {currencyFormatter.format(item.actual)} of{" "}
-                          {currencyFormatter.format(item.planned)} consumed
+                <>
+                  <div className="finance-charts-grid mb-3">
+                    <article className="details-card finance-chart-card">
+                      <div className="finance-chart-header">
+                        <h3 className="h6 mb-1">
+                          Budget vs Actual vs Forecast
+                        </h3>
+                        <p className="mb-0">
+                          Compare planned budget, current spending, and
+                          projected final cost.
                         </p>
                       </div>
-                    );
-                  })}
-                </div>
-              </article>
+                      <div className="finance-chart-body">
+                        <ResponsiveContainer width="100%" height={320}>
+                          <BarChart
+                            data={budgetChartData}
+                            margin={{ top: 12, right: 12, left: 4, bottom: 0 }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="#e6eef5"
+                            />
+                            <XAxis dataKey="category" tick={{ fontSize: 12 }} />
+                            <YAxis tick={{ fontSize: 12 }} />
+                            <Tooltip
+                              formatter={(value) =>
+                                currencyFormatter.format(Number(value ?? 0))
+                              }
+                            />
+                            <Legend />
+                            <Bar
+                              dataKey="planned"
+                              name="Planned"
+                              fill="#1b4965"
+                              radius={[6, 6, 0, 0]}
+                            />
+                            <Bar
+                              dataKey="actual"
+                              name="Actual"
+                              fill="#ef8354"
+                              radius={[6, 6, 0, 0]}
+                            />
+                            <Bar
+                              dataKey="forecast"
+                              name="Forecast"
+                              fill="#189ab4"
+                              radius={[6, 6, 0, 0]}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </article>
 
-              <div className="tasks-table-wrap">
-                <table className="tasks-table budget-table">
-                  <thead>
-                    <tr>
-                      <th>Category</th>
-                      <th>Planned</th>
-                      <th>Actual</th>
-                      <th>Forecast</th>
-                      <th style={{ width: 140 }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {budgets.map((b) =>
-                      editingBudgetId === b.id && canEditBudgets ? (
-                        <tr key={b.id} className="phase-edit-row">
-                          <td>
-                            <select
-                              className="form-select form-select-sm"
-                              name="category"
-                              value={editBudgetForm.category}
-                              onChange={handleEditBudgetChange}
+                    <article className="details-card finance-chart-card">
+                      <div className="finance-chart-header">
+                        <h3 className="h6 mb-1">Planned Budget Distribution</h3>
+                        <p className="mb-0">
+                          Allocation of planned budget across categories.
+                        </p>
+                      </div>
+                      <div className="finance-chart-body">
+                        <ResponsiveContainer width="100%" height={320}>
+                          <PieChart>
+                            <Pie
+                              data={budgetDistributionData}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              outerRadius={105}
                             >
-                              {Object.entries(BudgetCategory).map(
-                                ([value, label]) => (
-                                  <option key={value} value={value}>
-                                    {label}
-                                  </option>
-                                ),
-                              )}
-                            </select>
-                          </td>
-                          <td>
-                            <input
-                              className="form-control form-control-sm"
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              name="plannedAmount"
-                              value={editBudgetForm.plannedAmount}
-                              onChange={handleEditBudgetChange}
+                              {budgetDistributionData.map((entry, index) => (
+                                <Cell
+                                  key={`${entry.name}-${index}`}
+                                  fill={
+                                    chartPalette[index % chartPalette.length]
+                                  }
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip
+                              formatter={(value) =>
+                                currencyFormatter.format(Number(value ?? 0))
+                              }
                             />
-                          </td>
-                          <td>
-                            <input
-                              className="form-control form-control-sm"
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              name="actualAmount"
-                              value={editBudgetForm.actualAmount}
-                              onChange={handleEditBudgetChange}
-                            />
-                          </td>
-                          <td>
-                            <input
-                              className="form-control form-control-sm"
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              name="forecastAmount"
-                              value={editBudgetForm.forecastAmount}
-                              onChange={handleEditBudgetChange}
-                            />
-                          </td>
-                          <td>
-                            <div className="task-row-actions">
-                              <button
-                                type="button"
-                                className="btn btn-success btn-sm"
-                                onClick={() => handleUpdateBudget(b)}
-                                title="Save"
-                              >
-                                <i className="bi bi-check-lg" />
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-outline-secondary btn-sm"
-                                onClick={() => setEditingBudgetId(null)}
-                                title="Cancel"
-                              >
-                                <i className="bi bi-x-lg" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : (
-                        <tr key={b.id}>
-                          <td>
-                            {BudgetCategory[b.category ?? 0] || "Unknown"}
-                          </td>
-                          <td>${(b.plannedAmount ?? 0).toLocaleString()}</td>
-                          <td>${(b.actualAmount ?? 0).toLocaleString()}</td>
-                          <td>${(b.forecastAmount ?? 0).toLocaleString()}</td>
-                          <td>
-                            <div className="task-row-actions">
-                              {canDeleteBudgets &&
-                                (confirmDeleteBudgetId === b.id ? (
-                                  <span className="confirm-inline confirm-inline-sm">
-                                    <span className="confirm-inline-text">
-                                      Delete?
-                                    </span>
-                                    <button
-                                      type="button"
-                                      className="btn btn-danger btn-sm"
-                                      onClick={() => handleDeleteBudget(b.id)}
-                                    >
-                                      Yes
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-secondary btn-sm"
-                                      onClick={() =>
-                                        setConfirmDeleteBudgetId(null)
-                                      }
-                                    >
-                                      No
-                                    </button>
-                                  </span>
-                                ) : null)}
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </article>
+                  </div>
 
-                              {confirmDeleteBudgetId !== b.id && (
-                                <>
-                                  {canEditBudgets && (
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-primary btn-sm"
-                                      onClick={() => startEditBudget(b)}
-                                      title="Edit"
-                                    >
-                                      <i className="bi bi-pencil" />
-                                    </button>
-                                  )}
-                                  {canDeleteBudgets && (
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-danger btn-sm"
-                                      onClick={() =>
-                                        setConfirmDeleteBudgetId(b.id)
-                                      }
-                                      title="Delete"
-                                    >
-                                      <i className="bi bi-trash" />
-                                    </button>
-                                  )}
-                                </>
-                              )}
+                  <article className="details-card finance-consumption-card mb-3">
+                    <h3 className="h6 mb-3">Budget Consumption by Category</h3>
+                    <div className="finance-consumption-list">
+                      {budgetConsumptionData.map((item) => {
+                        const boundedPercent = Math.max(
+                          0,
+                          Math.min(item.percent, 100),
+                        );
+                        const overBudget = item.percent > 100;
+
+                        return (
+                          <div
+                            key={item.id}
+                            className="finance-consumption-item"
+                          >
+                            <div className="finance-consumption-top">
+                              <span className="finance-consumption-name">
+                                {item.category}
+                              </span>
+                              <span
+                                className={`finance-consumption-percent ${overBudget ? "over" : ""}`}
+                              >
+                                {item.percent.toFixed(1)}%
+                              </span>
                             </div>
-                          </td>
+                            <div
+                              className="finance-consumption-track"
+                              role="progressbar"
+                            >
+                              <span
+                                className={`finance-consumption-fill ${overBudget ? "over" : ""}`}
+                                style={{ width: `${boundedPercent}%` }}
+                              />
+                            </div>
+                            <p className="finance-consumption-meta mb-0">
+                              {currencyFormatter.format(item.actual)} of{" "}
+                              {currencyFormatter.format(item.planned)} consumed
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </article>
+
+                  <div className="tasks-table-wrap">
+                    <table className="tasks-table budget-table">
+                      <thead>
+                        <tr>
+                          <th>Category</th>
+                          <th>Planned</th>
+                          <th>Actual</th>
+                          <th>Forecast</th>
+                          <th style={{ width: 140 }}>Actions</th>
                         </tr>
-                      ),
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
+                      </thead>
+                      <tbody>
+                        {budgets.map((b) =>
+                          editingBudgetId === b.id && canEditBudgets ? (
+                            <tr key={b.id} className="phase-edit-row">
+                              <td>
+                                <select
+                                  className="form-select form-select-sm"
+                                  name="category"
+                                  value={editBudgetForm.category}
+                                  onChange={handleEditBudgetChange}
+                                >
+                                  {Object.entries(BudgetCategory).map(
+                                    ([value, label]) => (
+                                      <option key={value} value={value}>
+                                        {label}
+                                      </option>
+                                    ),
+                                  )}
+                                </select>
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  name="plannedAmount"
+                                  value={editBudgetForm.plannedAmount}
+                                  onChange={handleEditBudgetChange}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  name="actualAmount"
+                                  value={editBudgetForm.actualAmount}
+                                  onChange={handleEditBudgetChange}
+                                />
+                              </td>
+                              <td>
+                                <input
+                                  className="form-control form-control-sm"
+                                  type="number"
+                                  min="0"
+                                  step="0.01"
+                                  name="forecastAmount"
+                                  value={editBudgetForm.forecastAmount}
+                                  onChange={handleEditBudgetChange}
+                                />
+                              </td>
+                              <td>
+                                <div className="task-row-actions">
+                                  <button
+                                    type="button"
+                                    className="btn btn-success btn-sm"
+                                    onClick={() => handleUpdateBudget(b)}
+                                    title="Save"
+                                  >
+                                    <i className="bi bi-check-lg" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-secondary btn-sm"
+                                    onClick={() => setEditingBudgetId(null)}
+                                    title="Cancel"
+                                  >
+                                    <i className="bi bi-x-lg" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ) : (
+                            <tr key={b.id}>
+                              <td>
+                                {BudgetCategory[b.category ?? 0] || "Unknown"}
+                              </td>
+                              <td>
+                                ${(b.plannedAmount ?? 0).toLocaleString()}
+                              </td>
+                              <td>${(b.actualAmount ?? 0).toLocaleString()}</td>
+                              <td>
+                                ${(b.forecastAmount ?? 0).toLocaleString()}
+                              </td>
+                              <td>
+                                <div className="task-row-actions">
+                                  {canDeleteBudgets &&
+                                    (confirmDeleteBudgetId === b.id ? (
+                                      <span className="confirm-inline confirm-inline-sm">
+                                        <span className="confirm-inline-text">
+                                          Delete?
+                                        </span>
+                                        <button
+                                          type="button"
+                                          className="btn btn-danger btn-sm"
+                                          onClick={() =>
+                                            handleDeleteBudget(b.id)
+                                          }
+                                        >
+                                          Yes
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-secondary btn-sm"
+                                          onClick={() =>
+                                            setConfirmDeleteBudgetId(null)
+                                          }
+                                        >
+                                          No
+                                        </button>
+                                      </span>
+                                    ) : null)}
+
+                                  {confirmDeleteBudgetId !== b.id && (
+                                    <>
+                                      {canEditBudgets && (
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-primary btn-sm"
+                                          onClick={() => startEditBudget(b)}
+                                          title="Edit"
+                                        >
+                                          <i className="bi bi-pencil" />
+                                        </button>
+                                      )}
+                                      {canDeleteBudgets && (
+                                        <button
+                                          type="button"
+                                          className="btn btn-outline-danger btn-sm"
+                                          onClick={() =>
+                                            setConfirmDeleteBudgetId(b.id)
+                                          }
+                                          title="Delete"
+                                        >
+                                          <i className="bi bi-trash" />
+                                        </button>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ),
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
             </>
           )}
         </section>

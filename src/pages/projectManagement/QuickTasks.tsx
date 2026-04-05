@@ -113,7 +113,8 @@ export function QuickTasks() {
             <p className="quick-tasks-kicker">Project Management</p>
             <h1 className="quick-tasks-title">Quick Tasks</h1>
             <p className="quick-tasks-subtitle">
-              Independent tasks in one workspace, with status and execution focus.
+              Independent tasks in one workspace, with status and execution
+              focus.
             </p>
           </div>
           <div className="quick-tasks-hero-actions">

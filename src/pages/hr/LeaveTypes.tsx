@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { LeaveType } from "../../services/hrProjectManagementService";
 import hrService from "../../services/hrProjectManagementService";
-import { useHrPermissions } from '../../hooks/useHrPermissions';
-import { HR_PERMISSION_KEYS } from '../../config/hrPermissions';
-import { AccessDeniedState } from '../../Components/AccessDeniedState';
+import { useHrPermissions } from "../../hooks/useHrPermissions";
+import { HR_PERMISSION_KEYS } from "../../config/hrPermissions";
+import { AccessDeniedState } from "../../Components/AccessDeniedState";
 import "../styles/LeaveTypes.css";
 
 export default function LeaveTypes() {
@@ -103,7 +103,9 @@ export default function LeaveTypes() {
                       <div className="lt-days-label">Days Allowed / Year</div>
                     </div>
                     <div className="lt-badges">
-                      <span className={`lt-badge ${lt.isPaid ? "paid" : "unpaid"}`}>
+                      <span
+                        className={`lt-badge ${lt.isPaid ? "paid" : "unpaid"}`}
+                      >
                         <i
                           className={`bi ${lt.isPaid ? "bi-check-circle" : "bi-x-circle"}`}
                         ></i>
@@ -111,13 +113,16 @@ export default function LeaveTypes() {
                       </span>
                       {lt.requiresApproval && (
                         <span className="lt-badge approval">
-                          <i className="bi bi-shield-check"></i>Approval Required
+                          <i className="bi bi-shield-check"></i>Approval
+                          Required
                         </span>
                       )}
                       {lt.carryForward && (
                         <span className="lt-badge carry">
                           <i className="bi bi-arrow-repeat"></i>Carry Forward
-                          {lt.maxCarryForward ? ` (${lt.maxCarryForward}d)` : ""}
+                          {lt.maxCarryForward
+                            ? ` (${lt.maxCarryForward}d)`
+                            : ""}
                         </span>
                       )}
                     </div>

@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import * as meetingService from '../../services/meetingService';
-import type { CreateMeetingDto } from '../../services/meetingService';
-import hrService, { type Employee, type Department } from '../../services/hrProjectManagementService';
-import { useMeetingPermissions } from '../../hooks/useMeetingPermissions';
-import { MEETING_PERMISSION_KEYS } from '../../config/meetingPermissions';
-import './meetings.css';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import * as meetingService from "../../services/meetingService";
+import type { CreateMeetingDto } from "../../services/meetingService";
+import hrService, {
+  type Employee,
+  type Department,
+} from "../../services/hrProjectManagementService";
+import { useMeetingPermissions } from "../../hooks/useMeetingPermissions";
+import { MEETING_PERMISSION_KEYS } from "../../config/meetingPermissions";
+import "./meetings.css";
 
-function parseNestedList<T>(res: { data?: { data?: { data?: T[] } | T[] } }): T[] {
+function parseNestedList<T>(res: {
+  data?: { data?: { data?: T[] } | T[] };
+}): T[] {
   const innerData = res.data?.data;
 
   if (Array.isArray(innerData)) {
@@ -21,28 +26,32 @@ function parseNestedList<T>(res: { data?: { data?: { data?: T[] } | T[] } }): T[
   return [];
 }
 
-type ParticipantAddMode = 'users' | 'department';
+type ParticipantAddMode = "users" | "department";
 
 export function CreateMeeting() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<CreateMeetingDto>({
-    title: '',
-    description: '',
-    startTime: '',
-    endTime: '',
-    status: 'SCHEDULED'  // Changed from DRAFT to SCHEDULED
+    title: "",
+    description: "",
+    startTime: "",
+    endTime: "",
+    status: "SCHEDULED", // Changed from DRAFT to SCHEDULED
   });
-  const [participantAddMode, setParticipantAddMode] = useState<ParticipantAddMode>('users');
-  const [participantUserId, setParticipantUserId] = useState('');
+  const [participantAddMode, setParticipantAddMode] =
+    useState<ParticipantAddMode>("users");
+  const [participantUserId, setParticipantUserId] = useState("");
   const [participants, setParticipants] = useState<string[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   /** When adding by user: optional filter for the employee dropdown (HR). */
-  const [employeeListDepartmentFilter, setEmployeeListDepartmentFilter] = useState('');
+  const [employeeListDepartmentFilter, setEmployeeListDepartmentFilter] =
+    useState("");
   /** When adding by department: target department for bulk add. */
-  const [bulkDepartmentId, setBulkDepartmentId] = useState('');
+  const [bulkDepartmentId, setBulkDepartmentId] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
   /** Keeps labels for participants if the dropdown list is refetched under another department filter. */
-  const [employeeById, setEmployeeById] = useState<Record<string, Employee>>({});
+  const [employeeById, setEmployeeById] = useState<Record<string, Employee>>(
+    {},
+  );
   const [bulkAdding, setBulkAdding] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const {
@@ -61,7 +70,7 @@ export function CreateMeeting() {
         setDepartments(parseNestedList<Department>(res));
       })
       .catch((err) => {
-        console.error('Failed to load departments:', err);
+        console.error("Failed to load departments:", err);
         setDepartments([]);
       });
   }, [canCreateMeeting]);
@@ -71,7 +80,7 @@ export function CreateMeeting() {
       return;
     }
 
-    if (participantAddMode !== 'users') {
+    if (participantAddMode !== "users") {
       return;
     }
     const params = employeeListDepartmentFilter
@@ -91,35 +100,38 @@ export function CreateMeeting() {
         });
       })
       .catch((err) => {
-        console.error('Failed to load employees for participants dropdown:', err);
+        console.error(
+          "Failed to load employees for participants dropdown:",
+          err,
+        );
         setEmployees([]);
       });
   }, [canCreateMeeting, participantAddMode, employeeListDepartmentFilter]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       setSubmitting(true);
-      
+
       // Convert datetime-local format to ISO 8601 with timezone
       const startTime = new Date(formData.startTime).toISOString();
       const endTime = new Date(formData.endTime).toISOString();
-      
+
       const meetingData: CreateMeetingDto = {
         ...formData,
         startTime,
         endTime,
-        participants: participants.map(userId => ({ userId }))
+        participants: participants.map((userId) => ({ userId })),
       };
-      
-      console.log('Sending meeting data:', meetingData);
-      
+
+      console.log("Sending meeting data:", meetingData);
+
       await meetingService.createMeeting(meetingData);
-      navigate('/dashboard/meetings');
+      navigate("/dashboard/meetings");
     } catch (err) {
-      console.error('Failed to create meeting:', err);
-      alert('Failed to create meeting');
+      console.error("Failed to create meeting:", err);
+      alert("Failed to create meeting");
     } finally {
       setSubmitting(false);
     }
@@ -128,12 +140,12 @@ export function CreateMeeting() {
   const addParticipant = () => {
     if (participantUserId && !participants.includes(participantUserId)) {
       setParticipants([...participants, participantUserId]);
-      setParticipantUserId('');
+      setParticipantUserId("");
     }
   };
 
   const removeParticipant = (userId: string) => {
-    setParticipants(participants.filter(id => id !== userId));
+    setParticipants(participants.filter((id) => id !== userId));
   };
 
   const mergeEmployeesIntoParticipants = (list: Employee[]) => {
@@ -157,13 +169,15 @@ export function CreateMeeting() {
     if (!bulkDepartmentId) return;
     try {
       setBulkAdding(true);
-      const res = await hrService.getEmployees({ departmentId: bulkDepartmentId });
+      const res = await hrService.getEmployees({
+        departmentId: bulkDepartmentId,
+      });
       const list = parseNestedList<Employee>(res);
       mergeEmployeesIntoParticipants(list);
-      setBulkDepartmentId('');
+      setBulkDepartmentId("");
     } catch (e) {
-      console.error('Failed to load department employees:', e);
-      alert('Could not load employees for this department.');
+      console.error("Failed to load department employees:", e);
+      alert("Could not load employees for this department.");
     } finally {
       setBulkAdding(false);
     }
@@ -171,7 +185,10 @@ export function CreateMeeting() {
 
   if (!permissionsLoaded || permissionsLoading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ minHeight: '400px' }}>
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "400px" }}
+      >
         <div className="text-center">
           <div className="spinner-border text-secondary" role="status">
             <span className="visually-hidden">Loading...</span>
@@ -189,10 +206,12 @@ export function CreateMeeting() {
           <i className="bi bi-shield-lock display-1 text-warning opacity-75"></i>
         </div>
         <h4 className="text-muted mb-2">Unauthorized</h4>
-        <p className="text-muted mb-4">You do not have permission to create meetings.</p>
+        <p className="text-muted mb-4">
+          You do not have permission to create meetings.
+        </p>
         <button
           className="btn btn-outline-secondary"
-          onClick={() => navigate('/dashboard/meetings')}
+          onClick={() => navigate("/dashboard/meetings")}
         >
           <i className="bi bi-arrow-left me-2"></i>
           Back to Meetings
@@ -212,9 +231,9 @@ export function CreateMeeting() {
           </h2>
           <p className="text-muted mb-0">Schedule a new team meeting</p>
         </div>
-        <button 
-          className="btn btn-outline-secondary" 
-          onClick={() => navigate('/dashboard/meetings')}
+        <button
+          className="btn btn-outline-secondary"
+          onClick={() => navigate("/dashboard/meetings")}
         >
           <i className="bi bi-arrow-left me-2"></i>
           Back to Meetings
@@ -242,7 +261,9 @@ export function CreateMeeting() {
                     className="form-control form-control-lg border-0 shadow-sm"
                     placeholder="Enter meeting title..."
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, title: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -257,7 +278,9 @@ export function CreateMeeting() {
                     rows={4}
                     placeholder="Add meeting description or agenda..."
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                   />
                 </div>
 
@@ -271,7 +294,9 @@ export function CreateMeeting() {
                       type="datetime-local"
                       className="form-control border-0 shadow-sm"
                       value={formData.startTime}
-                      onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, startTime: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -284,7 +309,9 @@ export function CreateMeeting() {
                       type="datetime-local"
                       className="form-control border-0 shadow-sm"
                       value={formData.endTime}
-                      onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, endTime: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -296,14 +323,18 @@ export function CreateMeeting() {
                     Add Participants
                   </label>
                   <div className="mb-2">
-                    <label className="form-label small text-muted mb-1">Invite by</label>
+                    <label className="form-label small text-muted mb-1">
+                      Invite by
+                    </label>
                     <select
                       className="form-select border-0 shadow-sm"
                       value={participantAddMode}
                       onChange={(e) => {
-                        setParticipantAddMode(e.target.value as ParticipantAddMode);
-                        setParticipantUserId('');
-                        setBulkDepartmentId('');
+                        setParticipantAddMode(
+                          e.target.value as ParticipantAddMode,
+                        );
+                        setParticipantUserId("");
+                        setBulkDepartmentId("");
                       }}
                     >
                       <option value="users">Specific employees (users)</option>
@@ -311,23 +342,25 @@ export function CreateMeeting() {
                     </select>
                   </div>
 
-                  {participantAddMode === 'users' ? (
+                  {participantAddMode === "users" ? (
                     <>
                       <div className="mb-2">
-                        <label className="form-label small text-muted mb-1">Department</label>
+                        <label className="form-label small text-muted mb-1">
+                          Department
+                        </label>
                         <select
                           className="form-select border-0 shadow-sm"
                           value={employeeListDepartmentFilter}
                           onChange={(e) => {
                             setEmployeeListDepartmentFilter(e.target.value);
-                            setParticipantUserId('');
+                            setParticipantUserId("");
                           }}
                         >
                           <option value="">All departments</option>
                           {departments.map((d) => (
                             <option key={d.id} value={d.id}>
                               {d.name}
-                              {d.code ? ` (${d.code})` : ''}
+                              {d.code ? ` (${d.code})` : ""}
                             </option>
                           ))}
                         </select>
@@ -356,13 +389,16 @@ export function CreateMeeting() {
                       </div>
                       <small className="text-muted mt-2 d-block">
                         <i className="bi bi-info-circle me-1"></i>
-                        Optional department filter narrows the employee list; add users one by one.
+                        Optional department filter narrows the employee list;
+                        add users one by one.
                       </small>
                     </>
                   ) : (
                     <>
                       <div className="mb-2">
-                        <label className="form-label small text-muted mb-1">Department</label>
+                        <label className="form-label small text-muted mb-1">
+                          Department
+                        </label>
                         <select
                           className="form-select border-0 shadow-sm"
                           value={bulkDepartmentId}
@@ -372,7 +408,7 @@ export function CreateMeeting() {
                           {departments.map((d) => (
                             <option key={d.id} value={d.id}>
                               {d.name}
-                              {d.code ? ` (${d.code})` : ''}
+                              {d.code ? ` (${d.code})` : ""}
                             </option>
                           ))}
                         </select>
@@ -385,7 +421,10 @@ export function CreateMeeting() {
                       >
                         {bulkAdding ? (
                           <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" />
+                            <span
+                              className="spinner-border spinner-border-sm me-2"
+                              role="status"
+                            />
                             Loading…
                           </>
                         ) : (
@@ -397,7 +436,8 @@ export function CreateMeeting() {
                       </button>
                       <small className="text-muted mt-2 d-block">
                         <i className="bi bi-info-circle me-1"></i>
-                        Loads all HR users for that department and adds them as meeting participants.
+                        Loads all HR users for that department and adds them as
+                        meeting participants.
                       </small>
                     </>
                   )}
@@ -416,11 +456,14 @@ export function CreateMeeting() {
                           ? `${emp.firstName} ${emp.lastName} - ${emp.email}`
                           : userId;
                         return (
-                          <div key={userId} className="d-flex justify-content-between align-items-center py-2 px-3 mb-2 bg-white rounded-2 shadow-sm">
+                          <div
+                            key={userId}
+                            className="d-flex justify-content-between align-items-center py-2 px-3 mb-2 bg-white rounded-2 shadow-sm"
+                          >
                             <div className="d-flex align-items-center">
-                              <div 
+                              <div
                                 className="rounded-circle d-flex align-items-center justify-content-center me-3 bg-primary"
-                                style={{ width: '32px', height: '32px' }}
+                                style={{ width: "32px", height: "32px" }}
                               >
                                 <i className="bi bi-person-fill text-white"></i>
                               </div>
@@ -441,14 +484,17 @@ export function CreateMeeting() {
                 )}
 
                 <div className="d-flex gap-3 pt-3">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn btn-meetings-primary btn-lg px-4"
                     disabled={submitting}
                   >
                     {submitting ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                        ></span>
                         Creating...
                       </>
                     ) : (
@@ -458,10 +504,10 @@ export function CreateMeeting() {
                       </>
                     )}
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="btn btn-lg btn-outline-secondary px-4"
-                    onClick={() => navigate('/dashboard/meetings')}
+                    onClick={() => navigate("/dashboard/meetings")}
                   >
                     <i className="bi bi-x-circle me-2"></i>
                     Cancel

@@ -336,7 +336,6 @@ export function TaskDetails() {
     return map;
   }, [employees]);
 
-
   const filteredMembers = projectMembers.filter((m) => {
     const search = memberSearch.toLowerCase();
     return (
@@ -555,7 +554,9 @@ export function TaskDetails() {
               onClick={goBack}
             >
               <i className="bi bi-arrow-left me-2" />
-              {portfolioId && projectId ? "Back to Project" : "Back to Dashboard"}
+              {portfolioId && projectId
+                ? "Back to Project"
+                : "Back to Dashboard"}
             </button>
           </div>
         </section>
@@ -1038,165 +1039,185 @@ export function TaskDetails() {
             />
           ) : (
             <>
-          <div className="task-documents-header">
-            <h2 className="h6 mb-0">Task Documents</h2>
-            <span className="task-documents-count">
-              {documents.length} files
-            </span>
-          </div>
+              <div className="task-documents-header">
+                <h2 className="h6 mb-0">Task Documents</h2>
+                <span className="task-documents-count">
+                  {documents.length} files
+                </span>
+              </div>
 
-          {canCreateTaskDocuments ? (
-            <form className="row g-3 mt-1" onSubmit={handleUploadTaskDocument}>
-            <div className="col-12 col-lg-4">
-              <label className="form-label">Document Name</label>
-              <input
-                className="form-control"
-                value={uploadForm.name}
-                onChange={(e) =>
-                  setUploadForm((prev) => ({ ...prev, name: e.target.value }))
-                }
-                maxLength={200}
-                placeholder="Auto-filled from file name"
-              />
-            </div>
-            <div className="col-12 col-lg-3">
-              <label className="form-label">Type</label>
-              <select
-                className="form-select"
-                value={uploadForm.type}
-                onChange={(e) =>
-                  setUploadForm((prev) => ({ ...prev, type: e.target.value }))
-                }
-              >
-                {Object.entries(DocumentType).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="col-12 col-lg-2">
-              <label className="form-label">Version</label>
-              <input
-                className="form-control"
-                type="number"
-                min="1"
-                value={uploadForm.version}
-                onChange={(e) =>
-                  setUploadForm((prev) => ({
-                    ...prev,
-                    version: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="col-12 col-lg-3">
-              <label className="form-label">File</label>
-              <input
-                className="form-control"
-                type="file"
-                onChange={(e) => {
-                  const file = e.target.files?.[0] || null;
-                  setSelectedUploadFile(file);
-                  if (file && !uploadForm.name.trim()) {
-                    setUploadForm((prev) => ({ ...prev, name: file.name }));
-                  }
-                }}
-              />
-            </div>
-            <div className="col-12 d-flex justify-content-end">
-              <button
-                type="submit"
-                className="btn btn-info text-white"
-                disabled={uploadingDocument || !taskId}
-              >
-                {uploadingDocument ? "Uploading..." : "Upload Document"}
-              </button>
-            </div>
-            </form>
-          ) : (
-            <div className="alert alert-light border mt-3 mb-0" role="status">
-              <i className="bi bi-shield-lock me-2" />
-              You can view documents, but you do not have permission to upload documents.
-            </div>
-          )}
+              {canCreateTaskDocuments ? (
+                <form
+                  className="row g-3 mt-1"
+                  onSubmit={handleUploadTaskDocument}
+                >
+                  <div className="col-12 col-lg-4">
+                    <label className="form-label">Document Name</label>
+                    <input
+                      className="form-control"
+                      value={uploadForm.name}
+                      onChange={(e) =>
+                        setUploadForm((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      maxLength={200}
+                      placeholder="Auto-filled from file name"
+                    />
+                  </div>
+                  <div className="col-12 col-lg-3">
+                    <label className="form-label">Type</label>
+                    <select
+                      className="form-select"
+                      value={uploadForm.type}
+                      onChange={(e) =>
+                        setUploadForm((prev) => ({
+                          ...prev,
+                          type: e.target.value,
+                        }))
+                      }
+                    >
+                      {Object.entries(DocumentType).map(([value, label]) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-12 col-lg-2">
+                    <label className="form-label">Version</label>
+                    <input
+                      className="form-control"
+                      type="number"
+                      min="1"
+                      value={uploadForm.version}
+                      onChange={(e) =>
+                        setUploadForm((prev) => ({
+                          ...prev,
+                          version: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="col-12 col-lg-3">
+                    <label className="form-label">File</label>
+                    <input
+                      className="form-control"
+                      type="file"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setSelectedUploadFile(file);
+                        if (file && !uploadForm.name.trim()) {
+                          setUploadForm((prev) => ({
+                            ...prev,
+                            name: file.name,
+                          }));
+                        }
+                      }}
+                    />
+                  </div>
+                  <div className="col-12 d-flex justify-content-end">
+                    <button
+                      type="submit"
+                      className="btn btn-info text-white"
+                      disabled={uploadingDocument || !taskId}
+                    >
+                      {uploadingDocument ? "Uploading..." : "Upload Document"}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div
+                  className="alert alert-light border mt-3 mb-0"
+                  role="status"
+                >
+                  <i className="bi bi-shield-lock me-2" />
+                  You can view documents, but you do not have permission to
+                  upload documents.
+                </div>
+              )}
 
-          {documentsLoading ? (
-            <div className="task-documents-loading">Loading documents...</div>
-          ) : documents.length === 0 ? (
-            <div className="task-documents-empty">
-              No documents attached to this task.
-            </div>
-          ) : (
-            <div className="task-documents-list">
-              {documents.map((doc) => (
-                <div key={doc.id} className="task-document-row">
-                  <div className="task-document-main">
-                    {(() => {
-                      const uploaderName = doc.uploadedBy || "Unknown User";
-                      return (
-                        <div className="task-document-uploader">
-                          <span
-                            className="task-document-uploader-avatar"
-                            aria-hidden="true"
-                          >
-                            {getInitials(uploaderName)}
-                          </span>
-                          <span className="task-document-uploader-name">
-                            {uploaderName}
+              {documentsLoading ? (
+                <div className="task-documents-loading">
+                  Loading documents...
+                </div>
+              ) : documents.length === 0 ? (
+                <div className="task-documents-empty">
+                  No documents attached to this task.
+                </div>
+              ) : (
+                <div className="task-documents-list">
+                  {documents.map((doc) => (
+                    <div key={doc.id} className="task-document-row">
+                      <div className="task-document-main">
+                        {(() => {
+                          const uploaderName = doc.uploadedBy || "Unknown User";
+                          return (
+                            <div className="task-document-uploader">
+                              <span
+                                className="task-document-uploader-avatar"
+                                aria-hidden="true"
+                              >
+                                {getInitials(uploaderName)}
+                              </span>
+                              <span className="task-document-uploader-name">
+                                {uploaderName}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                        <div className="task-document-name-row">
+                          <i className="bi bi-file-earmark-text" />
+                          <strong>{doc.name || "Untitled document"}</strong>
+                        </div>
+                        <div className="task-document-meta">
+                          <span>{DocumentType[doc.type ?? 5] || "Other"}</span>
+                          <span>v{doc.version ?? 1}</span>
+                          <span>
+                            {formatDate(
+                              doc.uploadedAtUtc || doc.createdDateUtc,
+                            )}
                           </span>
                         </div>
-                      );
-                    })()}
-                    <div className="task-document-name-row">
-                      <i className="bi bi-file-earmark-text" />
-                      <strong>{doc.name || "Untitled document"}</strong>
+                        <div className="task-document-path">
+                          {doc.filePath || "No file path"}
+                        </div>
+                      </div>
+                      <div className="task-document-actions">
+                        {canDeleteTaskDocuments &&
+                          (confirmDeleteDocId === doc.id ? (
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-danger"
+                                onClick={() => handleDeleteTaskDocument(doc.id)}
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => setConfirmDeleteDocId(null)}
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => setConfirmDeleteDocId(doc.id)}
+                            >
+                              <i className="bi bi-trash me-1" />
+                              Delete
+                            </button>
+                          ))}
+                      </div>
                     </div>
-                    <div className="task-document-meta">
-                      <span>{DocumentType[doc.type ?? 5] || "Other"}</span>
-                      <span>v{doc.version ?? 1}</span>
-                      <span>
-                        {formatDate(doc.uploadedAtUtc || doc.createdDateUtc)}
-                      </span>
-                    </div>
-                    <div className="task-document-path">
-                      {doc.filePath || "No file path"}
-                    </div>
-                  </div>
-                  <div className="task-document-actions">
-                    {canDeleteTaskDocuments &&
-                      (confirmDeleteDocId === doc.id ? (
-                        <>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-danger"
-                            onClick={() => handleDeleteTaskDocument(doc.id)}
-                          >
-                            Confirm
-                          </button>
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-outline-secondary"
-                            onClick={() => setConfirmDeleteDocId(null)}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-outline-danger"
-                          onClick={() => setConfirmDeleteDocId(doc.id)}
-                        >
-                          <i className="bi bi-trash me-1" />
-                          Delete
-                        </button>
-                      ))}
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
+              )}
             </>
           )}
         </article>

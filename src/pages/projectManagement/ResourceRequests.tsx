@@ -39,7 +39,9 @@ export function ResourceRequests() {
   const hasResourceRequestsAccess = canAny([
     ...PM_ROUTE_PERMISSION_KEYS.RESOURCE_REQUESTS,
   ]);
-  const canViewRequests = canAny([...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.VIEW]);
+  const canViewRequests = canAny([
+    ...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.VIEW,
+  ]);
   const canApproveOrReject =
     canAny([...PM_PERMISSION_KEYS.APPROVALS.RESOURCE_REQUESTS]) ||
     canAny([...PM_PERMISSION_KEYS.RESOURCES.REQUESTS.EDIT]);
@@ -312,24 +314,24 @@ export function ResourceRequests() {
                       <div className="rr-row-actions">
                         {canApproveOrReject &&
                           (req.status === 0 || req.status === 1) && (
-                          <>
-                            <button
-                              type="button"
-                              className="btn btn-outline-success btn-sm"
-                              onClick={() => startAction(req.id, "approve")}
-                              title="Approve"
-                            >
-                              <i className="bi bi-check-circle" />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-outline-danger btn-sm"
-                              onClick={() => startAction(req.id, "reject")}
-                              title="Reject"
-                            >
-                              <i className="bi bi-x-circle" />
-                            </button>
-                          </>
+                            <>
+                              <button
+                                type="button"
+                                className="btn btn-outline-success btn-sm"
+                                onClick={() => startAction(req.id, "approve")}
+                                title="Approve"
+                              >
+                                <i className="bi bi-check-circle" />
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => startAction(req.id, "reject")}
+                                title="Reject"
+                              >
+                                <i className="bi bi-x-circle" />
+                              </button>
+                            </>
                           )}
                         <button
                           type="button"

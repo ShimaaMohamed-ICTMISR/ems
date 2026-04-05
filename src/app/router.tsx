@@ -5,8 +5,14 @@ import Login from "../pages/Login";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PermissionRoute } from "./PermissionRoute";
 import { MEETING_PERMISSION_KEYS } from "../config/meetingPermissions";
-import { HR_PERMISSION_KEYS, HR_ROUTE_PERMISSION_KEYS } from "../config/hrPermissions";
-import { PM_PERMISSION_KEYS, PM_ROUTE_PERMISSION_KEYS } from "../config/projectManagementPermissions";
+import {
+  HR_PERMISSION_KEYS,
+  HR_ROUTE_PERMISSION_KEYS,
+} from "../config/hrPermissions";
+import {
+  PM_PERMISSION_KEYS,
+  PM_ROUTE_PERMISSION_KEYS,
+} from "../config/projectManagementPermissions";
 import {
   Dashboard,
   Notifications,
@@ -75,7 +81,10 @@ const router = createBrowserRouter([
       {
         path: "hr",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.HR_HOME]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_ROUTE_PERMISSION_KEYS.HR_HOME]}
+          >
             <HumanResources />
           </PermissionRoute>
         ),
@@ -84,7 +93,10 @@ const router = createBrowserRouter([
       {
         path: "hr/departments",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.DEPARTMENTS]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_ROUTE_PERMISSION_KEYS.DEPARTMENTS]}
+          >
             <Departments />
           </PermissionRoute>
         ),
@@ -92,7 +104,10 @@ const router = createBrowserRouter([
       {
         path: "hr/departments/create",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.DEPARTMENTS.CREATE]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_PERMISSION_KEYS.DEPARTMENTS.CREATE]}
+          >
             <CreateDepartment />
           </PermissionRoute>
         ),
@@ -100,7 +115,10 @@ const router = createBrowserRouter([
       {
         path: "hr/departments/:id/edit",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.DEPARTMENTS.EDIT]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_PERMISSION_KEYS.DEPARTMENTS.EDIT]}
+          >
             <EditDepartment />
           </PermissionRoute>
         ),
@@ -109,7 +127,10 @@ const router = createBrowserRouter([
       {
         path: "hr/positions",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.POSITIONS]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_ROUTE_PERMISSION_KEYS.POSITIONS]}
+          >
             <Positions />
           </PermissionRoute>
         ),
@@ -117,7 +138,10 @@ const router = createBrowserRouter([
       {
         path: "hr/positions/create",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.POSITIONS.CREATE]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_PERMISSION_KEYS.POSITIONS.CREATE]}
+          >
             <CreatePosition />
           </PermissionRoute>
         ),
@@ -125,7 +149,10 @@ const router = createBrowserRouter([
       {
         path: "hr/positions/:id/edit",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.POSITIONS.EDIT]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_PERMISSION_KEYS.POSITIONS.EDIT]}
+          >
             <EditPosition />
           </PermissionRoute>
         ),
@@ -134,7 +161,10 @@ const router = createBrowserRouter([
       {
         path: "hr/employees",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.EMPLOYEES]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_ROUTE_PERMISSION_KEYS.EMPLOYEES]}
+          >
             <Employees />
           </PermissionRoute>
         ),
@@ -142,7 +172,10 @@ const router = createBrowserRouter([
       {
         path: "hr/employees/create",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.EMPLOYEES.CREATE]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_PERMISSION_KEYS.EMPLOYEES.CREATE]}
+          >
             <CreateEmployee />
           </PermissionRoute>
         ),
@@ -150,7 +183,10 @@ const router = createBrowserRouter([
       {
         path: "hr/employees/:id/edit",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.EMPLOYEES.EDIT]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_PERMISSION_KEYS.EMPLOYEES.EDIT]}
+          >
             <EditEmployee />
           </PermissionRoute>
         ),
@@ -159,7 +195,10 @@ const router = createBrowserRouter([
       {
         path: "hr/attendance",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.ATTENDANCE]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_ROUTE_PERMISSION_KEYS.ATTENDANCE]}
+          >
             <Attendance />
           </PermissionRoute>
         ),
@@ -168,7 +207,10 @@ const router = createBrowserRouter([
       {
         path: "hr/leave-types",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.LEAVE_TYPES]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_ROUTE_PERMISSION_KEYS.LEAVE_TYPES]}
+          >
             <LeaveTypes />
           </PermissionRoute>
         ),
@@ -176,7 +218,10 @@ const router = createBrowserRouter([
       {
         path: "hr/leave-types/create",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.LEAVE_TYPES.CREATE]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_PERMISSION_KEYS.LEAVE_TYPES.CREATE]}
+          >
             <CreateLeaveType />
           </PermissionRoute>
         ),
@@ -185,7 +230,10 @@ const router = createBrowserRouter([
       {
         path: "hr/leave-requests",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.LEAVE_REQUESTS]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_ROUTE_PERMISSION_KEYS.LEAVE_REQUESTS]}
+          >
             <LeaveRequests />
           </PermissionRoute>
         ),
@@ -193,7 +241,10 @@ const router = createBrowserRouter([
       {
         path: "hr/leave-requests/create",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_PERMISSION_KEYS.LEAVE_REQUESTS.CREATE]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_PERMISSION_KEYS.LEAVE_REQUESTS.CREATE]}
+          >
             <CreateLeaveRequest />
           </PermissionRoute>
         ),
@@ -202,7 +253,10 @@ const router = createBrowserRouter([
       {
         path: "hr/leave-balances",
         element: (
-          <PermissionRoute scope="hr" anyOf={[...HR_ROUTE_PERMISSION_KEYS.LEAVE_BALANCES]}>
+          <PermissionRoute
+            scope="hr"
+            anyOf={[...HR_ROUTE_PERMISSION_KEYS.LEAVE_BALANCES]}
+          >
             <LeaveBalances />
           </PermissionRoute>
         ),

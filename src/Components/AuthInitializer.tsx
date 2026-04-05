@@ -1,28 +1,32 @@
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { restoreAuth } from '../store/authSlice';
-import { authService } from '../services/authService';
-import { getMeetingPermissions } from '../services/meetingService';
-import hrService from '../services/hrProjectManagementService';
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { restoreAuth } from "../store/authSlice";
+import { authService } from "../services/authService";
+import { getMeetingPermissions } from "../services/meetingService";
+import hrService from "../services/hrProjectManagementService";
 import {
   clearMeetingPermissions,
   fetchMeetingPermissionsFailure,
   fetchMeetingPermissionsStart,
   fetchMeetingPermissionsSuccess,
-} from '../store/meetingPermissionsSlice';
+} from "../store/meetingPermissionsSlice";
 import {
   clearHrPermissions,
   fetchHrPermissionsFailure,
   fetchHrPermissionsStart,
   fetchHrPermissionsSuccess,
-} from '../store/hrPermissionsSlice';
-import type { RootState, AppDispatch } from '../store/store';
-import { extractPermissionCodes, toUniquePermissions } from '../utils/permissionUtils';
+} from "../store/hrPermissionsSlice";
+import type { RootState, AppDispatch } from "../store/store";
+import {
+  extractPermissionCodes,
+  toUniquePermissions,
+} from "../utils/permissionUtils";
 
 const toPermissionList = (payload: unknown): string[] => {
-  if (Array.isArray(payload)) return toUniquePermissions(extractPermissionCodes(payload));
+  if (Array.isArray(payload))
+    return toUniquePermissions(extractPermissionCodes(payload));
 
-  if (payload && typeof payload === 'object') {
+  if (payload && typeof payload === "object") {
     const typedPayload = payload as {
       permissions?: unknown;
       data?: unknown;
@@ -49,8 +53,8 @@ const toPermissionList = (payload: unknown): string[] => {
 const normalizeHrPermissionName = (permission: string): string =>
   permission
     .trim()
-    .replace(/^HR\./i, '')
-    .replace(/^HumanResources\./i, '');
+    .replace(/^HR\./i, "")
+    .replace(/^HumanResources\./i, "");
 
 interface AuthInitializerProps {
   children: React.ReactNode;
@@ -58,7 +62,9 @@ interface AuthInitializerProps {
 
 export function AuthInitializer({ children }: AuthInitializerProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const { isAuthenticated, token, user } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, token, user } = useSelector(
+    (state: RootState) => state.auth,
+  );
 
   useEffect(() => {
     // Restore authentication state from localStorage on app load
@@ -88,7 +94,7 @@ export function AuthInitializer({ children }: AuthInitializerProps) {
         const message =
           error?.response?.data?.message ||
           error?.message ||
-          'Failed to load meeting permissions';
+          "Failed to load meeting permissions";
         dispatch(fetchMeetingPermissionsFailure(message));
       }
     };
@@ -106,14 +112,21 @@ export function AuthInitializer({ children }: AuthInitializerProps) {
         let permissions: string[] = [];
 
         if (user?.id) {
-          const sectionResponse = await hrService.getUserPermissionSections(user.id);
+          const sectionResponse = await hrService.getUserPermissionSections(
+            user.id,
+          );
           permissions = toPermissionList(sectionResponse.data);
 
           if (permissions.length === 0) {
-            const positionId = (user as any)?.positionId || (user as any)?.position?.id;
+            const positionId =
+              (user as any)?.positionId || (user as any)?.position?.id;
 
             if (positionId) {
-              const effectiveResponse = await hrService.getUserEffectivePermissions(user.id, positionId);
+              const effectiveResponse =
+                await hrService.getUserEffectivePermissions(
+                  user.id,
+                  positionId,
+                );
               permissions = toPermissionList(effectiveResponse.data);
             }
           }
@@ -142,7 +155,7 @@ export function AuthInitializer({ children }: AuthInitializerProps) {
         const message =
           error?.response?.data?.message ||
           error?.message ||
-          'Failed to load HR permissions';
+          "Failed to load HR permissions";
 
         dispatch(fetchHrPermissionsFailure(message));
       }

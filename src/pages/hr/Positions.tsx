@@ -5,9 +5,9 @@ import type {
   SubPosition,
 } from "../../services/hrProjectManagementService";
 import hrService from "../../services/hrProjectManagementService";
-import { useHrPermissions } from '../../hooks/useHrPermissions';
-import { HR_PERMISSION_KEYS } from '../../config/hrPermissions';
-import { AccessDeniedState } from '../../Components/AccessDeniedState';
+import { useHrPermissions } from "../../hooks/useHrPermissions";
+import { HR_PERMISSION_KEYS } from "../../config/hrPermissions";
+import { AccessDeniedState } from "../../Components/AccessDeniedState";
 import "../styles/Departments.css";
 
 export function Positions() {
@@ -511,7 +511,9 @@ export function Positions() {
                                 <i className="bi bi-building"></i> Department
                               </label>
                               <p>
-                                {pos.department?.name || pos.departmentId || "N/A"}
+                                {pos.department?.name ||
+                                  pos.departmentId ||
+                                  "N/A"}
                               </p>
                             </div>
                             <div className="info-item">
@@ -569,68 +571,72 @@ export function Positions() {
                                           gap: "0.5rem",
                                         }}
                                       >
-                                        {(subPositions[pos.id] || []).map((sub) => (
-                                          <div
-                                            key={sub.id}
-                                            style={{
-                                              display: "flex",
-                                              alignItems: "center",
-                                              justifyContent: "space-between",
-                                              padding: "0.5rem 0.75rem",
-                                              background: "white",
-                                              borderRadius: "6px",
-                                              border: "1px solid #ecf0f1",
-                                            }}
-                                          >
-                                            <div>
-                                              <strong
-                                                style={{ fontSize: "0.85rem" }}
-                                              >
-                                                {sub.title}
-                                              </strong>
-                                              <span
-                                                style={{
-                                                  marginLeft: "0.5rem",
-                                                  fontSize: "0.75rem",
-                                                  color: "#7f8c8d",
-                                                }}
-                                              >
-                                                {sub.code}
-                                              </span>
-                                              {sub.inheritsParentPermissions && (
+                                        {(subPositions[pos.id] || []).map(
+                                          (sub) => (
+                                            <div
+                                              key={sub.id}
+                                              style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "space-between",
+                                                padding: "0.5rem 0.75rem",
+                                                background: "white",
+                                                borderRadius: "6px",
+                                                border: "1px solid #ecf0f1",
+                                              }}
+                                            >
+                                              <div>
+                                                <strong
+                                                  style={{
+                                                    fontSize: "0.85rem",
+                                                  }}
+                                                >
+                                                  {sub.title}
+                                                </strong>
                                                 <span
                                                   style={{
                                                     marginLeft: "0.5rem",
-                                                    fontSize: "0.65rem",
-                                                    background: "#dcfce7",
-                                                    color: "#166534",
-                                                    padding: "2px 6px",
-                                                    borderRadius: "4px",
+                                                    fontSize: "0.75rem",
+                                                    color: "#7f8c8d",
                                                   }}
                                                 >
-                                                  Inherits
+                                                  {sub.code}
                                                 </span>
+                                                {sub.inheritsParentPermissions && (
+                                                  <span
+                                                    style={{
+                                                      marginLeft: "0.5rem",
+                                                      fontSize: "0.65rem",
+                                                      background: "#dcfce7",
+                                                      color: "#166534",
+                                                      padding: "2px 6px",
+                                                      borderRadius: "4px",
+                                                    }}
+                                                  >
+                                                    Inherits
+                                                  </span>
+                                                )}
+                                              </div>
+                                              {canDeletePositions && (
+                                                <button
+                                                  className="btn btn-sm btn-outline-danger"
+                                                  style={{
+                                                    padding: "2px 8px",
+                                                    fontSize: "0.75rem",
+                                                  }}
+                                                  onClick={() =>
+                                                    handleDeleteSubPosition(
+                                                      pos.id,
+                                                      sub.id,
+                                                    )
+                                                  }
+                                                >
+                                                  <i className="bi bi-trash"></i>
+                                                </button>
                                               )}
                                             </div>
-                                            {canDeletePositions && (
-                                              <button
-                                                className="btn btn-sm btn-outline-danger"
-                                                style={{
-                                                  padding: "2px 8px",
-                                                  fontSize: "0.75rem",
-                                                }}
-                                                onClick={() =>
-                                                  handleDeleteSubPosition(
-                                                    pos.id,
-                                                    sub.id,
-                                                  )
-                                                }
-                                              >
-                                                <i className="bi bi-trash"></i>
-                                              </button>
-                                            )}
-                                          </div>
-                                        ))}
+                                          ),
+                                        )}
                                       </div>
                                     ) : (
                                       <p
@@ -645,7 +651,8 @@ export function Positions() {
                                       </p>
                                     )}
 
-                                    {showSubForm === pos.id && canCreatePositions ? (
+                                    {showSubForm === pos.id &&
+                                    canCreatePositions ? (
                                       <div
                                         style={{
                                           marginTop: "0.75rem",
@@ -718,12 +725,17 @@ export function Positions() {
                                           </label>
                                         </div>
                                         <div
-                                          style={{ display: "flex", gap: "0.5rem" }}
+                                          style={{
+                                            display: "flex",
+                                            gap: "0.5rem",
+                                          }}
                                         >
                                           <button
                                             className="btn btn-sm btn-primary"
                                             disabled={
-                                              subSubmitting || !subTitle || !subCode
+                                              subSubmitting ||
+                                              !subTitle ||
+                                              !subCode
                                             }
                                             onClick={() =>
                                               handleCreateSubPosition(pos.id)
@@ -801,7 +813,8 @@ export function Positions() {
                                       >
                                         {positionPermissions.map(
                                           (perm: any, idx: number) => {
-                                            const code = getPermissionCode(perm);
+                                            const code =
+                                              getPermissionCode(perm);
                                             const source =
                                               typeof perm === "object"
                                                 ? perm.source
@@ -828,27 +841,28 @@ export function Positions() {
                                                 }}
                                               >
                                                 {code}
-                                                {source !== "inherited" && canEditPositions && (
-                                                  <button
-                                                    onClick={() =>
-                                                      handleRemovePermission(
-                                                        pos.id,
-                                                        code,
-                                                      )
-                                                    }
-                                                    style={{
-                                                      background: "none",
-                                                      border: "none",
-                                                      cursor: "pointer",
-                                                      color: "#ef4444",
-                                                      fontSize: "0.7rem",
-                                                      padding: 0,
-                                                      marginLeft: "2px",
-                                                    }}
-                                                  >
-                                                    <i className="bi bi-x-circle-fill"></i>
-                                                  </button>
-                                                )}
+                                                {source !== "inherited" &&
+                                                  canEditPositions && (
+                                                    <button
+                                                      onClick={() =>
+                                                        handleRemovePermission(
+                                                          pos.id,
+                                                          code,
+                                                        )
+                                                      }
+                                                      style={{
+                                                        background: "none",
+                                                        border: "none",
+                                                        cursor: "pointer",
+                                                        color: "#ef4444",
+                                                        fontSize: "0.7rem",
+                                                        padding: 0,
+                                                        marginLeft: "2px",
+                                                      }}
+                                                    >
+                                                      <i className="bi bi-x-circle-fill"></i>
+                                                    </button>
+                                                  )}
                                               </span>
                                             );
                                           },
@@ -887,7 +901,10 @@ export function Positions() {
 
                                         {permissionPackages.length > 0 ? (
                                           <div
-                                            style={{ display: "flex", gap: "0.5rem" }}
+                                            style={{
+                                              display: "flex",
+                                              gap: "0.5rem",
+                                            }}
                                           >
                                             <select
                                               className="form-select form-select-sm"
@@ -897,13 +914,19 @@ export function Positions() {
                                                   e.target.value,
                                                 )
                                               }
-                                              style={{ flex: 1, fontSize: "0.8rem" }}
+                                              style={{
+                                                flex: 1,
+                                                fontSize: "0.8rem",
+                                              }}
                                             >
                                               <option value="">
                                                 Select package...
                                               </option>
                                               {permissionPackages.map((pkg) => (
-                                                <option key={pkg.key} value={pkg.key}>
+                                                <option
+                                                  key={pkg.key}
+                                                  value={pkg.key}
+                                                >
                                                   {pkg.label} (
                                                   {pkg.permissions.length})
                                                 </option>
@@ -917,7 +940,9 @@ export function Positions() {
                                                 assigningPermission
                                               }
                                               onClick={() =>
-                                                handleAssignPermissionPackage(pos.id)
+                                                handleAssignPermissionPackage(
+                                                  pos.id,
+                                                )
                                               }
                                             >
                                               {assigningPermission ? (
@@ -972,7 +997,10 @@ export function Positions() {
                               </button>
                               <ul className="dropdown-menu dropdown-menu-end">
                                 <li>
-                                  <a className="dropdown-item text-danger" href="#!">
+                                  <a
+                                    className="dropdown-item text-danger"
+                                    href="#!"
+                                  >
                                     <strong>Are you sure?</strong>
                                   </a>
                                 </li>

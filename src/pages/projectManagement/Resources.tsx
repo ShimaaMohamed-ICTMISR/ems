@@ -61,37 +61,40 @@ export function Resources() {
     4: "#6b7280",
   };
 
-  const openDetail = useCallback(async (r: Resource) => {
-    if (!canViewResources) {
-      toast.error("You do not have permission to view resource details.");
-      return;
-    }
+  const openDetail = useCallback(
+    async (r: Resource) => {
+      if (!canViewResources) {
+        toast.error("You do not have permission to view resource details.");
+        return;
+      }
 
-    setDetailResource(r);
-    setDetailRequests([]);
-    setDetailRequestsLoading(true);
-    try {
-      const [allRequests, allProjects] = await Promise.all([
-        resourceRequestService.getAll(),
-        projectService.getProjects(),
-      ]);
-      const projectMap = new Map(
-        allProjects.map((p: Project) => [p.id, p.name || "Unnamed Project"]),
-      );
-      const matched = allRequests
-        .filter((req: ResourceRequest) => req.resourceId === r.id)
-        .map((req: ResourceRequest) => ({
-          ...req,
-          projectName:
-            projectMap.get(req.projectId ?? "") || req.projectId || "—",
-        }));
-      setDetailRequests(matched);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setDetailRequestsLoading(false);
-    }
-  }, [canViewResources]);
+      setDetailResource(r);
+      setDetailRequests([]);
+      setDetailRequestsLoading(true);
+      try {
+        const [allRequests, allProjects] = await Promise.all([
+          resourceRequestService.getAll(),
+          projectService.getProjects(),
+        ]);
+        const projectMap = new Map(
+          allProjects.map((p: Project) => [p.id, p.name || "Unnamed Project"]),
+        );
+        const matched = allRequests
+          .filter((req: ResourceRequest) => req.resourceId === r.id)
+          .map((req: ResourceRequest) => ({
+            ...req,
+            projectName:
+              projectMap.get(req.projectId ?? "") || req.projectId || "—",
+          }));
+        setDetailRequests(matched);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setDetailRequestsLoading(false);
+      }
+    },
+    [canViewResources],
+  );
 
   useEffect(() => {
     if (!hasResourcesAccess) {

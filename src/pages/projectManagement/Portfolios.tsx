@@ -607,7 +607,10 @@ export function Portfolios() {
                   Projects In This Portfolio
                 </p>
                 {!canViewProjects ? (
-                  <div className="alert alert-light border mb-0 py-2 px-3" role="status">
+                  <div
+                    className="alert alert-light border mb-0 py-2 px-3"
+                    role="status"
+                  >
                     <i className="bi bi-shield-lock me-2" />
                     You do not have permission to view project titles.
                   </div>

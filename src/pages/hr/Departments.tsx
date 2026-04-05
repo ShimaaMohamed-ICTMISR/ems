@@ -1,18 +1,18 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import type { Department } from '../../services/hrProjectManagementService';
-import hrService from '../../services/hrProjectManagementService';
-import { useHrPermissions } from '../../hooks/useHrPermissions';
-import { HR_PERMISSION_KEYS } from '../../config/hrPermissions';
-import { AccessDeniedState } from '../../Components/AccessDeniedState';
-import '../styles/Departments.css';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import type { Department } from "../../services/hrProjectManagementService";
+import hrService from "../../services/hrProjectManagementService";
+import { useHrPermissions } from "../../hooks/useHrPermissions";
+import { HR_PERMISSION_KEYS } from "../../config/hrPermissions";
+import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import "../styles/Departments.css";
 
 export function Departments() {
   const navigate = useNavigate();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [employees, setEmployees] = useState<any[]>([]);
   const {
     canAny,
@@ -23,9 +23,13 @@ export function Departments() {
   } = useHrPermissions();
   const isDev = import.meta.env.DEV;
   const canViewDepartment = canAny([...HR_PERMISSION_KEYS.DEPARTMENTS.VIEW]);
-  const canCreateDepartment = canAny([...HR_PERMISSION_KEYS.DEPARTMENTS.CREATE]);
+  const canCreateDepartment = canAny([
+    ...HR_PERMISSION_KEYS.DEPARTMENTS.CREATE,
+  ]);
   const canEditDepartment = canAny([...HR_PERMISSION_KEYS.DEPARTMENTS.EDIT]);
-  const canDeleteDepartment = canAny([...HR_PERMISSION_KEYS.DEPARTMENTS.DELETE]);
+  const canDeleteDepartment = canAny([
+    ...HR_PERMISSION_KEYS.DEPARTMENTS.DELETE,
+  ]);
 
   const departmentPermissionDebug = {
     permissionsLoaded,
@@ -59,11 +63,12 @@ export function Departments() {
   const fetchEmployees = async () => {
     try {
       const response = await hrService.getEmployees();
-      const empData = response.data?.data?.data || response.data?.data || response.data;
+      const empData =
+        response.data?.data?.data || response.data?.data || response.data;
       const empList = Array.isArray(empData) ? empData : [];
       setEmployees(empList);
     } catch (err) {
-      console.error('Error fetching employees:', err);
+      console.error("Error fetching employees:", err);
     }
   };
 
@@ -75,8 +80,8 @@ export function Departments() {
       setDepartments(Array.isArray(deptData) ? deptData : []);
       setError(null);
     } catch (err) {
-      console.error('Error fetching departments:', err);
-      setError('Failed to load departments');
+      console.error("Error fetching departments:", err);
+      setError("Failed to load departments");
     } finally {
       setLoading(false);
     }
@@ -84,16 +89,16 @@ export function Departments() {
 
   const handleCreateDepartment = () => {
     if (!canCreateDepartment) {
-      setError('You do not have permission to create departments.');
+      setError("You do not have permission to create departments.");
       return;
     }
 
-    navigate('/dashboard/hr/departments/create');
+    navigate("/dashboard/hr/departments/create");
   };
 
   const handleEditDepartment = (id: string) => {
     if (!canEditDepartment) {
-      setError('You do not have permission to edit departments.');
+      setError("You do not have permission to edit departments.");
       return;
     }
 
@@ -102,17 +107,17 @@ export function Departments() {
 
   const handleDeleteDepartment = async (id: string) => {
     if (!canDeleteDepartment) {
-      setError('You do not have permission to delete departments.');
+      setError("You do not have permission to delete departments.");
       return;
     }
 
     try {
       await hrService.deleteDepartment(id);
       setDepartments(departments.filter((d) => d.id !== id));
-      alert('Department deleted successfully!');
+      alert("Department deleted successfully!");
     } catch (err) {
-      console.error('Error deleting department:', err);
-      setError('Failed to delete department');
+      console.error("Error deleting department:", err);
+      setError("Failed to delete department");
     }
   };
 
@@ -121,7 +126,7 @@ export function Departments() {
   };
 
   const handleFilter = () => {
-    console.log('Filter clicked');
+    console.log("Filter clicked");
   };
 
   const filteredDepartments = departments.filter(
@@ -162,11 +167,16 @@ export function Departments() {
               <i className="bi bi-building me-3"></i>
               Departments
             </h1>
-            <p className="page-subtitle">Manage organization departments and structure</p>
+            <p className="page-subtitle">
+              Manage organization departments and structure
+            </p>
           </div>
         </div>
         {canCreateDepartment && (
-          <button className="btn btn-primary btn-lg" onClick={handleCreateDepartment}>
+          <button
+            className="btn btn-primary btn-lg"
+            onClick={handleCreateDepartment}
+          >
             <i className="bi bi-plus-circle me-2"></i>
             New Department
           </button>
@@ -186,14 +196,20 @@ export function Departments() {
                 onChange={handleSearchChange}
               />
             </div>
-            <button className="btn btn-outline-secondary" onClick={handleFilter}>
+            <button
+              className="btn btn-outline-secondary"
+              onClick={handleFilter}
+            >
               <i className="bi bi-funnel me-2"></i>
               Filter
             </button>
           </div>
 
           {error && (
-            <div className="alert alert-danger alert-dismissible fade show" role="alert">
+            <div
+              className="alert alert-danger alert-dismissible fade show"
+              role="alert"
+            >
               <i className="bi bi-exclamation-circle me-2"></i>
               {error}
               <button
@@ -206,10 +222,13 @@ export function Departments() {
 
           {isDev && (
             <details className="mb-3">
-              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              <summary style={{ cursor: "pointer", fontWeight: 600 }}>
                 Departments Permission Debug
               </summary>
-              <pre className="mt-2 p-3 bg-light border rounded" style={{ whiteSpace: 'pre-wrap' }}>
+              <pre
+                className="mt-2 p-3 bg-light border rounded"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
                 {JSON.stringify(departmentPermissionDebug, null, 2)}
               </pre>
             </details>
@@ -243,16 +262,19 @@ export function Departments() {
                           <p>
                             {(() => {
                               const typedDept = dept as Department & {
-                                head?: { firstName?: string; lastName?: string };
+                                head?: {
+                                  firstName?: string;
+                                  lastName?: string;
+                                };
                               };
 
                               return (
                                 (typedDept.head
-                                  ? `${typedDept.head.firstName || ''} ${typedDept.head.lastName || ''}`.trim()
+                                  ? `${typedDept.head.firstName || ""} ${typedDept.head.lastName || ""}`.trim()
                                   : getEmployeeName(dept.headId)) ||
                                 (dept.headId
                                   ? `${dept.headId.substring(0, 8)}...`
-                                  : 'Unassigned')
+                                  : "Unassigned")
                               );
                             })()}
                           </p>
@@ -274,7 +296,12 @@ export function Departments() {
                                 (dept.parentId ? (
                                   `${dept.parentId.substring(0, 8)}...`
                                 ) : (
-                                  <span style={{ color: '#95a5a6', fontStyle: 'italic' }}>
+                                  <span
+                                    style={{
+                                      color: "#95a5a6",
+                                      fontStyle: "italic",
+                                    }}
+                                  >
                                     Root Department
                                   </span>
                                 ))
@@ -314,7 +341,10 @@ export function Departments() {
                           </button>
                           <ul className="dropdown-menu dropdown-menu-end">
                             <li>
-                              <a className="dropdown-item text-danger" href="#!">
+                              <a
+                                className="dropdown-item text-danger"
+                                href="#!"
+                              >
                                 <strong>Are you sure?</strong>
                               </a>
                             </li>
@@ -346,8 +376,8 @@ export function Departments() {
                 <h3>No departments found</h3>
                 <p>
                   {searchTerm
-                    ? 'Try adjusting your search criteria'
-                    : 'Create your first department to get started'}
+                    ? "Try adjusting your search criteria"
+                    : "Create your first department to get started"}
                 </p>
               </div>
             )}
@@ -362,10 +392,13 @@ export function Departments() {
 
           {isDev && (
             <details className="mt-4">
-              <summary style={{ cursor: 'pointer', fontWeight: 600 }}>
+              <summary style={{ cursor: "pointer", fontWeight: 600 }}>
                 Departments Permission Debug
               </summary>
-              <pre className="mt-2 p-3 bg-light border rounded" style={{ whiteSpace: 'pre-wrap' }}>
+              <pre
+                className="mt-2 p-3 bg-light border rounded"
+                style={{ whiteSpace: "pre-wrap" }}
+              >
                 {JSON.stringify(departmentPermissionDebug, null, 2)}
               </pre>
             </details>
