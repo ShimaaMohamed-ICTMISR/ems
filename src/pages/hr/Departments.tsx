@@ -14,14 +14,7 @@ export function Departments() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [employees, setEmployees] = useState<any[]>([]);
-  const {
-    canAny,
-    permissions,
-    servicePermissions,
-    isLoaded: permissionsLoaded,
-    isLoading: permissionsLoading,
-  } = useHrPermissions();
-  const isDev = import.meta.env.DEV;
+  const { canAny } = useHrPermissions();
   const canViewDepartment = canAny([...HR_PERMISSION_KEYS.DEPARTMENTS.VIEW]);
   const canCreateDepartment = canAny([
     ...HR_PERMISSION_KEYS.DEPARTMENTS.CREATE,
@@ -30,25 +23,6 @@ export function Departments() {
   const canDeleteDepartment = canAny([
     ...HR_PERMISSION_KEYS.DEPARTMENTS.DELETE,
   ]);
-
-  const departmentPermissionDebug = {
-    permissionsLoaded,
-    permissionsLoading,
-    checks: {
-      canViewDepartment,
-      canCreateDepartment,
-      canEditDepartment,
-      canDeleteDepartment,
-    },
-    required: {
-      view: HR_PERMISSION_KEYS.DEPARTMENTS.VIEW,
-      create: HR_PERMISSION_KEYS.DEPARTMENTS.CREATE,
-      edit: HR_PERMISSION_KEYS.DEPARTMENTS.EDIT,
-      delete: HR_PERMISSION_KEYS.DEPARTMENTS.DELETE,
-    },
-    effectivePermissions: permissions,
-    hrSlicePermissions: servicePermissions,
-  };
 
   useEffect(() => {
     if (!canViewDepartment) {
@@ -220,7 +194,7 @@ export function Departments() {
             </div>
           )}
 
-          {isDev && (
+          {/* {isDev && (
             <details className="mb-3">
               <summary style={{ cursor: "pointer", fontWeight: 600 }}>
                 Departments Permission Debug
@@ -232,7 +206,7 @@ export function Departments() {
                 {JSON.stringify(departmentPermissionDebug, null, 2)}
               </pre>
             </details>
-          )}
+          )} */}
 
           <div className="departments-grid">
             {filteredDepartments.length > 0 ? (
@@ -390,7 +364,7 @@ export function Departments() {
             description="You do not have permission to view department details."
           />
 
-          {isDev && (
+          {/* {isDev && (
             <details className="mt-4">
               <summary style={{ cursor: "pointer", fontWeight: 600 }}>
                 Departments Permission Debug
@@ -402,7 +376,7 @@ export function Departments() {
                 {JSON.stringify(departmentPermissionDebug, null, 2)}
               </pre>
             </details>
-          )}
+          )} */}
         </>
       )}
     </div>

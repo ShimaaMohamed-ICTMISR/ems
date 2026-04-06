@@ -1,4 +1,4 @@
-import projectManagementApiClient from './projectManagementApiClient';
+import projectManagementApiClient from './projectManagementServices/projectManagementApiClient';
 
 export interface ProjectMember {
   id: string;

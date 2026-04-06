@@ -242,6 +242,17 @@ export interface UpdateLeaveRequestRequest {
   approverComments?: string;
 }
 
+export interface UpdateLeaveRequestStatusRequest {
+  status:
+    | 'PENDING'
+    | 'APPROVED'
+    | 'REJECTED'
+    | 'CANCELLED'
+    | 'IN_PROGRESS'
+    | 'COMPLETED';
+  approverComments?: string;
+}
+
 // ─── Attendance Interfaces ───────────────────────────
 export interface AttendancePolicy {
   id: string;
@@ -344,6 +355,8 @@ export const hrService = {
     hrApiClient.get('/v1/leave-requests', { params }),
   createLeaveRequest: (data: CreateLeaveRequestRequest) => hrApiClient.post('/v1/leave-requests', data),
   updateLeaveRequest: (id: string, data: UpdateLeaveRequestRequest) => hrApiClient.patch(`/v1/leave-requests/${id}`, data),
+  updateLeaveRequestStatus: (id: string, data: UpdateLeaveRequestStatusRequest) =>
+    hrApiClient.patch(`/v1/leave-requests/${id}/status`, data),
   cancelLeaveRequest: (id: string) => hrApiClient.delete(`/v1/leave-requests/${id}`),
 
   // ─── Leave Balances ──────────────────────
