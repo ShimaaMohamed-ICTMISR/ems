@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
-import { validateExternalEmail, validateEmail } from '../../utils/meetingValidation';
+import { validateEmail } from '../../utils/meetingValidation';
 import './meetings.css';
 
 export function MeetingExternalInvites() {

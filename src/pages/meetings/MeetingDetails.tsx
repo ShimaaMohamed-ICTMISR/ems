@@ -6,7 +6,7 @@ import hrService, {
   type Employee,
 } from "../../services/hrProjectManagementService";
 import { useMeetingPermissions } from "../../hooks/useMeetingPermissions";
-import { MEETING_PERMISSION_KEYS } from "../../config/meetingPermissions";
+import { MEETING_ROUTE_PERMISSION_KEYS } from "../../config/meetingPermissions";
 import "./meetings.css";
 
 export function MeetingDetails() {
@@ -21,7 +21,7 @@ export function MeetingDetails() {
     isLoaded: permissionsLoaded,
     isLoading: permissionsLoading,
   } = useMeetingPermissions();
-  const canViewMeeting = canAny([...MEETING_PERMISSION_KEYS.VIEW]);
+  const canViewMeeting = canAny([...MEETING_ROUTE_PERMISSION_KEYS.DETAILS]);
 
   useEffect(() => {
     if (!permissionsLoaded || !canViewMeeting) {
@@ -124,9 +124,10 @@ export function MeetingDetails() {
         <div className="mb-4">
           <i className="bi bi-shield-lock display-1 text-warning opacity-75"></i>
         </div>
-        <h4 className="text-muted mb-2">Unauthorized</h4>
+        <h4 className="text-muted mb-2">Access Restricted</h4>
         <p className="text-muted mb-4">
-          You do not have permission to view meetings.
+          You do not currently have permission to list or view meeting details.
+          Please contact your administrator if you need access.
         </p>
         <button
           className="btn btn-outline-secondary"

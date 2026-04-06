@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import * as meetingService from '../../services/meetingService';
 import type { CreateMeetingDto } from '../../services/meetingService';
 import hrService, { type Employee, type Department } from '../../services/hrProjectManagementService';
+import { useMeetingPermissions } from '../../hooks/useMeetingPermissions';
+import { MEETING_PERMISSION_KEYS } from '../../config/meetingPermissions';
 import { validateCreateMeeting, validateMeetingTitle, validateMeetingTimes, validateDescription, sanitizeText } from '../../utils/meetingValidation';
 import './meetings.css';
 
@@ -21,6 +23,13 @@ type ParticipantAddMode = "users" | "department";
 
 export function CreateMeeting() {
   const navigate = useNavigate();
+  const {
+    canAny,
+    isLoaded: permissionsLoaded,
+    isLoading: permissionsLoading,
+  } = useMeetingPermissions();
+  const canCreateMeeting = canAny([...MEETING_PERMISSION_KEYS.CREATE]);
+
   const [formData, setFormData] = useState<CreateMeetingDto>({
     title: "",
     description: "",
@@ -237,9 +246,10 @@ export function CreateMeeting() {
         <div className="mb-4">
           <i className="bi bi-shield-lock display-1 text-warning opacity-75"></i>
         </div>
-        <h4 className="text-muted mb-2">Unauthorized</h4>
+        <h4 className="text-muted mb-2">Access Restricted</h4>
         <p className="text-muted mb-4">
-          You do not have permission to create meetings.
+          You do not currently have permission to create meetings.
+          Please contact your administrator if you need access.
         </p>
         <button
           className="btn btn-outline-secondary"

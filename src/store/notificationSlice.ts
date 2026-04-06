@@ -33,6 +33,9 @@ export interface Notification {
   actionUrl?: string;
   relatedEntityId?: string;
   relatedEntityType?: string;
+  sourceEvent?: string;
+  sourceEntityId?: string;
+  sourceEntityType?: string;
 }
 
 export interface StreamNotification {

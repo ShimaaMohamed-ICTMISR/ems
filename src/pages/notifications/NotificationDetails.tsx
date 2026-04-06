@@ -8,8 +8,15 @@ import type { Notification } from "../../store/notificationSlice";
 import { PollVoteForm } from "../../modules/voting/components/PollVoteForm";
 import "./styles.css";
 
+type NotificationWithSourceFields = Notification & {
+  sourceEvent?: string;
+  sourceEntityId?: string;
+  sourceEntityType?: string;
+};
+
 function getPollIdFromNotification(n: Notification | undefined): string | undefined {
   if (!n) return undefined;
+  const notif = n as NotificationWithSourceFields;
   let meta: unknown = n.metadata;
   if (typeof meta === "string") {
     try {
@@ -22,12 +29,12 @@ function getPollIdFromNotification(n: Notification | undefined): string | undefi
     const pid = (meta as Record<string, unknown>).pollId;
     if (typeof pid === "string" && pid.trim()) return pid;
   }
-  const type = n.sourceEntityType?.toLowerCase();
+  const type = notif.sourceEntityType?.toLowerCase();
   if (
-    (type === "poll" || n.sourceEvent === "PollEligibilityAssigned") &&
-    n.sourceEntityId
+    (type === "poll" || notif.sourceEvent === "PollEligibilityAssigned") &&
+    notif.sourceEntityId
   ) {
-    return n.sourceEntityId;
+    return notif.sourceEntityId;
   }
   return undefined;
 }

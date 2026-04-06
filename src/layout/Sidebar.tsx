@@ -5,6 +5,8 @@ import type { RootState } from "../store/store";
 import finovatelogo from "../assets/images/finovate-logo.webp";
 import { useProjectManagementPermissions } from "../hooks/useProjectManagementPermissions";
 import { PM_ROUTE_PERMISSION_KEYS } from "../config/projectManagementPermissions";
+import { useMeetingPermissions } from "../hooks/useMeetingPermissions";
+import { MEETING_ROUTE_PERMISSION_KEYS } from "../config/meetingPermissions";
 
 interface NavItem {
   to: string;
@@ -95,10 +97,15 @@ function NavItems({ items }: { items: NavItem[] }) {
 function SidebarContent() {
   const user = useSelector((state: RootState) => state.auth.user);
   const { canAny: canAnyProjectManagement } = useProjectManagementPermissions();
+  const { canAny: canAnyMeeting } = useMeetingPermissions();
 
   const visibleModuleNavItems = moduleNavItems.filter((item) => {
     if (item.to === "/dashboard/project-management") {
       return canAnyProjectManagement([...PM_ROUTE_PERMISSION_KEYS.HOME]);
+    }
+
+    if (item.to === "/dashboard/meetings") {
+      return canAnyMeeting([...MEETING_ROUTE_PERMISSION_KEYS.HOME]);
     }
 
     return true;

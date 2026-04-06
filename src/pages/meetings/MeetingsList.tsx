@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import * as meetingService from "../../services/meetingService";
 import type { Meeting, MeetingStatus } from "../../services/meetingService";
 import { useMeetingPermissions } from "../../hooks/useMeetingPermissions";
-import { MEETING_PERMISSION_KEYS } from "../../config/meetingPermissions";
+import {
+  MEETING_PERMISSION_KEYS,
+  MEETING_ROUTE_PERMISSION_KEYS,
+} from "../../config/meetingPermissions";
 import "./meetings.css";
 
 export function MeetingsList() {
@@ -20,7 +23,7 @@ export function MeetingsList() {
     isLoading: permissionsLoading,
   } = useMeetingPermissions();
 
-  const canViewMeetings = canAny([...MEETING_PERMISSION_KEYS.VIEW]);
+  const canViewMeetings = canAny([...MEETING_ROUTE_PERMISSION_KEYS.LIST]);
   const canCreateMeeting = canAny([...MEETING_PERMISSION_KEYS.CREATE]);
   const canDeleteMeeting = canAny([...MEETING_PERMISSION_KEYS.DELETE]);
 
@@ -162,9 +165,10 @@ export function MeetingsList() {
         <div className="mb-4">
           <i className="bi bi-shield-lock display-1 text-warning opacity-75"></i>
         </div>
-        <h4 className="text-muted mb-2">Unauthorized</h4>
+        <h4 className="text-muted mb-2">Access Restricted</h4>
         <p className="text-muted mb-0">
-          You do not have permission to view meetings.
+          You do not currently have permission to list or view meetings.
+          Please contact your administrator if you need access.
         </p>
       </div>
     );

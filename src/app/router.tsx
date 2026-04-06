@@ -4,7 +4,6 @@ import { AppLayout } from "../layout/AppLayout";
 import Login from "../pages/Login";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { PermissionRoute } from "./PermissionRoute";
-import { MEETING_PERMISSION_KEYS } from "../config/meetingPermissions";
 import {
   HR_PERMISSION_KEYS,
   HR_ROUTE_PERMISSION_KEYS,
@@ -13,6 +12,7 @@ import {
   PM_PERMISSION_KEYS,
   PM_ROUTE_PERMISSION_KEYS,
 } from "../config/projectManagementPermissions";
+import { MEETING_ROUTE_PERMISSION_KEYS } from "../config/meetingPermissions";
 import {
   Dashboard,
   Notifications,
@@ -386,7 +386,12 @@ const router = createBrowserRouter([
       {
         path: "meetings",
         element: (
-          <PermissionRoute anyOf={[...MEETING_PERMISSION_KEYS.VIEW]}>
+          <PermissionRoute
+            scope="meeting"
+            anyOf={[...MEETING_ROUTE_PERMISSION_KEYS.LIST]}
+            title="Meetings Access Restricted"
+            description="You do not currently have permission to list or view meetings. Please contact your administrator if you need access."
+          >
             <MeetingsList />
           </PermissionRoute>
         ),
@@ -394,7 +399,12 @@ const router = createBrowserRouter([
       {
         path: "meetings/create",
         element: (
-          <PermissionRoute anyOf={[...MEETING_PERMISSION_KEYS.CREATE]}>
+          <PermissionRoute
+            scope="meeting"
+            anyOf={[...MEETING_ROUTE_PERMISSION_KEYS.CREATE]}
+            title="Meeting Creation Restricted"
+            description="You do not currently have permission to create meetings. Please contact your administrator if you need access."
+          >
             <CreateMeeting />
           </PermissionRoute>
         ),
@@ -402,15 +412,29 @@ const router = createBrowserRouter([
       {
         path: "meetings/:id",
         element: (
-          <PermissionRoute anyOf={[...MEETING_PERMISSION_KEYS.VIEW]}>
+          <PermissionRoute
+            scope="meeting"
+            anyOf={[...MEETING_ROUTE_PERMISSION_KEYS.DETAILS]}
+            title="Meeting Details Restricted"
+            description="You do not currently have permission to view meeting details. Please contact your administrator if you need access."
+          >
             <MeetingDetails />
           </PermissionRoute>
         ),
       },
-      { path: "meetings", element: <MeetingsList /> },
-      { path: "meetings/create", element: <CreateMeeting /> },
-      { path: "meetings/:id", element: <MeetingDetails /> },
-      { path: "meetings/:id/external-invites", element: <MeetingExternalInvites /> },
+      {
+        path: "meetings/:id/external-invites",
+        element: (
+          <PermissionRoute
+            scope="meeting"
+            anyOf={[...MEETING_ROUTE_PERMISSION_KEYS.EXTERNAL_INVITES]}
+            title="External Invites Restricted"
+            description="You do not currently have permission to send meeting external invites. Please contact your administrator if you need access."
+          >
+            <MeetingExternalInvites />
+          </PermissionRoute>
+        ),
+      },
       // Voting
       {
         path: "voting",
