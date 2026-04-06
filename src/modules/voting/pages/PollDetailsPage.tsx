@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import {
   fetchPoll,
   fetchPollOptions,
@@ -7,25 +7,37 @@ import {
   fetchPollResults,
   activatePoll,
   closePoll,
-} from '../api/votingApi';
-import { PollOptions } from '../components/PollOptions';
-import { PollEligibilityComponent } from '../components/PollEligibility';
-import { PollResults } from '../components/PollResults';
-import type { Poll, PollOption, PollEligibility, PollResults as PollResultsType } from '../types/voting.types';
-import '../styles/voting.css';
+} from "../api/votingApi";
+import { PollOptions } from "../components/PollOptions";
+import { PollEligibilityComponent } from "../components/PollEligibility";
+import { PollResults } from "../components/PollResults";
+import type {
+  Poll,
+  PollOption,
+  PollEligibility,
+  PollResults as PollResultsType,
+} from "../types/voting.types";
+import { useVotingPermissions } from "../../../hooks/useVotingPermissions";
+import { VOTING_PERMISSION_KEYS } from "../../../config/votingPermissions";
+import "../styles/voting.css";
 
-type TabId = 'overview' | 'options' | 'eligibility' | 'vote' | 'results';
+type TabId = "overview" | "options" | "eligibility" | "vote" | "results";
 
 function asText(value: unknown): string {
-  if (value == null) return '';
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+  if (value == null) return "";
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
     return String(value);
   }
-  if (typeof value === 'object') {
+  if (typeof value === "object") {
     const v = value as any;
-    if (typeof v.name === 'string') return v.name;
-    if (typeof v.title === 'string') return v.title;
-    if (typeof v.id === 'string' || typeof v.id === 'number') return String(v.id);
+    if (typeof v.name === "string") return v.name;
+    if (typeof v.title === "string") return v.title;
+    if (typeof v.id === "string" || typeof v.id === "number")
+      return String(v.id);
     return JSON.stringify(value);
   }
   return String(value);
@@ -34,16 +46,43 @@ function asText(value: unknown): string {
 export function PollDetailsPage() {
   const { pollId } = useParams<{ pollId: string }>();
   const navigate = useNavigate();
+  const {
+    canAny,
+    isLoaded: permissionsLoaded,
+    isLoading: permissionsLoading,
+  } = useVotingPermissions();
   const [poll, setPoll] = useState<Poll | null>(null);
   const [options, setOptions] = useState<PollOption[]>([]);
   const [eligibility, setEligibility] = useState<PollEligibility[]>([]);
   const [results, setResults] = useState<PollResultsType | null>(null);
   const location = useLocation();
-  const initialTab = (location.state as { tab?: TabId })?.tab ?? 'overview';
+  const initialTab = (location.state as { tab?: TabId })?.tab ?? "overview";
   const [tab, setTab] = useState<TabId>(initialTab);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [statusLoading, setStatusLoading] = useState(false);
+
+  const canViewPollDetails = canAny([...VOTING_PERMISSION_KEYS.POLLS.VIEW]);
+  const canActivatePoll = canAny([...VOTING_PERMISSION_KEYS.POLLS.ACTIVATE]);
+  const canClosePoll = canAny([...VOTING_PERMISSION_KEYS.POLLS.CLOSE]);
+
+  const canViewOptions = canAny([...VOTING_PERMISSION_KEYS.OPTIONS.VIEW]);
+  const canCreateOptions = canAny([...VOTING_PERMISSION_KEYS.OPTIONS.CREATE]);
+  const canEditOptions = canAny([...VOTING_PERMISSION_KEYS.OPTIONS.EDIT]);
+  const canDeleteOptions = canAny([...VOTING_PERMISSION_KEYS.OPTIONS.DELETE]);
+
+  const canViewEligibility = canAny([
+    ...VOTING_PERMISSION_KEYS.ELIGIBILITY.VIEW,
+  ]);
+  const canCreateEligibility = canAny([
+    ...VOTING_PERMISSION_KEYS.ELIGIBILITY.CREATE,
+  ]);
+  const canDeleteEligibility = canAny([
+    ...VOTING_PERMISSION_KEYS.ELIGIBILITY.DELETE,
+  ]);
+
+  const canVote = canAny([...VOTING_PERMISSION_KEYS.VOTE.CREATE]);
+  const canViewResults = canAny([...VOTING_PERMISSION_KEYS.RESULTS.VIEW]);
 
   const loadPoll = async () => {
     if (!pollId) return;
@@ -51,7 +90,7 @@ export function PollDetailsPage() {
       const p = await fetchPoll(pollId);
       setPoll(p);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load poll');
+      setError(e instanceof Error ? e.message : "Failed to load poll");
     }
   };
 
@@ -94,62 +133,144 @@ export function PollDetailsPage() {
     setLoading(true);
     setError(null);
     await loadPoll();
-    await loadOptions();
-    await loadEligibility();
+    if (canViewOptions) {
+      await loadOptions();
+    } else {
+      setOptions([]);
+    }
+
+    if (canViewEligibility) {
+      await loadEligibility();
+    } else {
+      setEligibility([]);
+    }
+
     setResults(null);
     setLoading(false);
   };
 
   useEffect(() => {
+    if (!permissionsLoaded || permissionsLoading || !canViewPollDetails) {
+      return;
+    }
+
     loadAll();
-  }, [pollId]);
+  }, [
+    pollId,
+    permissionsLoaded,
+    permissionsLoading,
+    canViewPollDetails,
+    canViewOptions,
+    canViewEligibility,
+  ]);
 
   useEffect(() => {
-    if (tab === 'options') loadOptions();
-    if (tab === 'eligibility') loadEligibility();
-    if (tab === 'results') loadResults();
-  }, [tab, pollId]);
+    if (tab === "options" && canViewOptions) loadOptions();
+    if (tab === "eligibility" && canViewEligibility) loadEligibility();
+    if (tab === "results" && canViewResults) loadResults();
+  }, [tab, pollId, canViewOptions, canViewEligibility, canViewResults]);
+
+  useEffect(() => {
+    if (tab === "options" && !canViewOptions) setTab("overview");
+    if (tab === "eligibility" && !canViewEligibility) setTab("overview");
+    if (tab === "vote" && !canVote) setTab("overview");
+    if (tab === "results" && !canViewResults) setTab("overview");
+  }, [tab, canViewOptions, canViewEligibility, canVote, canViewResults]);
 
   const handleActivate = async () => {
+    if (!canActivatePoll) return;
     if (!pollId || !poll) return;
     setStatusLoading(true);
     try {
       await activatePoll(pollId);
-      setPoll((prev) => (prev ? { ...prev, status: 'ACTIVE' } : null));
+      setPoll((prev) => (prev ? { ...prev, status: "ACTIVE" } : null));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to activate');
+      setError(e instanceof Error ? e.message : "Failed to activate");
     } finally {
       setStatusLoading(false);
     }
   };
 
   const handleClose = async () => {
+    if (!canClosePoll) return;
     if (!pollId || !poll) return;
     setStatusLoading(true);
     try {
       await closePoll(pollId);
-      setPoll((prev) => (prev ? { ...prev, status: 'CLOSED' } : null));
+      setPoll((prev) => (prev ? { ...prev, status: "CLOSED" } : null));
       loadResults();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to close');
+      setError(e instanceof Error ? e.message : "Failed to close");
     } finally {
       setStatusLoading(false);
     }
   };
 
   if (!pollId) return null;
-  if (loading && !poll) return (
-    <div className="voting-page">
-      <div className="container-fluid py-3">
-        <div className="text-center py-5">
-          <div className="spinner-border mb-3" style={{ color: '#06b6d4' }} role="status">
-            <span className="visually-hidden">Loading...</span>
+
+  if (!permissionsLoaded || permissionsLoading) {
+    return (
+      <div className="voting-page">
+        <div className="container-fluid py-3">
+          <div className="text-center py-5">
+            <div
+              className="spinner-border mb-3"
+              style={{ color: "#06b6d4" }}
+              role="status"
+            >
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="text-muted">Checking permissions...</p>
           </div>
-          <p className="text-muted">Loading poll details...</p>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (!canViewPollDetails) {
+    return (
+      <div className="voting-page">
+        <div className="container-fluid py-3">
+          <div className="text-center py-5">
+            <div className="mb-4">
+              <i className="bi bi-shield-lock display-1 text-warning opacity-75"></i>
+            </div>
+            <h4 className="text-muted mb-2">Access Restricted</h4>
+            <p className="text-muted mb-4">
+              You do not currently have permission to view poll details. Please
+              contact your administrator if you need access.
+            </p>
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={() => navigate("/dashboard/voting")}
+            >
+              <i className="bi bi-arrow-left me-2"></i>
+              Back to Voting
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && !poll)
+    return (
+      <div className="voting-page">
+        <div className="container-fluid py-3">
+          <div className="text-center py-5">
+            <div
+              className="spinner-border mb-3"
+              style={{ color: "#06b6d4" }}
+              role="status"
+            >
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <p className="text-muted">Loading poll details...</p>
+          </div>
+        </div>
+      </div>
+    );
   if (error && !poll) {
     return (
       <div className="voting-page">
@@ -158,7 +279,11 @@ export function PollDetailsPage() {
             <i className="bi bi-exclamation-triangle me-2"></i>
             {error}
           </div>
-          <button type="button" className="btn btn-outline-secondary" onClick={() => navigate('/dashboard/voting')}>
+          <button
+            type="button"
+            className="btn btn-outline-secondary"
+            onClick={() => navigate("/dashboard/voting")}
+          >
             <i className="bi bi-arrow-left me-2"></i>
             Back to Voting
           </button>
@@ -168,38 +293,52 @@ export function PollDetailsPage() {
   }
 
   const tabs: { id: TabId; label: string; icon: string }[] = [
-    { id: 'overview', label: 'Overview', icon: 'bi-info-circle' },
-    { id: 'options', label: 'Options', icon: 'bi-list-ul' },
-    { id: 'eligibility', label: 'Eligibility', icon: 'bi-people' },
-    { id: 'vote', label: 'Vote', icon: 'bi-check-circle' },
-    { id: 'results', label: 'Results', icon: 'bi-bar-chart' },
+    { id: "overview", label: "Overview", icon: "bi-info-circle" },
+    ...(canViewOptions
+      ? [{ id: "options" as TabId, label: "Options", icon: "bi-list-ul" }]
+      : []),
+    ...(canViewEligibility
+      ? [
+          {
+            id: "eligibility" as TabId,
+            label: "Eligibility",
+            icon: "bi-people",
+          },
+        ]
+      : []),
+    ...(canVote
+      ? [{ id: "vote" as TabId, label: "Vote", icon: "bi-check-circle" }]
+      : []),
+    ...(canViewResults
+      ? [{ id: "results" as TabId, label: "Results", icon: "bi-bar-chart" }]
+      : []),
   ];
 
   const getStatusBadge = (status: string) => {
     const statusUpper = status.toUpperCase();
     switch (statusUpper) {
-      case 'DRAFT':
-        return 'bg-secondary';
-      case 'ACTIVE':
-        return 'bg-success';
-      case 'CLOSED':
-        return 'bg-dark';
+      case "DRAFT":
+        return "bg-secondary";
+      case "ACTIVE":
+        return "bg-success";
+      case "CLOSED":
+        return "bg-dark";
       default:
-        return 'bg-secondary';
+        return "bg-secondary";
     }
   };
 
   const getStatusIcon = (status: string) => {
     const statusUpper = status.toUpperCase();
     switch (statusUpper) {
-      case 'DRAFT':
-        return 'bi-pencil-square';
-      case 'ACTIVE':
-        return 'bi-play-circle-fill';
-      case 'CLOSED':
-        return 'bi-stop-circle-fill';
+      case "DRAFT":
+        return "bi-pencil-square";
+      case "ACTIVE":
+        return "bi-play-circle-fill";
+      case "CLOSED":
+        return "bi-stop-circle-fill";
       default:
-        return 'bi-circle';
+        return "bi-circle";
     }
   };
 
@@ -209,58 +348,76 @@ export function PollDetailsPage() {
         {/* Clean Header */}
         <div className="d-flex justify-content-between align-items-center mb-4">
           <div>
-            <h2 className="mb-1 fw-bold text-dark">{poll ? asText((poll as any).title) : 'Poll'}</h2>
+            <h2 className="mb-1 fw-bold text-dark">
+              {poll ? asText((poll as any).title) : "Poll"}
+            </h2>
             {poll?.description && (
-              <p className="text-muted mb-2">{asText((poll as any).description)}</p>
+              <p className="text-muted mb-2">
+                {asText((poll as any).description)}
+              </p>
             )}
             {poll && (
-              <span className={`badge ${getStatusBadge(asText((poll as any).status))} px-3 py-2`}>
-                <i className={`${getStatusIcon(asText((poll as any).status))} me-1`}></i>
+              <span
+                className={`badge ${getStatusBadge(asText((poll as any).status))} px-3 py-2`}
+              >
+                <i
+                  className={`${getStatusIcon(asText((poll as any).status))} me-1`}
+                ></i>
                 {asText((poll as any).status)}
               </span>
             )}
           </div>
           <div className="d-flex gap-2">
-            {poll && asText((poll as any).status).toUpperCase() === 'DRAFT' && (
-              <button 
-                type="button" 
-                className="btn btn-success" 
-                onClick={handleActivate} 
-                disabled={statusLoading}
-              >
-                {statusLoading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                    Activating...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-play-fill me-2"></i>
-                    Activate
-                  </>
-                )}
-              </button>
-            )}
-            {poll && asText((poll as any).status).toUpperCase() === 'ACTIVE' && (
-              <button 
-                type="button" 
-                className="btn btn-outline-dark" 
-                onClick={handleClose} 
-                disabled={statusLoading}
-              >
-                {statusLoading ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                    Closing...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-stop-fill me-2"></i>
-                    Close Poll
-                  </>
-                )}
-              </button>
-            )}
+            {poll &&
+              canActivatePoll &&
+              asText((poll as any).status).toUpperCase() === "DRAFT" && (
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={handleActivate}
+                  disabled={statusLoading}
+                >
+                  {statusLoading ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                      ></span>
+                      Activating...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-play-fill me-2"></i>
+                      Activate
+                    </>
+                  )}
+                </button>
+              )}
+            {poll &&
+              canClosePoll &&
+              asText((poll as any).status).toUpperCase() === "ACTIVE" && (
+                <button
+                  type="button"
+                  className="btn btn-outline-dark"
+                  onClick={handleClose}
+                  disabled={statusLoading}
+                >
+                  {statusLoading ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        role="status"
+                      ></span>
+                      Closing...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-stop-fill me-2"></i>
+                      Close Poll
+                    </>
+                  )}
+                </button>
+              )}
             <Link to="/dashboard/voting" className="btn btn-outline-secondary">
               <i className="bi bi-arrow-left me-2"></i>
               Back to List
@@ -283,7 +440,7 @@ export function PollDetailsPage() {
               <li key={t.id} className="nav-item">
                 <button
                   type="button"
-                  className={`nav-link ${tab === t.id ? 'active' : ''}`}
+                  className={`nav-link ${tab === t.id ? "active" : ""}`}
                   onClick={() => setTab(t.id)}
                 >
                   <i className={`${t.icon} me-2`}></i>
@@ -297,17 +454,22 @@ export function PollDetailsPage() {
         {/* Clean Content Area */}
         <div className="card border-0 shadow-sm">
           <div className="card-body p-4">
-            {tab === 'overview' && (
+            {tab === "overview" && (
               <div>
                 <h5 className="mb-4 fw-semibold">Poll Overview</h5>
                 <div className="row g-4">
                   <div className="col-md-3">
                     <div className="text-center p-3">
                       <div className="mb-2">
-                        <i className={`${getStatusIcon(poll ? asText((poll as any).status) : '')} fs-1`} style={{ color: '#06b6d4' }}></i>
+                        <i
+                          className={`${getStatusIcon(poll ? asText((poll as any).status) : "")} fs-1`}
+                          style={{ color: "#06b6d4" }}
+                        ></i>
                       </div>
                       <h6 className="fw-semibold">Status</h6>
-                      <p className="text-muted mb-0">{poll ? asText((poll as any).status) : ''}</p>
+                      <p className="text-muted mb-0">
+                        {poll ? asText((poll as any).status) : ""}
+                      </p>
                     </div>
                   </div>
                   <div className="col-md-3">
@@ -317,7 +479,9 @@ export function PollDetailsPage() {
                       </div>
                       <h6 className="fw-semibold">Created</h6>
                       <p className="text-muted mb-0">
-                        {poll?.createdAt ? new Date(poll.createdAt).toLocaleDateString() : '-'}
+                        {poll?.createdAt
+                          ? new Date(poll.createdAt).toLocaleDateString()
+                          : "-"}
                       </p>
                     </div>
                   </div>
@@ -342,42 +506,72 @@ export function PollDetailsPage() {
                 </div>
               </div>
             )}
-            {tab === 'options' && (
+            {tab === "options" && (
               <div>
                 <h5 className="mb-4 fw-semibold">
-                  <i className="bi bi-list-ul me-2" style={{ color: '#06b6d4' }}></i>
+                  <i
+                    className="bi bi-list-ul me-2"
+                    style={{ color: "#06b6d4" }}
+                  ></i>
                   Poll Options
                 </h5>
                 <PollOptions
                   pollId={pollId}
                   options={options}
                   onOptionsChange={loadOptions}
-                  readOnly={poll ? asText((poll as any).status).toUpperCase() === 'CLOSED' : false}
+                  readOnly={
+                    poll
+                      ? asText((poll as any).status).toUpperCase() === "CLOSED"
+                      : false
+                  }
+                  canView={canViewOptions}
+                  canCreate={canCreateOptions}
+                  canEdit={canEditOptions}
+                  canDelete={canDeleteOptions}
                 />
               </div>
             )}
-            {tab === 'eligibility' && (
+            {tab === "eligibility" && (
               <div>
                 <h5 className="mb-4 fw-semibold">
-                  <i className="bi bi-people me-2" style={{ color: '#06b6d4' }}></i>
+                  <i
+                    className="bi bi-people me-2"
+                    style={{ color: "#06b6d4" }}
+                  ></i>
                   Eligibility Rules
                 </h5>
                 <PollEligibilityComponent
                   pollId={pollId}
                   eligibility={eligibility}
                   onEligibilityChange={loadEligibility}
-                  readOnly={poll ? asText((poll as any).status).toUpperCase() === 'CLOSED' : false}
+                  readOnly={
+                    poll
+                      ? asText((poll as any).status).toUpperCase() === "CLOSED"
+                      : false
+                  }
+                  canView={canViewEligibility}
+                  canCreate={canCreateEligibility}
+                  canDelete={canDeleteEligibility}
                 />
               </div>
             )}
-            {tab === 'vote' && (
+            {tab === "vote" && (
               <div className="text-center py-5">
-                <i className="bi bi-check-circle display-1 mb-4" style={{ color: '#06b6d4' }}></i>
+                <i
+                  className="bi bi-check-circle display-1 mb-4"
+                  style={{ color: "#06b6d4" }}
+                ></i>
                 <h4 className="mb-3">Cast Your Vote</h4>
-                {poll && asText((poll as any).status).toUpperCase() === 'ACTIVE' ? (
+                {poll &&
+                asText((poll as any).status).toUpperCase() === "ACTIVE" ? (
                   <>
-                    <p className="text-muted mb-4">This poll is currently active and accepting votes.</p>
-                    <Link to={`/dashboard/voting/${pollId}/vote`} className="btn btn-primary btn-lg px-5">
+                    <p className="text-muted mb-4">
+                      This poll is currently active and accepting votes.
+                    </p>
+                    <Link
+                      to={`/dashboard/voting/${pollId}/vote`}
+                      className="btn btn-primary btn-lg px-5"
+                    >
                       <i className="bi bi-check-circle me-2"></i>
                       Go to Vote
                     </Link>
@@ -385,11 +579,14 @@ export function PollDetailsPage() {
                 ) : (
                   <>
                     <p className="text-muted mb-4">
-                      {asText((poll as any).status).toUpperCase() === 'DRAFT' 
-                        ? 'This poll is still in draft mode. Activate it to start accepting votes.'
-                        : 'This poll has been closed and is no longer accepting votes.'}
+                      {asText((poll as any).status).toUpperCase() === "DRAFT"
+                        ? "This poll is still in draft mode. Activate it to start accepting votes."
+                        : "This poll has been closed and is no longer accepting votes."}
                     </p>
-                    <button className="btn btn-outline-secondary btn-lg px-5" disabled>
+                    <button
+                      className="btn btn-outline-secondary btn-lg px-5"
+                      disabled
+                    >
                       <i className="bi bi-x-circle me-2"></i>
                       Voting Not Available
                     </button>
@@ -397,10 +594,13 @@ export function PollDetailsPage() {
                 )}
               </div>
             )}
-            {tab === 'results' && (
+            {tab === "results" && (
               <div>
                 <h5 className="mb-4 fw-semibold">
-                  <i className="bi bi-bar-chart me-2" style={{ color: '#06b6d4' }}></i>
+                  <i
+                    className="bi bi-bar-chart me-2"
+                    style={{ color: "#06b6d4" }}
+                  ></i>
                   Poll Results
                 </h5>
                 {results ? (
@@ -409,7 +609,9 @@ export function PollDetailsPage() {
                   <div className="text-center py-5">
                     <i className="bi bi-bar-chart display-1 text-muted mb-4"></i>
                     <h5 className="text-muted mb-3">No Results Yet</h5>
-                    <p className="text-muted">Results will appear here once voting begins.</p>
+                    <p className="text-muted">
+                      Results will appear here once voting begins.
+                    </p>
                   </div>
                 )}
               </div>

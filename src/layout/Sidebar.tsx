@@ -3,10 +3,14 @@ import { useSelector } from "react-redux";
 import { NavLink } from "react-router-dom";
 import type { RootState } from "../store/store";
 import finovatelogo from "../assets/images/finovate-logo.webp";
+import { useHrPermissions } from "../hooks/useHrPermissions";
+import { HR_ROUTE_PERMISSION_KEYS } from "../config/hrPermissions";
 import { useProjectManagementPermissions } from "../hooks/useProjectManagementPermissions";
 import { PM_ROUTE_PERMISSION_KEYS } from "../config/projectManagementPermissions";
 import { useMeetingPermissions } from "../hooks/useMeetingPermissions";
 import { MEETING_ROUTE_PERMISSION_KEYS } from "../config/meetingPermissions";
+import { useVotingPermissions } from "../hooks/useVotingPermissions";
+import { VOTING_ROUTE_PERMISSION_KEYS } from "../config/votingPermissions";
 
 interface NavItem {
   to: string;
@@ -96,16 +100,26 @@ function NavItems({ items }: { items: NavItem[] }) {
 
 function SidebarContent() {
   const user = useSelector((state: RootState) => state.auth.user);
+  const { canAny: canAnyHr } = useHrPermissions();
   const { canAny: canAnyProjectManagement } = useProjectManagementPermissions();
   const { canAny: canAnyMeeting } = useMeetingPermissions();
+  const { canAny: canAnyVoting } = useVotingPermissions();
 
   const visibleModuleNavItems = moduleNavItems.filter((item) => {
+    if (item.to === "/dashboard/hr") {
+      return canAnyHr([...HR_ROUTE_PERMISSION_KEYS.HR_HOME]);
+    }
+
     if (item.to === "/dashboard/project-management") {
       return canAnyProjectManagement([...PM_ROUTE_PERMISSION_KEYS.HOME]);
     }
 
     if (item.to === "/dashboard/meetings") {
       return canAnyMeeting([...MEETING_ROUTE_PERMISSION_KEYS.HOME]);
+    }
+
+    if (item.to === "/dashboard/voting") {
+      return canAnyVoting([...VOTING_ROUTE_PERMISSION_KEYS.HOME]);
     }
 
     return true;

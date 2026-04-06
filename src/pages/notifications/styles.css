@@ -416,9 +416,7 @@
     transition: all 0.2s;
 }
 
-.modal-close::before {
-    content: '×';
-}
+/*  */
 
 .modal-close:hover {
     background: #e2e8f0;

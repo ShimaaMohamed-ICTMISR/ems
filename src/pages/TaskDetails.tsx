@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import taskService, { type Task } from "../services/taskService";
 import taskDocumentService, {
   type TaskDocument,
-} from "../services/taskDocumentService";
+} from "../services/projectManagementServices/taskDocumentService";
 import memberService, { type ProjectMember } from "../services/memberService";
 import hrService, {
   type Employee,
@@ -279,11 +279,6 @@ export function TaskDetails() {
     });
     return map;
   }, [employees]);
-
-  function getEmployerId(employee: Employee) {
-    const withEmployerId = employee as Employee & { employerId?: string };
-    return withEmployerId.employerId || employee.id;
-  }
 
   const filteredMembers = projectMembers.filter((m) => {
     const search = memberSearch.toLowerCase();

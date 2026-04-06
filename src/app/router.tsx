@@ -13,6 +13,7 @@ import {
   PM_ROUTE_PERMISSION_KEYS,
 } from "../config/projectManagementPermissions";
 import { MEETING_ROUTE_PERMISSION_KEYS } from "../config/meetingPermissions";
+import { VOTING_ROUTE_PERMISSION_KEYS } from "../config/votingPermissions";
 import {
   Dashboard,
   Notifications,
@@ -443,13 +444,82 @@ const router = createBrowserRouter([
       // Voting
       {
         path: "voting",
-        element: <Outlet />,
+        element: (
+          <PermissionRoute
+            scope="voting"
+            anyOf={[...VOTING_ROUTE_PERMISSION_KEYS.HOME]}
+            title="Voting Access Restricted"
+            description="You do not currently have permission to access voting features. Please contact your administrator if you need access."
+          >
+            <Outlet />
+          </PermissionRoute>
+        ),
         children: [
-          { index: true, element: <PollsDashboard /> },
-          { path: "create", element: <CreatePollPage /> },
-          { path: ":pollId", element: <PollDetailsPage /> },
-          { path: ":pollId/vote", element: <VotePage /> },
-          { path: ":pollId/results", element: <ResultsPage /> },
+          {
+            index: true,
+            element: (
+              <PermissionRoute
+                scope="voting"
+                anyOf={[...VOTING_ROUTE_PERMISSION_KEYS.DASHBOARD]}
+                title="Voting Dashboard Restricted"
+                description="You do not currently have permission to view or create polls. Please contact your administrator if you need access."
+              >
+                <PollsDashboard />
+              </PermissionRoute>
+            ),
+          },
+          {
+            path: "create",
+            element: (
+              <PermissionRoute
+                scope="voting"
+                anyOf={[...VOTING_ROUTE_PERMISSION_KEYS.CREATE_POLL]}
+                title="Poll Creation Restricted"
+                description="You do not currently have permission to create polls. Please contact your administrator if you need access."
+              >
+                <CreatePollPage />
+              </PermissionRoute>
+            ),
+          },
+          {
+            path: ":pollId",
+            element: (
+              <PermissionRoute
+                scope="voting"
+                anyOf={[...VOTING_ROUTE_PERMISSION_KEYS.POLL_DETAILS]}
+                title="Poll Details Restricted"
+                description="You do not currently have permission to view poll details. Please contact your administrator if you need access."
+              >
+                <PollDetailsPage />
+              </PermissionRoute>
+            ),
+          },
+          {
+            path: ":pollId/vote",
+            element: (
+              <PermissionRoute
+                scope="voting"
+                anyOf={[...VOTING_ROUTE_PERMISSION_KEYS.VOTE]}
+                title="Voting Restricted"
+                description="You do not currently have permission to submit votes. Please contact your administrator if you need access."
+              >
+                <VotePage />
+              </PermissionRoute>
+            ),
+          },
+          {
+            path: ":pollId/results",
+            element: (
+              <PermissionRoute
+                scope="voting"
+                anyOf={[...VOTING_ROUTE_PERMISSION_KEYS.RESULTS]}
+                title="Results Restricted"
+                description="You do not currently have permission to view poll results. Please contact your administrator if you need access."
+              >
+                <ResultsPage />
+              </PermissionRoute>
+            ),
+          },
         ],
       },
       // Opportunities

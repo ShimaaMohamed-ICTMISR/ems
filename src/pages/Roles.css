@@ -50,6 +50,28 @@
   min-width: 250px;
 }
 
+.roles-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+}
+
+.roles-search-wrap .search-input {
+  width: 100%;
+  min-width: 0;
+  padding-right: 42px;
+}
+
+.roles-search-loader {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #0ea5e9;
+  pointer-events: none;
+  display: inline-flex;
+}
+
 .filter-select {
   min-width: 150px;
   cursor: pointer;
@@ -512,6 +534,58 @@
   font-family: 'Courier New', monospace;
 }
 
+.permissions-search-controls {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.permissions-bulk-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fbff;
+}
+
+.permissions-select-all-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.92rem;
+  color: #0f172a;
+}
+
+.permissions-select-all-label input {
+  width: 16px;
+  height: 16px;
+  accent-color: #1e40af;
+}
+
+.permissions-selection-count {
+  font-size: 0.82rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.permissions-search-input {
+  width: 100%;
+}
+
+.permissions-search-empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #64748b;
+  text-align: center;
+}
+
 /* Badges */
 .badge {
   padding: 6px 12px;
@@ -561,6 +635,11 @@
     flex-direction: column;
   }
 
+  .roles-search-wrap {
+    width: 100%;
+    min-width: 0;
+  }
+
   .search-input,
   .filter-select {
     width: 100%;
@@ -585,6 +664,15 @@
 
   .permissions-grid {
     grid-template-columns: 1fr;
+  }
+
+  .permissions-search-controls {
+    width: 100%;
+  }
+
+  .permissions-bulk-controls {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .form-row {

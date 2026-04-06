@@ -1,7 +1,9 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import type { Poll, PollStatus } from '../types/voting.types';
-import { activatePoll, closePoll, deletePoll } from '../api/votingApi';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import type { Poll, PollStatus } from "../types/voting.types";
+import { activatePoll, closePoll, deletePoll } from "../api/votingApi";
+import { useVotingPermissions } from "../../../hooks/useVotingPermissions";
+import { VOTING_PERMISSION_KEYS } from "../../../config/votingPermissions";
 
 interface PollCardProps {
   poll: Poll;
@@ -9,21 +11,21 @@ interface PollCardProps {
 }
 
 const statusBadge: Record<PollStatus, string> = {
-  DRAFT: 'bg-secondary',
-  ACTIVE: 'bg-success',
-  CLOSED: 'bg-dark',
+  DRAFT: "bg-secondary",
+  ACTIVE: "bg-success",
+  CLOSED: "bg-dark",
 };
 
 const statusLabel: Record<PollStatus, string> = {
-  DRAFT: 'Draft',
-  ACTIVE: 'Active',
-  CLOSED: 'Closed',
+  DRAFT: "Draft",
+  ACTIVE: "Active",
+  CLOSED: "Closed",
 };
 
 function formatDate(iso: string): string {
   try {
     return new Date(iso).toLocaleDateString(undefined, {
-      dateStyle: 'medium',
+      dateStyle: "medium",
     });
   } catch {
     return iso;
@@ -31,15 +33,20 @@ function formatDate(iso: string): string {
 }
 
 function asText(value: unknown): string {
-  if (value == null) return '';
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+  if (value == null) return "";
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
     return String(value);
   }
-  if (typeof value === 'object') {
+  if (typeof value === "object") {
     const v = value as any;
-    if (typeof v.name === 'string') return v.name;
-    if (typeof v.title === 'string') return v.title;
-    if (typeof v.id === 'string' || typeof v.id === 'number') return String(v.id);
+    if (typeof v.name === "string") return v.name;
+    if (typeof v.title === "string") return v.title;
+    if (typeof v.id === "string" || typeof v.id === "number")
+      return String(v.id);
     return JSON.stringify(value);
   }
   return String(value);
@@ -49,11 +56,19 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { canAny } = useVotingPermissions();
   const statusStr = asText((poll as unknown as Record<string, unknown>).status);
-  const statusClass = statusBadge[statusStr as PollStatus] ?? 'bg-secondary';
+  const statusClass = statusBadge[statusStr as PollStatus] ?? "bg-secondary";
   const statusText = statusLabel[statusStr as PollStatus] ?? statusStr;
+  const canEditPoll = canAny([...VOTING_PERMISSION_KEYS.POLLS.EDIT]);
+  const canActivatePoll = canAny([...VOTING_PERMISSION_KEYS.POLLS.ACTIVATE]);
+  const canClosePoll = canAny([...VOTING_PERMISSION_KEYS.POLLS.CLOSE]);
+  const canDeletePoll = canAny([...VOTING_PERMISSION_KEYS.POLLS.DELETE]);
+  const canVote = canAny([...VOTING_PERMISSION_KEYS.VOTE.CREATE]);
+  const canViewResults = canAny([...VOTING_PERMISSION_KEYS.RESULTS.VIEW]);
 
   const handleActivate = async () => {
+    if (!canActivatePoll) return;
     try {
       await activatePoll(poll.id);
       onStatusChange?.();
@@ -63,6 +78,7 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
   };
 
   const handleClose = async () => {
+    if (!canClosePoll) return;
     try {
       await closePoll(poll.id);
       onStatusChange?.();
@@ -72,21 +88,27 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Delete poll "${asText((poll as any).title)}"? This cannot be undone.`)) return;
+    if (!canDeletePoll) return;
+    if (
+      !window.confirm(
+        `Delete poll "${asText((poll as any).title)}"? This cannot be undone.`,
+      )
+    )
+      return;
     setDeleteError(null);
     setDeleting(true);
     try {
       await deletePoll(poll.id);
       onStatusChange?.();
-      navigate('/dashboard/voting');
+      navigate("/dashboard/voting");
     } catch (e) {
-      setDeleteError(e instanceof Error ? e.message : 'Failed to delete poll');
+      setDeleteError(e instanceof Error ? e.message : "Failed to delete poll");
     } finally {
       setDeleting(false);
     }
   };
 
-  const btnClass = 'btn btn-sm px-3';
+  const btnClass = "btn btn-sm px-3";
 
   return (
     <div className="voting-page h-100">
@@ -96,16 +118,22 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
             <Link
               to={`/dashboard/voting/${poll.id}`}
               className="card-title mb-0 text-decoration-none flex-grow-1"
-              style={{ fontSize: '1.1rem' }}
+              style={{ fontSize: "1.1rem" }}
             >
               {asText((poll as any).title)}
             </Link>
-            <span className={`badge ${statusClass} text-uppercase`} style={{ fontSize: '0.7rem' }}>
+            <span
+              className={`badge ${statusClass} text-uppercase`}
+              style={{ fontSize: "0.7rem" }}
+            >
               {statusText}
             </span>
           </div>
           {(poll as any).description && (
-            <p className="card-text text-muted small flex-grow-1 mb-3" style={{ lineHeight: 1.5 }}>
+            <p
+              className="card-text text-muted small flex-grow-1 mb-3"
+              style={{ lineHeight: 1.5 }}
+            >
               {asText((poll as any).description)}
             </p>
           )}
@@ -120,50 +148,88 @@ export function PollCard({ poll, onStatusChange }: PollCardProps) {
             </div>
           )}
           <div className="mt-auto pt-2">
-            {statusStr.toUpperCase() === 'DRAFT' && (
+            {statusStr.toUpperCase() === "DRAFT" && (
               <div className="d-flex flex-wrap justify-content-center gap-2">
-                <Link to={`/dashboard/voting/${poll.id}`} className={`${btnClass} btn-outline-primary`}>
-                  <i className="bi bi-pencil me-1"></i>Edit
-                </Link>
-                <button type="button" className={`${btnClass} btn-success`} onClick={handleActivate}>
-                  <i className="bi bi-play-fill me-1"></i>Activate
-                </button>
-                <button
-                  type="button"
-                  className={`${btnClass} btn-outline-danger`}
-                  onClick={handleDelete}
-                  disabled={deleting}
-                >
-                  <i className="bi bi-trash me-1"></i>{deleting ? 'Deleting...' : 'Delete'}
-                </button>
+                {canEditPoll && (
+                  <Link
+                    to={`/dashboard/voting/${poll.id}`}
+                    className={`${btnClass} btn-outline-primary`}
+                  >
+                    <i className="bi bi-pencil me-1"></i>Edit
+                  </Link>
+                )}
+                {canActivatePoll && (
+                  <button
+                    type="button"
+                    className={`${btnClass} btn-success`}
+                    onClick={handleActivate}
+                  >
+                    <i className="bi bi-play-fill me-1"></i>Activate
+                  </button>
+                )}
+                {canDeletePoll && (
+                  <button
+                    type="button"
+                    className={`${btnClass} btn-outline-danger`}
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    <i className="bi bi-trash me-1"></i>
+                    {deleting ? "Deleting..." : "Delete"}
+                  </button>
+                )}
               </div>
             )}
-            {statusStr.toUpperCase() === 'ACTIVE' && (
+            {statusStr.toUpperCase() === "ACTIVE" && (
               <div className="d-flex flex-wrap justify-content-center gap-2">
-                <Link to={`/dashboard/voting/${poll.id}/vote`} className={`${btnClass} btn-primary`}>
-                  <i className="bi bi-check-circle me-1"></i>Vote
-                </Link>
-                <Link to={`/dashboard/voting/${poll.id}/results`} className={`${btnClass} btn-outline-secondary`}>
-                  <i className="bi bi-bar-chart me-1"></i>Results
-                </Link>
-                <button type="button" className={`${btnClass} btn-outline-dark`} onClick={handleClose}>
-                  <i className="bi bi-stop-fill me-1"></i>Close
-                </button>
+                {canVote && (
+                  <Link
+                    to={`/dashboard/voting/${poll.id}/vote`}
+                    className={`${btnClass} btn-primary`}
+                  >
+                    <i className="bi bi-check-circle me-1"></i>Vote
+                  </Link>
+                )}
+                {canViewResults && (
+                  <Link
+                    to={`/dashboard/voting/${poll.id}/results`}
+                    className={`${btnClass} btn-outline-secondary`}
+                  >
+                    <i className="bi bi-bar-chart me-1"></i>Results
+                  </Link>
+                )}
+                {canClosePoll && (
+                  <button
+                    type="button"
+                    className={`${btnClass} btn-outline-dark`}
+                    onClick={handleClose}
+                  >
+                    <i className="bi bi-stop-fill me-1"></i>Close
+                  </button>
+                )}
               </div>
             )}
-            {statusStr.toUpperCase() === 'CLOSED' && (
+            {statusStr.toUpperCase() === "CLOSED" && (
               <div className="d-flex flex-wrap justify-content-center gap-2">
-                <Link to={`/dashboard/voting/${poll.id}/results`} className={`${btnClass} btn-primary`}>
-                  <i className="bi bi-bar-chart me-1"></i>View Results
-                </Link>
-                <button
-                  type="button"
-                  className={`${btnClass} btn-outline-danger`}
-                  onClick={handleDelete}
-                  disabled={deleting}
-                >
-                  <i className="bi bi-trash me-1"></i>{deleting ? 'Deleting...' : 'Delete'}
-                </button>
+                {canViewResults && (
+                  <Link
+                    to={`/dashboard/voting/${poll.id}/results`}
+                    className={`${btnClass} btn-primary`}
+                  >
+                    <i className="bi bi-bar-chart me-1"></i>View Results
+                  </Link>
+                )}
+                {canDeletePoll && (
+                  <button
+                    type="button"
+                    className={`${btnClass} btn-outline-danger`}
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    <i className="bi bi-trash me-1"></i>
+                    {deleting ? "Deleting..." : "Delete"}
+                  </button>
+                )}
               </div>
             )}
           </div>

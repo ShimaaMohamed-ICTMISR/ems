@@ -52,7 +52,10 @@ export default function LeaveRequests() {
     }
   };
 
-  const handleStatusUpdate = async (id: string, status: string) => {
+  const handleStatusUpdate = async (
+    id: string,
+    status: LeaveRequest["status"],
+  ) => {
     if (!canEditLeaveRequest) {
       alert("You do not have permission to update leave requests.");
       return;
@@ -61,7 +64,7 @@ export default function LeaveRequests() {
     const comments =
       status === "REJECTED" ? prompt("Enter rejection reason:") : "";
     try {
-      await hrService.updateLeaveRequest(id, {
+      await hrService.updateLeaveRequestStatus(id, {
         status,
         approverComments: comments || undefined,
       });
