@@ -14,7 +14,9 @@ type NotificationWithSourceFields = Notification & {
   sourceEntityType?: string;
 };
 
-function getPollIdFromNotification(n: Notification | undefined): string | undefined {
+function getPollIdFromNotification(
+  n: Notification | undefined,
+): string | undefined {
   if (!n) return undefined;
   const notif = n as NotificationWithSourceFields;
   let meta: unknown = n.metadata;
@@ -196,11 +198,15 @@ export default function NotificationDetails({
           {pollIdForVote && (
             <div className="notification-detail-section notification-poll-vote-wrap mt-3 pt-3 border-top">
               <label className="detail-label d-flex align-items-center gap-2">
-                <i className="bi bi-hand-index-thumb" style={{ color: "#06b6d4" }}></i>
+                <i
+                  className="bi bi-hand-index-thumb"
+                  style={{ color: "#06b6d4" }}
+                ></i>
                 Cast your vote
               </label>
               <p className="small text-muted mb-2">
-                Select an option below. You can also use the full voting page if you prefer.
+                Select an option below. You can also use the full voting page if
+                you prefer.
               </p>
               <PollVoteForm
                 pollId={pollIdForVote}

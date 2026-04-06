@@ -167,8 +167,8 @@ export function MeetingsList() {
         </div>
         <h4 className="text-muted mb-2">Access Restricted</h4>
         <p className="text-muted mb-0">
-          You do not currently have permission to list or view meetings.
-          Please contact your administrator if you need access.
+          You do not currently have permission to list or view meetings. Please
+          contact your administrator if you need access.
         </p>
       </div>
     );
