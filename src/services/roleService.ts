@@ -39,7 +39,7 @@ export interface UpdateRoleDto {
 }
 
 export interface AssignPermissionsDto {
-  permissionIds: string[];
+  permissionCodes: string[];
   replaceExisting: boolean;
 }
 
@@ -118,7 +118,10 @@ export const assignPermissionsToRole = async (
   roleId: string,
   data: AssignPermissionsDto
 ): Promise<Role> => {
-  const response = await apiClient.post(`/Role/${roleId}/permissions`, data);
+  const response = await apiClient.post(`/Role/${roleId}/permissions`, {
+    permissionCodes: data.permissionCodes,
+    replaceExisting: data.replaceExisting
+  });
   return response.data;
 };
 

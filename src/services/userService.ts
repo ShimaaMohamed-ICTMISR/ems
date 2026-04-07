@@ -124,7 +124,20 @@ export const toggleUserMfa = async (id: string): Promise<void> => {
 
 // Assign role to user
 export const assignRoleToUser = async (userId: string, data: AssignRoleDto): Promise<void> => {
-  await apiClient.post(`/User/${userId}/roles`, data);
+  // Only send non-empty fields to avoid validation errors
+  const payload: any = {
+    roleId: data.roleId
+  };
+  
+  if (data.expiresAt && data.expiresAt.trim()) {
+    payload.expiresAt = data.expiresAt;
+  }
+  
+  if (data.notes && data.notes.trim()) {
+    payload.notes = data.notes;
+  }
+  
+  await apiClient.post(`/User/${userId}/roles`, payload);
 };
 
 // Remove role from user

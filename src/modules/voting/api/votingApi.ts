@@ -12,11 +12,12 @@ import type {
   VoteRequest,
 } from '../types/voting.types';
 
-const BASE_URL = (
-  import.meta.env.VITE_VOTING_API_BASE_URL ??
-  import.meta.env.VITE_API_BASE_URL ??
-  'https://ems-voting-service.onrender.com/'
-).replace(/\/+$/, '');
+// const BASE_URL = (
+//   import.meta.env.VITE_VOTING_API_BASE_URL ??
+//   import.meta.env.VITE_API_BASE_URL ??
+//   'https://ems-voting-service.onrender.com/'
+// ).replace(/\/+$/, '');
+const BASE_URL='http://apigetway.runasp.net/api/voting'
 
 /** Voting service ticket — do not use global VITE_SERVICE_TICKET (other services may differ). */
 const VOTING_TICKET_DEFAULT = 'TEST-SECRET-TICKET-2026';
@@ -30,10 +31,18 @@ function getServiceTicket(): string {
 }
 
 function getHeaders(): Record<string, string> {
-  return {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'X-Service-Ticket': getServiceTicket(),
   };
+  
+  // Add authorization token if available
+  const authToken = localStorage.getItem('authToken');
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+  
+  return headers;
 }
 
 async function handleResponse<T>(res: Response): Promise<T> {
