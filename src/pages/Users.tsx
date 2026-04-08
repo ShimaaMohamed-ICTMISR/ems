@@ -522,7 +522,7 @@ const Users = () => {
                 <div className="roles-list">
                   {selectedUser.roles && selectedUser.roles.length > 0 ? (
                     selectedUser.roles.map((role) => (
-                      <div key={role.roleId} className="role-item">
+                      <div key={`${role.roleId}-view`} className="role-item">
                         <span className="role-tag">{role.roleName || role.roleCode}</span>
                         {role.expiresAt && (
                           <span className="role-expiry">Expires: {new Date(role.expiresAt).toLocaleDateString()}</span>
@@ -732,7 +732,7 @@ const Users = () => {
                 {selectedUser.roles && selectedUser.roles.length > 0 ? (
                   <div className="roles-list">
                     {selectedUser.roles.map((role) => (
-                      <div key={role.roleId} className="role-item">
+                      <div key={`${role.roleId}-manage`} className="role-item">
                         <div>
                           <strong>{role.roleName || role.roleCode}</strong>
                           {role.expiresAt && (

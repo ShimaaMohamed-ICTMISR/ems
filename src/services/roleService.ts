@@ -61,7 +61,7 @@ export interface UpdateRoleDto {
 }
 
 export interface AssignPermissionsDto {
-  permissionIds: string[];
+  permissionCodes: string[];
   replaceExisting: boolean;
 }
 

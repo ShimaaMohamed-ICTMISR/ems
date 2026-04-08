@@ -153,8 +153,8 @@ const Roles = () => {
     // Fetch the role with its permissions
     try {
       const roleData = await roleService.getRoleById(role.id);
-      const permIds = roleData.permissions?.map((p) => p.id) || [];
-      setSelectedRolePermissions(permIds);
+      const permCodes = roleData.permissions?.map((p) => p.code) || [];
+      setSelectedRolePermissions(permCodes);
     } catch (err) {
       console.error("Failed to fetch role permissions:", err);
       setSelectedRolePermissions([]);
@@ -208,7 +208,7 @@ const Roles = () => {
 
     try {
       await roleService.assignPermissionsToRole(selectedRole.id, {
-        permissionIds: normalizedPermissionIds,
+        permissionCodes: selectedRolePermissions,
         replaceExisting: true,
       });
 
@@ -324,6 +324,36 @@ const Roles = () => {
   const handleToggleSelectAllPermissions = (checked: boolean) => {
     if (checked) {
       setSelectedRolePermissions(allPermissionIds);
+      return;
+    }
+
+    setSelectedRolePermissions([]);
+  };
+
+  const filteredModalPermissions = allPermissions.filter((permission) => {
+    const searchValue = permissionsSearchInput.trim().toLowerCase();
+    if (!searchValue) return true;
+
+    return (
+      permission.name?.toLowerCase().includes(searchValue) ||
+      permission.code?.toLowerCase().includes(searchValue) ||
+      permission.description?.toLowerCase().includes(searchValue) ||
+      permission.category?.toLowerCase().includes(searchValue)
+    );
+  });
+
+  const allPermissionCodes = allPermissions.map((permission) => permission.code);
+  const areAllPermissionsSelected =
+    allPermissionCodes.length > 0 &&
+    allPermissionCodes.every((permissionCode) =>
+      selectedRolePermissions.includes(permissionCode),
+    );
+  const hasSomePermissionsSelected =
+    !areAllPermissionsSelected && selectedRolePermissions.length > 0;
+
+  const handleToggleSelectAllPermissions = (checked: boolean) => {
+    if (checked) {
+      setSelectedRolePermissions(allPermissionCodes);
       return;
     }
 
@@ -817,10 +847,9 @@ const Roles = () => {
                       <input
                         type="checkbox"
                         checked={selectedRolePermissions.includes(
-                          permission.id,
+                          permission.code,
                         )}
-                        disabled={permission.isActive === false}
-                        onChange={() => handlePermissionToggle(permission.id)}
+                        onChange={() => handlePermissionToggle(permission.code)}
                       />
                       <span className="permission-name">{permission.name}</span>
                       <span className="permission-code">
