@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Meeting service uses a separate microservice - call directly
-const MEETING_API_BASE = 'https://ems-meeting-service.onrender.com';
+// Route Meeting requests through API Gateway
+const MEETING_API_BASE = 'http://apigetway.runasp.net/api/meeting-service';
 
 const meetingClient = axios.create({
   baseURL: MEETING_API_BASE,
@@ -41,27 +41,34 @@ meetingClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-// Add token to requests if available
+const getMeetingServiceTicket = (): string =>
+  localStorage.getItem('meeting-service-ticket')?.trim() ?? '';
+
+// Attach meeting auth headers (X-Service-Ticket OR Bearer)
 meetingClient.interceptors.request.use(
   (config) => {
-    // Meeting service ticket
-    const serviceTicket = 'TEST-SECRET-TICKET-2026';
-    config.headers['X-Service-Ticket'] = serviceTicket;
-    
-    // Also add user auth token for user identification
+    const serviceTicket = getMeetingServiceTicket();
     const userToken = localStorage.getItem('authToken');
-    if (userToken) {
+
+    if (serviceTicket) {
+      config.headers['X-Service-Ticket'] = serviceTicket;
+    } else if (userToken) {
       config.headers.Authorization = `Bearer ${userToken}`;
+    } else {
+      return Promise.reject(
+        new Error('Missing meeting credentials. Please login again.'),
+      );
     }
-    
-    // Debug logging
-    console.log('Meeting service request headers:', {
-      'X-Service-Ticket': config.headers['X-Service-Ticket'],
-      'Authorization': config.headers.Authorization,
-      'url': config.url,
-      'method': config.method
-    });
-    
+
+    if (import.meta.env.DEV) {
+      console.debug('[Meeting API] auth headers', {
+        hasTicket: Boolean(serviceTicket),
+        hasBearer: Boolean(!serviceTicket && userToken),
+        url: config.url,
+        method: config.method,
+      });
+    }
+
     return config;
   },
   (error) => {

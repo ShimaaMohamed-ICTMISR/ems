@@ -39,17 +39,6 @@ export default function Login() {
         password: data.password || "",
       });
 
-      // Store service tickets in localStorage
-      if (response.votingServiceTicket) {
-        localStorage.setItem('voting-service-ticket', response.votingServiceTicket);
-      }
-      if (response.meetingServiceTicket) {
-        localStorage.setItem('meeting-service-ticket', response.meetingServiceTicket);
-      }
-      if (response.opportunityServiceTicket) {
-        localStorage.setItem('opportunity-service-ticket', response.opportunityServiceTicket);
-      }
-
       dispatch(
         loginSuccess({
           user: response.user,

@@ -30,18 +30,36 @@ export interface LoginResponse {
   opportunityServiceTicket?: string;
 }
 
+const saveServiceTicket = (storageKey: string, ticket?: string) => {
+  const normalized = ticket?.trim();
+  if (normalized) {
+    localStorage.setItem(storageKey, normalized);
+  }
+};
+
 export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     try {
       const response = await apiClient.post<LoginResponse>('/Auth/login', credentials);
-      const ticketFromBody =
-        response.data?.serviceTicket?.trim() ||
-        response.data?.xServiceTicket?.trim();
-      const ticketFromHeader = response.headers?.['x-service-ticket']?.trim();
-      const ticket = ticketFromBody || ticketFromHeader;
-      if (ticket) {
-        localStorage.setItem('voting-service-ticket', ticket);
-      }
+      const sharedTicket =
+        response.data?.serviceTicket ||
+        response.data?.xServiceTicket ||
+        response.headers?.['x-service-ticket'];
+
+      // Persist tickets from API Gateway response (service-specific first, then shared fallback)
+      saveServiceTicket(
+        'voting-service-ticket',
+        response.data?.votingServiceTicket || sharedTicket,
+      );
+      saveServiceTicket(
+        'meeting-service-ticket',
+        response.data?.meetingServiceTicket || sharedTicket,
+      );
+      saveServiceTicket(
+        'opportunity-service-ticket',
+        response.data?.opportunityServiceTicket || sharedTicket,
+      );
+
       console.log('Login response:', response.data);
       return response.data;
     } catch (error: any) {
