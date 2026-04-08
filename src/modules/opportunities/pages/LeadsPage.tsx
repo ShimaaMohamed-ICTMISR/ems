@@ -9,6 +9,11 @@ import {
 } from '../api/opportunityApi';
 import type { ConvertLeadDto, CreateLeadDto, Lead, LeadSource } from '../types/opportunity.types';
 import { isLeadQualifiedForConvert } from '../utils/opportunityFlow';
+import { useOpportunitiesPermissions } from '../../../hooks/useOpportunitiesPermissions';
+import {
+  OPPORTUNITY_PERMISSION_KEYS,
+  OPPORTUNITY_ROUTE_PERMISSION_KEYS,
+} from '../../../config/opportunitiesPermissions';
 import './LeadsPage.css';
 
 const SOURCE_OPTIONS: { value: LeadSource; label: string }[] = [
@@ -81,6 +86,13 @@ export function LeadsPage() {
   });
 
   const [actionLoading, setActionLoading] = useState(false);
+  const { canAny } = useOpportunitiesPermissions();
+
+  const canViewOpportunitiesDashboard = canAny([...OPPORTUNITY_ROUTE_PERMISSION_KEYS.DASHBOARD]);
+  const canCreateLead = canAny([...OPPORTUNITY_PERMISSION_KEYS.LEADS.CREATE]);
+  const canQualifyLead = canAny([...OPPORTUNITY_PERMISSION_KEYS.LEADS.QUALIFY]);
+  const canConvertLead = canAny([...OPPORTUNITY_PERMISSION_KEYS.LEADS.CONVERT]);
+  const canDeleteLead = canAny([...OPPORTUNITY_PERMISSION_KEYS.LEADS.DELETE]);
 
   const loadLeads = async () => {
     try {
@@ -296,18 +308,22 @@ export function LeadsPage() {
           </div>
         </div>
         <div className="d-flex gap-2">
-          <Link to="/dashboard/opportunities" className="btn btn-outline-secondary btn-lg">
-            <i className="bi bi-graph-up-arrow me-2" />
-            Opportunities
-          </Link>
-          <button
-            type="button"
-            className="btn btn-meetings-primary btn-lg"
-            onClick={() => setCreating(true)}
-          >
-            <i className="bi bi-person-plus me-2" />
-            New Lead
-          </button>
+          {canViewOpportunitiesDashboard && (
+            <Link to="/dashboard/opportunities" className="btn btn-outline-secondary btn-lg">
+              <i className="bi bi-graph-up-arrow me-2" />
+              Opportunities
+            </Link>
+          )}
+          {canCreateLead && (
+            <button
+              type="button"
+              className="btn btn-meetings-primary btn-lg"
+              onClick={() => setCreating(true)}
+            >
+              <i className="bi bi-person-plus me-2" />
+              New Lead
+            </button>
+          )}
         </div>
       </div>
 
@@ -342,13 +358,19 @@ export function LeadsPage() {
           ) : leads.length === 0 ? (
             <div className="text-center py-5">
               <h5 className="text-muted mb-2">No leads yet</h5>
-              <button
-                type="button"
-                className="btn btn-meetings-primary btn-lg"
-                onClick={() => setCreating(true)}
-              >
-                Create Lead
-              </button>
+              {canCreateLead ? (
+                <button
+                  type="button"
+                  className="btn btn-meetings-primary btn-lg"
+                  onClick={() => setCreating(true)}
+                >
+                  Create Lead
+                </button>
+              ) : (
+                <p className="mb-0 text-muted">
+                  You can view leads but do not currently have permission to create new ones.
+                </p>
+              )}
             </div>
           ) : (
             <div className="table-responsive">
@@ -394,43 +416,52 @@ export function LeadsPage() {
                             role="toolbar"
                             aria-label={`Actions for ${lead.firstName} ${lead.lastName}`}
                           >
-                            <button
-                              type="button"
-                              className="lead-action-btn lead-action-btn--qualify"
-                              onClick={() => openQualify(lead)}
-                              disabled={actionLoading || lead.isQualified === true}
-                              title={lead.isQualified === true ? "Lead is already qualified" : "Qualify lead"}
-                              aria-label="Qualify lead"
-                            >
-                              <i className="bi bi-patch-check" aria-hidden />
-                              <span className="visually-hidden">Qualify</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="lead-action-btn lead-action-btn--convert"
-                              onClick={() => openConvert(lead)}
-                              disabled={actionLoading || !canConvert}
-                              title={
-                                !canConvert
-                                  ? 'Qualify the lead first, then convert to opportunity'
-                                  : 'Convert to opportunity'
-                              }
-                              aria-label="Convert to opportunity"
-                            >
-                              <i className="bi bi-box-arrow-up-right" aria-hidden />
-                              <span className="visually-hidden">Convert</span>
-                            </button>
-                            <button
-                              type="button"
-                              className="lead-action-btn lead-action-btn--delete"
-                              onClick={() => handleDelete(lead)}
-                              disabled={actionLoading}
-                              title="Delete lead"
-                              aria-label="Delete lead"
-                            >
-                              <i className="bi bi-trash" aria-hidden />
-                              <span className="visually-hidden">Delete</span>
-                            </button>
+                            {canQualifyLead && (
+                              <button
+                                type="button"
+                                className="lead-action-btn lead-action-btn--qualify"
+                                onClick={() => openQualify(lead)}
+                                disabled={actionLoading || lead.isQualified === true}
+                                title={lead.isQualified === true ? 'Lead is already qualified' : 'Qualify lead'}
+                                aria-label="Qualify lead"
+                              >
+                                <i className="bi bi-patch-check" aria-hidden />
+                                <span className="visually-hidden">Qualify</span>
+                              </button>
+                            )}
+                            {canConvertLead && (
+                              <button
+                                type="button"
+                                className="lead-action-btn lead-action-btn--convert"
+                                onClick={() => openConvert(lead)}
+                                disabled={actionLoading || !canConvert}
+                                title={
+                                  !canConvert
+                                    ? 'Qualify the lead first, then convert to opportunity'
+                                    : 'Convert to opportunity'
+                                }
+                                aria-label="Convert to opportunity"
+                              >
+                                <i className="bi bi-box-arrow-up-right" aria-hidden />
+                                <span className="visually-hidden">Convert</span>
+                              </button>
+                            )}
+                            {canDeleteLead && (
+                              <button
+                                type="button"
+                                className="lead-action-btn lead-action-btn--delete"
+                                onClick={() => handleDelete(lead)}
+                                disabled={actionLoading}
+                                title="Delete lead"
+                                aria-label="Delete lead"
+                              >
+                                <i className="bi bi-trash" aria-hidden />
+                                <span className="visually-hidden">Delete</span>
+                              </button>
+                            )}
+                            {!canQualifyLead && !canConvertLead && !canDeleteLead && (
+                              <span className="small text-muted">No actions available</span>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -443,7 +474,7 @@ export function LeadsPage() {
         </div>
       </div>
 
-      {creating && (
+      {creating && canCreateLead && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">
@@ -632,7 +663,7 @@ export function LeadsPage() {
         </div>
       )}
 
-      {qualifyModalOpen && qualifyLeadId && (
+      {qualifyModalOpen && qualifyLeadId && canQualifyLead && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
@@ -673,7 +704,7 @@ export function LeadsPage() {
         </div>
       )}
 
-      {convertModalOpen && convertLeadId && (
+      {convertModalOpen && convertLeadId && canConvertLead && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content">

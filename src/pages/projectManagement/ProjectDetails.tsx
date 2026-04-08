@@ -3018,9 +3018,8 @@ export function ProjectDetails() {
 
       {canEditProject && isEditing && (
         <section className="details-card mb-4">
-          <h2 className="h6 mb-3">Update Project (PUT /project/:id)</h2>
           <form className="row g-3" onSubmit={handleUpdateProject}>
-            <div className="col-12 col-lg-6">
+            <div className="col-12 col-lg-12">
               <label className="form-label">Project Name</label>
               <input
                 className="form-control"
@@ -3030,7 +3029,7 @@ export function ProjectDetails() {
                 required
               />
             </div>
-            <div className="col-12 col-lg-6">
+            {/* <div className="col-12 col-lg-6">
               <label className="form-label">Portfolio ID</label>
               <input
                 className="form-control"
@@ -3038,7 +3037,7 @@ export function ProjectDetails() {
                 value={editForm.portfolioId}
                 onChange={handleEditInputChange}
               />
-            </div>
+            </div> */}
             <div className="col-12 col-lg-4">
               <label className="form-label">Stage</label>
               <select
@@ -4418,10 +4417,10 @@ export function ProjectDetails() {
                               "No deliverables recorded."}
                           </p>
                         </div>
-                        <div className="detail-row detail-id">
+                        {/* <div className="detail-row detail-id">
                           <span>Phase ID</span>
                           <strong>{selectedPhase.id}</strong>
-                        </div>
+                        </div> */}
                       </section>
                     )}
 
@@ -4756,10 +4755,10 @@ export function ProjectDetails() {
                             </div>
                           )}
                         </div>
-                        <div className="detail-row detail-id">
+                        {/* <div className="detail-row detail-id">
                           <span>Milestone ID</span>
                           <strong>{selectedMilestone.id}</strong>
-                        </div>
+                        </div> */}
                       </section>
                     )}
                   </>

@@ -821,22 +821,22 @@ export function TaskDetails() {
       <section className="task-details-grid">
         <article className="task-info-card">
           <h2 className="h6">Task Info</h2>
-          <div className="task-info-row">
+          {/* <div className="task-info-row">
             <span>ID</span>
             <strong>{task.id}</strong>
-          </div>
-          <div className="task-info-row">
+          </div> */}
+          {/* <div className="task-info-row">
             <span>Project ID</span>
             <strong>{task.projectId || "N/A"}</strong>
-          </div>
-          <div className="task-info-row">
+          </div> */}
+          {/* <div className="task-info-row">
             <span>Phase ID</span>
             <strong>{task.projectPhaseId || "N/A"}</strong>
-          </div>
-          <div className="task-info-row">
+          </div> */}
+          {/* <div className="task-info-row">
             <span>Milestone ID</span>
             <strong>{task.milestoneId || "N/A"}</strong>
-          </div>
+          </div> */}
           <div className="task-info-row">
             <span>Priority</span>
             <strong style={{ color: priorityColor[priorityVal] }}>

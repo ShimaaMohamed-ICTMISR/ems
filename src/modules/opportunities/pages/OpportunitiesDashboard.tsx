@@ -20,6 +20,11 @@ import {
   opportunityDisplayName,
 } from '../utils/opportunityFlow';
 import { useHrEmployees } from '../hooks/useHrEmployees';
+import { useOpportunitiesPermissions } from '../../../hooks/useOpportunitiesPermissions';
+import {
+  OPPORTUNITY_PERMISSION_KEYS,
+  OPPORTUNITY_ROUTE_PERMISSION_KEYS,
+} from '../../../config/opportunitiesPermissions';
 import './OpportunitiesDashboard.css';
 
 const STAGE_LABELS: Record<OpportunityStage, string> = {
@@ -87,6 +92,17 @@ export function OpportunitiesDashboard() {
 
   const { employees: hrEmployees, loading: hrEmployeesLoading, loadError: hrEmployeesError } =
     useHrEmployees();
+  const { canAny } = useOpportunitiesPermissions();
+
+  const canViewLeads = canAny([...OPPORTUNITY_ROUTE_PERMISSION_KEYS.LEADS]);
+  const canViewOpportunityDetails = canAny([...OPPORTUNITY_ROUTE_PERMISSION_KEYS.DETAILS]);
+  const canCreateOpportunity = canAny([...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.CREATE]);
+  const canChangeStageOpportunity = canAny([
+    ...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.CHANGE_STAGE,
+  ]);
+  const canAssignOpportunity = canAny([...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.ASSIGN]);
+  const canCloseOpportunity = canAny([...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.CLOSE]);
+  const canDeleteOpportunity = canAny([...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.DELETE]);
 
   const loadPage = async (targetPage: number) => {
     try {
@@ -292,12 +308,14 @@ export function OpportunitiesDashboard() {
             </p>
           </div>
         </div>
-        <div className="d-flex gap-2 opportunities-header-actions">
-          <Link to="/dashboard/opportunities/leads" className="btn btn-opportunities-outline btn-lg">
-            <i className="bi bi-people me-2" />
-            Leads
-          </Link>
-        </div>
+        {canViewLeads && (
+          <div className="d-flex gap-2 opportunities-header-actions">
+            <Link to="/dashboard/opportunities/leads" className="btn btn-opportunities-outline btn-lg">
+              <i className="bi bi-people me-2" />
+              Leads
+            </Link>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -363,14 +381,20 @@ export function OpportunitiesDashboard() {
               <p className="mb-4" style={{ color: '#6b7280' }}>
                 Start by creating your first opportunity to track potential revenue.
               </p>
-              <button
-                type="button"
-                className="btn btn-opportunities-primary btn-lg"
-                onClick={() => setCreating(true)}
-              >
-                <i className="bi bi-plus-circle me-2" />
-                Create Opportunity
-              </button>
+              {canCreateOpportunity ? (
+                <button
+                  type="button"
+                  className="btn btn-opportunities-primary btn-lg"
+                  onClick={() => setCreating(true)}
+                >
+                  <i className="bi bi-plus-circle me-2" />
+                  Create Opportunity
+                </button>
+              ) : (
+                <p className="mb-0 text-muted">
+                  You can view opportunities but do not currently have permission to create new ones.
+                </p>
+              )}
             </div>
           ) : (
             <div className="table-responsive">
@@ -420,67 +444,84 @@ export function OpportunitiesDashboard() {
                           role="toolbar"
                           aria-label={`Actions for ${opportunityDisplayName(opp)}`}
                         >
-                          <Link
-                            to={`/dashboard/opportunities/${opp.id}`}
-                            className="opp-action-btn opp-action-btn--view"
-                            title="View details"
-                            aria-label="View opportunity details"
-                          >
-                            <i className="bi bi-eye" aria-hidden />
-                            <span className="visually-hidden">View</span>
-                          </Link>
-                          <button
-                            type="button"
-                            className="opp-action-btn opp-action-btn--stage"
-                            disabled={closed}
-                            title={
-                              closed
-                                ? 'Closed — stage cannot be changed'
-                                : 'Change pipeline stage'
-                            }
-                            aria-label="Change stage"
-                            onClick={() => openStageModal(opp)}
-                          >
-                            <i className="bi bi-kanban" aria-hidden />
-                            <span className="visually-hidden">Stage</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="opp-action-btn opp-action-btn--assign"
-                            disabled={closed}
-                            title={
-                              closed
-                                ? 'Closed — cannot reassign'
-                                : 'Assign to an employee'
-                            }
-                            aria-label="Assign opportunity"
-                            onClick={() => openAssignModal(opp)}
-                          >
-                            <i className="bi bi-person-plus" aria-hidden />
-                            <span className="visually-hidden">Assign</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="opp-action-btn opp-action-btn--close"
-                            disabled={closed}
-                            title={closed ? 'Already closed' : 'Close opportunity (won / lost)'}
-                            aria-label="Close opportunity"
-                            onClick={() => openCloseModal(opp)}
-                          >
-                            <i className="bi bi-flag" aria-hidden />
-                            <span className="visually-hidden">Close</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="opp-action-btn opp-action-btn--delete"
-                            title="Delete opportunity"
-                            aria-label="Delete opportunity"
-                            disabled={actionLoading}
-                            onClick={() => handleDeleteOpportunity(opp)}
-                          >
-                            <i className="bi bi-trash3" aria-hidden />
-                            <span className="visually-hidden">Delete</span>
-                          </button>
+                          {canViewOpportunityDetails && (
+                            <Link
+                              to={`/dashboard/opportunities/${opp.id}`}
+                              className="opp-action-btn opp-action-btn--view"
+                              title="View details"
+                              aria-label="View opportunity details"
+                            >
+                              <i className="bi bi-eye" aria-hidden />
+                              <span className="visually-hidden">View</span>
+                            </Link>
+                          )}
+                          {canChangeStageOpportunity && (
+                            <button
+                              type="button"
+                              className="opp-action-btn opp-action-btn--stage"
+                              disabled={closed}
+                              title={
+                                closed
+                                  ? 'Closed — stage cannot be changed'
+                                  : 'Change pipeline stage'
+                              }
+                              aria-label="Change stage"
+                              onClick={() => openStageModal(opp)}
+                            >
+                              <i className="bi bi-kanban" aria-hidden />
+                              <span className="visually-hidden">Stage</span>
+                            </button>
+                          )}
+                          {canAssignOpportunity && (
+                            <button
+                              type="button"
+                              className="opp-action-btn opp-action-btn--assign"
+                              disabled={closed}
+                              title={
+                                closed
+                                  ? 'Closed — cannot reassign'
+                                  : 'Assign to an employee'
+                              }
+                              aria-label="Assign opportunity"
+                              onClick={() => openAssignModal(opp)}
+                            >
+                              <i className="bi bi-person-plus" aria-hidden />
+                              <span className="visually-hidden">Assign</span>
+                            </button>
+                          )}
+                          {canCloseOpportunity && (
+                            <button
+                              type="button"
+                              className="opp-action-btn opp-action-btn--close"
+                              disabled={closed}
+                              title={closed ? 'Already closed' : 'Close opportunity (won / lost)'}
+                              aria-label="Close opportunity"
+                              onClick={() => openCloseModal(opp)}
+                            >
+                              <i className="bi bi-flag" aria-hidden />
+                              <span className="visually-hidden">Close</span>
+                            </button>
+                          )}
+                          {canDeleteOpportunity && (
+                            <button
+                              type="button"
+                              className="opp-action-btn opp-action-btn--delete"
+                              title="Delete opportunity"
+                              aria-label="Delete opportunity"
+                              disabled={actionLoading}
+                              onClick={() => handleDeleteOpportunity(opp)}
+                            >
+                              <i className="bi bi-trash3" aria-hidden />
+                              <span className="visually-hidden">Delete</span>
+                            </button>
+                          )}
+                          {!canViewOpportunityDetails &&
+                            !canChangeStageOpportunity &&
+                            !canAssignOpportunity &&
+                            !canCloseOpportunity &&
+                            !canDeleteOpportunity && (
+                              <span className="small text-muted">No actions available</span>
+                            )}
                         </div>
                       </td>
                     </tr>
@@ -529,7 +570,7 @@ export function OpportunitiesDashboard() {
       </div>
 
       {/* Create Opportunity Modal */}
-      {creating && (
+      {creating && canCreateOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div className="modal-content">
@@ -698,7 +739,7 @@ export function OpportunitiesDashboard() {
       )}
 
       {/* Change Stage Modal */}
-      {stageModalOpen && selected && (
+      {stageModalOpen && selected && canChangeStageOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-md modal-dialog-centered" role="document">
             <div className="modal-content">
@@ -752,7 +793,7 @@ export function OpportunitiesDashboard() {
       )}
 
       {/* Assign Modal */}
-      {assignModalOpen && selected && (
+      {assignModalOpen && selected && canAssignOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-md modal-dialog-centered" role="document">
             <div className="modal-content">
@@ -860,7 +901,7 @@ export function OpportunitiesDashboard() {
       )}
 
       {/* Close Modal */}
-      {closeModalOpen && selected && (
+      {closeModalOpen && selected && canCloseOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-md modal-dialog-centered" role="document">
             <div className="modal-content">

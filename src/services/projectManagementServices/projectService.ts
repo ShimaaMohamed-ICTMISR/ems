@@ -1,3 +1,4 @@
+import axios from 'axios';
 import projectManagementApiClient from './projectManagementApiClient';
 
 export interface Project {
@@ -64,6 +65,102 @@ function extractPayload<T>(response: { data: unknown }): T {
   return payload as T;
 }
 
+type ApiStatusEnvelope = {
+  success?: boolean;
+  succeeded?: boolean;
+  isSuccess?: boolean;
+  message?: string;
+  error?: string;
+  title?: string;
+};
+
+function extractApiMessage(payload: unknown): string | undefined {
+  if (!payload || typeof payload !== 'object') {
+    return undefined;
+  }
+
+  const envelope = payload as ApiStatusEnvelope;
+  return envelope.message || envelope.error || envelope.title;
+}
+
+function isExplicitApiFailure(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object') {
+    return false;
+  }
+
+  const envelope = payload as ApiStatusEnvelope;
+  return (
+    envelope.success === false ||
+    envelope.succeeded === false ||
+    envelope.isSuccess === false
+  );
+}
+
+function isNotFoundMessage(message?: string): boolean {
+  if (!message) {
+    return false;
+  }
+
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes('not found') ||
+    normalized.includes('does not exist') ||
+    normalized.includes('no project')
+  );
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+async function isProjectMissing(id: string): Promise<boolean> {
+  try {
+    const response = await projectManagementApiClient.get(`/Projects/${id}`);
+    const message = extractApiMessage(response.data);
+
+    if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+      const data = (response.data as { data?: unknown }).data;
+      if (data == null) {
+        return true;
+      }
+    }
+
+    if (isExplicitApiFailure(response.data) && isNotFoundMessage(message)) {
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const message = extractApiMessage(error.response?.data);
+
+      if (status === 404 || isNotFoundMessage(message)) {
+        return true;
+      }
+    }
+
+    throw error;
+  }
+}
+
+async function waitForProjectMissing(id: string, attempts = 4, delayMs = 300): Promise<boolean> {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const missing = await isProjectMissing(id);
+    if (missing) {
+      return true;
+    }
+
+    if (attempt < attempts - 1) {
+      await sleep(delayMs);
+    }
+  }
+
+  return false;
+}
+
 export const projectService = {
   getProjects: async (): Promise<Project[]> => {
     const response = await projectManagementApiClient.get('/Projects');
@@ -86,7 +183,16 @@ export const projectService = {
   },
 
   deleteProjectById: async (id: string): Promise<void> => {
-    await projectManagementApiClient.delete(`/Projects/${id}`);
+    const response = await projectManagementApiClient.delete(`/Projects/${id}`);
+
+    if (isExplicitApiFailure(response.data)) {
+      throw new Error(extractApiMessage(response.data) || 'Failed to delete project.');
+    }
+
+    const deleted = await waitForProjectMissing(id);
+    if (!deleted) {
+      throw new Error('Delete request was sent, but the project still exists.');
+    }
   },
 };
 

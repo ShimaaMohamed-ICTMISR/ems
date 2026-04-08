@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
+  approveQuote,
   assignOpportunity,
   changeOpportunityStage,
   closeOpportunity,
@@ -37,6 +38,12 @@ import {
 } from '../utils/opportunityAssigneeStorage';
 import { StageEntriesSection } from '../components/StageEntriesSection';
 import { notificationService } from '../../../services/notificationService';
+import { AccessDeniedState } from '../../../Components/AccessDeniedState';
+import { useOpportunitiesPermissions } from '../../../hooks/useOpportunitiesPermissions';
+import {
+  OPPORTUNITY_PERMISSION_KEYS,
+  OPPORTUNITY_ROUTE_PERMISSION_KEYS,
+} from '../../../config/opportunitiesPermissions';
 
 const STAGE_LABELS: Record<OpportunityStageApi, string> = {
   prospecting: 'Prospecting',
@@ -46,6 +53,18 @@ const STAGE_LABELS: Record<OpportunityStageApi, string> = {
   negotiation: 'Negotiation',
   closed_won: 'Closed – Won',
   closed_lost: 'Closed – Lost',
+};
+
+const quoteStatusLabel = (status: string | undefined): string => {
+  const normalized = String(status ?? '').toUpperCase();
+  return normalized || 'UNKNOWN';
+};
+
+const quoteStatusClass = (status: string | undefined): string => {
+  const normalized = String(status ?? '').toUpperCase();
+  if (normalized === 'APPROVED') return 'bg-success';
+  if (normalized === 'REJECTED') return 'bg-danger';
+  return 'bg-secondary';
 };
 
 // (Removed) OPEN_STAGES: was used for filtered stage list; UI now shows all stages.
@@ -111,7 +130,25 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
   });
 
   const { employees: hrEmployees, loading: hrEmployeesLoading, loadError: hrEmployeesError } =
-    useHrEmployees();  const load = useCallback(async () => {
+    useHrEmployees();
+  const { canAny } = useOpportunitiesPermissions();
+
+  const canChangeStageOpportunity = canAny([
+    ...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.CHANGE_STAGE,
+  ]);
+  const canAssignOpportunity = canAny([...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.ASSIGN]);
+  const canEditOpportunity = canAny([...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.EDIT]);
+  const canCloseOpportunity = canAny([...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.CLOSE]);
+  const canCreateQuote = canAny([...OPPORTUNITY_PERMISSION_KEYS.QUOTES.CREATE]);
+  const canApproveQuote = canAny([...OPPORTUNITY_PERMISSION_KEYS.QUOTES.APPROVE]);
+  const canDeleteOpportunity = canAny([...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.DELETE]);
+  const canViewHistory = canAny([...OPPORTUNITY_ROUTE_PERMISSION_KEYS.HISTORY]);
+  const canViewQuotes = canAny([
+    ...OPPORTUNITY_PERMISSION_KEYS.QUOTES.VIEW,
+    ...OPPORTUNITY_ROUTE_PERMISSION_KEYS.DETAILS,
+  ]);
+
+  const load = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     setError(null);
@@ -149,6 +186,13 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
   const hasApprovedQuote = approvedFromApi || approvedFromQuotes;
   const hasSignedContract = opp?.hasSignedContract === true;
   const eligibleCloseWon = hasApprovedQuote && hasSignedContract;
+  const hasHeaderActions =
+    canChangeStageOpportunity ||
+    canAssignOpportunity ||
+    canEditOpportunity ||
+    canCloseOpportunity ||
+    canCreateQuote ||
+    canDeleteOpportunity;
   const stageOptionsForSelect = useMemo(() => {
     if (closed) return [];
     return Object.keys(STAGE_LABELS) as OpportunityStageApi[];
@@ -298,72 +342,86 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
             </p>
           </div>
         </div>
-        <div className="d-flex gap-2">
-          <button
-            type="button"
-            className="btn btn-outline-primary btn-sm"
-            disabled={closed || busy}
-            onClick={() => setStageOpen(true)}
-          >
-            <i className="bi bi-kanban me-1" />
-            Change stage
-          </button>          <button
-            type="button"
-            className="btn btn-outline-secondary btn-sm"
-            disabled={closed || busy}
-            onClick={() => {
-              setAssignForm({ userId: '' });
-              setAssignOpen(true);
-            }}
-          >
-            <i className="bi bi-person-plus me-1" />
-            Assign
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline-secondary btn-sm"
-            disabled={closed || busy}
-            onClick={openEdit}
-            title="Update opportunity"
-          >
-            <i className="bi bi-pencil-square me-1" />
-            Edit
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline-dark btn-sm"
-            disabled={closed || busy}
-            onClick={() => setCloseOpen(true)}
-          >
-            <i className="bi bi-flag me-1" />
-            Close
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary btn-sm"
-            disabled={closed || busy}
-            onClick={() => setQuoteOpen(true)}
-          >
-            <i className="bi bi-plus-circle me-1" />
-            New quote
-          </button>
-          <button
-            type="button"
-            className="btn btn-outline-danger btn-sm"
-            disabled={busy}
-            onClick={() => {
-              const confirmed = window.confirm(`Delete opportunity "${opportunityDisplayName(opp)}"?`);
-              if (!confirmed) return;
-              void run(async () => {
-                await deleteOpportunity(id);
-                navigate('/dashboard/opportunities');
-              });
-            }}
-            title="Delete opportunity"
-          >
-            <i className="bi bi-trash3 me-1" />
-            Delete
-          </button>
+        <div className="d-flex gap-2 align-items-center">
+          {canChangeStageOpportunity && (
+            <button
+              type="button"
+              className="btn btn-outline-primary btn-sm"
+              disabled={closed || busy}
+              onClick={() => setStageOpen(true)}
+            >
+              <i className="bi bi-kanban me-1" />
+              Change stage
+            </button>
+          )}
+          {canAssignOpportunity && (
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              disabled={closed || busy}
+              onClick={() => {
+                setAssignForm({ userId: '' });
+                setAssignOpen(true);
+              }}
+            >
+              <i className="bi bi-person-plus me-1" />
+              Assign
+            </button>
+          )}
+          {canEditOpportunity && (
+            <button
+              type="button"
+              className="btn btn-outline-secondary btn-sm"
+              disabled={closed || busy}
+              onClick={openEdit}
+              title="Update opportunity"
+            >
+              <i className="bi bi-pencil-square me-1" />
+              Edit
+            </button>
+          )}
+          {canCloseOpportunity && (
+            <button
+              type="button"
+              className="btn btn-outline-dark btn-sm"
+              disabled={closed || busy}
+              onClick={() => setCloseOpen(true)}
+            >
+              <i className="bi bi-flag me-1" />
+              Close
+            </button>
+          )}
+          {canCreateQuote && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              disabled={closed || busy}
+              onClick={() => setQuoteOpen(true)}
+            >
+              <i className="bi bi-plus-circle me-1" />
+              New quote
+            </button>
+          )}
+          {canDeleteOpportunity && (
+            <button
+              type="button"
+              className="btn btn-outline-danger btn-sm"
+              disabled={busy}
+              onClick={() => {
+                const confirmed = window.confirm(`Delete opportunity "${opportunityDisplayName(opp)}"?`);
+                if (!confirmed) return;
+                void run(async () => {
+                  await deleteOpportunity(id);
+                  navigate('/dashboard/opportunities');
+                });
+              }}
+              title="Delete opportunity"
+            >
+              <i className="bi bi-trash3 me-1" />
+              Delete
+            </button>
+          )}
+          {!hasHeaderActions && <span className="small text-muted">No actions available</span>}
         </div>
       </div>
 
@@ -444,7 +502,8 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                       {opportunityDisplayAmount(opp).toLocaleString()}
                     </h3>
                   </div>
-                </div>                <div className="col-md-4">
+                </div>
+                <div className="col-md-4">
                   <div className="text-center p-3" style={{
                     backgroundColor: '#f0f9ff',
                     borderRadius: '12px',
@@ -479,7 +538,8 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                       {employeeOverviewLabel}
                     </h4>
                   </div>
-                </div>                {opp.description && (
+                </div>
+                {opp.description && (
                   <div className="col-12">
                     <div className="mt-3 p-3" style={{ 
                       backgroundColor: '#f0f9ff',
@@ -543,7 +603,14 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
               </div>
             </div>
             <div className="card-body p-0">
-              {quotes.length === 0 ? (
+              {!canViewQuotes ? (
+                <div className="p-3">
+                  <AccessDeniedState
+                    title="Quotes Access Restricted"
+                    description="You do not currently have permission to view quotes for this opportunity. Please contact your administrator if you need access."
+                  />
+                </div>
+              ) : quotes.length === 0 ? (
                 <div className="text-center py-5" style={{ 
                   padding: '2rem 1.5rem',
                   background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
@@ -557,7 +624,8 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                     }}
                   >
                     <i className="bi bi-file-earmark-plus text-white" style={{ fontSize: '1.5rem' }} />
-                  </div>                  <h6 className="mb-2" style={{ color: '#0f172a' }}>No quotes yet</h6>
+                  </div>
+                  <h6 className="mb-2" style={{ color: '#0f172a' }}>No quotes yet</h6>
                   <p className="mb-0" style={{ color: '#64748b', fontSize: '1rem' }}>
                     Create your first quote to start the proposal process.
                   </p>
@@ -569,30 +637,66 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                       <tr>
                         <th style={{ color: '#0f172a', fontWeight: '600' }}>ID</th>
                         <th style={{ color: '#0f172a', fontWeight: '600' }}>Amount</th>
+                        <th style={{ color: '#0f172a', fontWeight: '600' }}>Status</th>
                         <th style={{ color: '#0f172a', fontWeight: '600' }}>Valid until</th>
+                        {canApproveQuote && (
+                          <th style={{ color: '#0f172a', fontWeight: '600' }} className="text-end">
+                            Actions
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
-                      {quotes.map((q) => (
-                        <tr key={q.id}>
-                          <td>
-                            <code className="small px-2 py-1" style={{
-                              backgroundColor: '#f0f9ff',
-                              color: '#0e7490',
-                              borderRadius: '6px',
-                              fontWeight: '500'
-                            }}>
-                              {q.id.slice(0, 8)}…
-                            </code>
-                          </td>
-                          <td style={{ color: '#0f172a', fontWeight: '500' }}>
-                            {q.totalAmount?.toLocaleString?.() ?? '—'}
-                          </td>
-                          <td style={{ color: '#64748b' }}>
-                            {q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '—'}
-                          </td>
-                        </tr>
-                      ))}
+                      {quotes.map((q) => {
+                        const isApproved = String(q.status ?? '').toUpperCase() === 'APPROVED';
+                        return (
+                          <tr key={q.id}>
+                            <td>
+                              <code className="small px-2 py-1" style={{
+                                backgroundColor: '#f0f9ff',
+                                color: '#0e7490',
+                                borderRadius: '6px',
+                                fontWeight: '500'
+                              }}>
+                                {q.id.slice(0, 8)}…
+                              </code>
+                            </td>
+                            <td style={{ color: '#0f172a', fontWeight: '500' }}>
+                              {q.totalAmount?.toLocaleString?.() ?? '—'}
+                            </td>
+                            <td>
+                              <span className={`badge ${quoteStatusClass(q.status)} px-3 py-2`}>
+                                {quoteStatusLabel(q.status)}
+                              </span>
+                            </td>
+                            <td style={{ color: '#64748b' }}>
+                              {q.validUntil ? new Date(q.validUntil).toLocaleDateString() : '—'}
+                            </td>
+                            {canApproveQuote && (
+                              <td className="text-end">
+                                {isApproved ? (
+                                  <span className="small text-muted">Already approved</span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="btn btn-outline-success btn-sm"
+                                    disabled={busy}
+                                    onClick={() => {
+                                      const confirmed = window.confirm('Approve this quote?');
+                                      if (!confirmed) return;
+                                      void run(async () => {
+                                        await approveQuote(id, q.id, {});
+                                      });
+                                    }}
+                                  >
+                                    Approve
+                                  </button>
+                                )}
+                              </td>
+                            )}
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -635,8 +739,14 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
                 </h5>
                 <small style={{ color: '#64748b' }}>Activity timeline</small>
               </div>
-            </div>            <div className="card-body" style={{ padding: '1.25rem', position: 'relative', zIndex: 1 }}>
-              {history.length === 0 ? (
+            </div>
+            <div className="card-body" style={{ padding: '1.25rem', position: 'relative', zIndex: 1 }}>
+              {!canViewHistory ? (
+                <AccessDeniedState
+                  title="History Access Restricted"
+                  description="You do not currently have permission to view opportunity history. Please contact your administrator if you need access."
+                />
+              ) : history.length === 0 ? (
                 <div className="text-center py-4" style={{ 
                   background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
                   borderRadius: '12px'
@@ -705,7 +815,7 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
           </div>
         </div>
       </div>      {/* Modals - voting/meetings style */}
-      {stageOpen && (
+      {stageOpen && canChangeStageOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content" style={{
@@ -780,7 +890,7 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
         </div>
       )}
 
-      {assignOpen && (
+      {assignOpen && canAssignOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content" style={{
@@ -888,7 +998,7 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
         </div>
       )}
 
-      {closeOpen && (
+      {closeOpen && canCloseOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content" style={{
@@ -967,7 +1077,7 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
         </div>
       )}
 
-      {quoteOpen && (
+      {quoteOpen && canCreateQuote && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content" style={{
@@ -1075,7 +1185,7 @@ export function OpportunityDetailsPage() {  const { id } = useParams<{ id: strin
         </div>
       )}
 
-      {editOpen && (
+      {editOpen && canEditOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
           <div className="modal-dialog modal-dialog-centered modal-lg">
             <div className="modal-content" style={{

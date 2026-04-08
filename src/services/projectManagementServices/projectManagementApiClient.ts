@@ -1,12 +1,8 @@
 import axios from 'axios';
 
-const PROJECT_MANAGEMENT_API_BASE_URL = 'http://apigetway.runasp.net/api/projectmanagement/api/';
-  // import.meta.env.VITE_PROJECT_MANAGEMENT_API_URL ||
-  // (import.meta.env.DEV
-  //   ? 'http://apigetway.runasp.net/api/projectmanagement/api/'
-  //   : 'http://apigetway.runasp.net/api/projectmanagement/api/');
-
-// const SERVICE_TICKET = import.meta.env.VITE_PROJECT_MANAGEMENT_SERVICE_TICKET || 'TEST-SECRET-TICKET-2026';
+const PROJECT_MANAGEMENT_API_BASE_URL = import.meta.env.DEV
+  ? '/api/project-management'
+  : 'http://apigetway.runasp.net/api/projectmanagement/api/';
 
 export const projectManagementApiClient = axios.create({
   baseURL: PROJECT_MANAGEMENT_API_BASE_URL,
@@ -22,10 +18,6 @@ projectManagementApiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
-    // if (SERVICE_TICKET) {
-    //   config.headers['X-Service-Ticket'] = SERVICE_TICKET;
-    // }
 
     return config;
   },

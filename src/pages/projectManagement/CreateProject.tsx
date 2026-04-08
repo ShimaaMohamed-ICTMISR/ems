@@ -109,7 +109,7 @@ export function CreateProject() {
       await projectService.createProject(payload);
       toast.success("Project created successfully.");
       if (form.portfolioId) {
-        navigate("/portfolios");
+        navigate("/dashboard/portfolios");
       } else {
         navigate("/portfolios");
       }
