@@ -261,7 +261,7 @@ const Users = () => {
   };
 
   const handleRemoveRole = async (roleId: string) => {
-    if (!selectedUser) return;
+    if (!selectedUser || !roleId) return;
     try {
       await userService.removeRoleFromUser(selectedUser.id, roleId);
       const updatedUser = await userService.getUserById(selectedUser.id);
@@ -521,8 +521,8 @@ const Users = () => {
                 <label>Roles ({selectedUser.roles?.length || 0})</label>
                 <div className="roles-list">
                   {selectedUser.roles && selectedUser.roles.length > 0 ? (
-                    selectedUser.roles.map((role) => (
-                      <div key={`${role.roleId}-view`} className="role-item">
+                    selectedUser.roles.map((role, idx) => (
+                      <div key={`${selectedUser.id}-${role.roleName || role.roleCode}-${idx}`} className="role-item">
                         <span className="role-tag">{role.roleName || role.roleCode}</span>
                         {role.expiresAt && (
                           <span className="role-expiry">Expires: {new Date(role.expiresAt).toLocaleDateString()}</span>
@@ -731,8 +731,8 @@ const Users = () => {
                 <h3>Assigned Roles</h3>
                 {selectedUser.roles && selectedUser.roles.length > 0 ? (
                   <div className="roles-list">
-                    {selectedUser.roles.map((role) => (
-                      <div key={`${role.roleId}-manage`} className="role-item">
+                    {selectedUser.roles.map((role, idx) => (
+                      <div key={`${selectedUser.id}-${role.roleName || role.roleCode}-${idx}-manage`} className="role-item">
                         <div>
                           <strong>{role.roleName || role.roleCode}</strong>
                           {role.expiresAt && (
@@ -744,7 +744,10 @@ const Users = () => {
                         </div>
                         <button
                           className="btn btn-sm btn-danger"
-                          onClick={() => handleRemoveRole(role.roleId)}
+                          onClick={() => {
+                            const roleIdentifier = role.roleId || role.roleName || role.roleCode;
+                            if (roleIdentifier) handleRemoveRole(roleIdentifier);
+                          }}
                         >
                           Remove
                         </button>
