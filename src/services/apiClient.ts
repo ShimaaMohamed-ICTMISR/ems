@@ -28,7 +28,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle 401 errors
+// Add response interceptor to handle 401 and 403 errors
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -41,6 +41,11 @@ apiClient.interceptors.response.use(
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
+    } else if (error.response?.status === 403) {
+      console.warn('Access denied (403): User lacks required permissions for:', error.config?.url);
+      // Create a more user-friendly error message
+      const originalMessage = error.response?.data?.message || 'Access denied';
+      error.message = `Access Denied: ${originalMessage}`;
     }
     return Promise.reject(error);
   }

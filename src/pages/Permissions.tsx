@@ -30,7 +30,11 @@ export function Permissions() {
         setError('');
       } catch (err: any) {
         console.error('Error fetching permissions:', err);
-        setError(err.message || 'Failed to load permissions');
+        let errorMessage = err.message || 'Failed to load permissions';
+        if (errorMessage.includes('403') || errorMessage.includes('Access Denied')) {
+          errorMessage = "You don't have permission to view permissions. Contact your administrator.";
+        }
+        setError(errorMessage);
         setPermissions([]);
       } finally {
         setIsLoading(false);
@@ -46,12 +50,19 @@ export function Permissions() {
       try {
         const cats = await permissionService.getPermissionCategories();
         setCategories(cats || []);
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching categories:', err);
+        let categoryErrorMsg = err.message || 'Failed to load categories';
+        if (categoryErrorMsg.includes('403') || categoryErrorMsg.includes('Access Denied')) {
+          // Only set error if we don't already have one from permissions fetch
+          if (!error) {
+            setError("You don't have permission to view permissions. Contact your administrator.");
+          }
+        }
       }
     };
     fetchCategories();
-  }, []);
+  }, [error]);
 
   // Reset to page 1 when category changes
   useEffect(() => {

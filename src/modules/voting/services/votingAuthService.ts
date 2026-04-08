@@ -69,6 +69,11 @@ export async function fetchCurrentVotingUser(): Promise<VotingAuthUser | null> {
       return null;
     }
 
+    if (response.status === 404) {
+      console.debug('[VotingAuth] Voting auth endpoint not available (404)');
+      return null;
+    }
+
     if (!response.ok) {
       console.error('[VotingAuth] Failed to fetch current user:', response.statusText);
       return null;

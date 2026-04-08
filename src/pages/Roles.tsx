@@ -110,7 +110,15 @@ const Roles = () => {
       if (requestId !== latestRolesRequestRef.current) return;
 
       console.error("Error fetching roles:", err);
-      setError(err instanceof Error ? err.message : "Failed to fetch roles");
+      let errorMessage = "Failed to fetch roles";
+      if (err instanceof Error) {
+        if (err.message.includes("403")) {
+          errorMessage = "You don't have permission to view roles. Contact your administrator.";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      setError(errorMessage);
     } finally {
       if (requestId === latestRolesRequestRef.current) {
         setLoading(false);
@@ -124,6 +132,15 @@ const Roles = () => {
       setAllPermissions(data);
     } catch (err) {
       console.error("Failed to fetch permissions:", err);
+      let errorMessage = "Failed to fetch permissions";
+      if (err instanceof Error) {
+        if (err.message.includes("403")) {
+          errorMessage = "You don't have permission to view permissions. Contact your administrator.";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      setError(errorMessage);
     }
   };
 
