@@ -15,6 +15,7 @@ import { getVotingServiceHeaders } from '../services/votingAuthService';
 
 const BASE_URL = 'http://apigetway.runasp.net/api/voting';
 
+
 async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
   let data: unknown = null;
@@ -24,6 +25,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
     // ignore
   }
 
+ 
   if (!res.ok) {
     const message = (data as { message?: string })?.message ?? res.statusText ?? 'Request failed';
 
@@ -35,7 +37,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
         lower.includes('service ticket')
       ) {
         throw new Error(
-          'Voting API requires a valid X-Service-Ticket. Check .env.local (VITE_VOTING_SERVICE_TICKET) and ensure the backend is running at ' +
+          'Voting API requires a valid X-Service-Ticket from API Gateway (or a valid bearer token). Ensure login succeeded and the gateway returned a ticket, then retry. Backend: ' +
             BASE_URL +
             '.'
         );

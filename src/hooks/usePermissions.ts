@@ -9,6 +9,7 @@ import {
   normalizePermission,
   toUniquePermissions,
 } from '../utils/permissionUtils';
+import { ALL_PERMISSION_CHECKS_DISABLED } from '../config/permissionChecks';
 
 /**
  * Get user permissions from localStorage
@@ -55,6 +56,7 @@ export const usePermissions = () => {
    */
   const hasPermission = useCallback(
     (permission: PermissionType | string): boolean => {
+      if (ALL_PERMISSION_CHECKS_DISABLED) return true;
       return hasPermissionInSet(normalizedPermissions, permission);
     },
     [normalizedPermissions]
@@ -67,6 +69,7 @@ export const usePermissions = () => {
    */
   const hasFeaturePermission = useCallback(
     (feature: FeaturePermissionType): boolean => {
+      if (ALL_PERMISSION_CHECKS_DISABLED) return true;
       const permission = FEATURE_PERMISSIONS[feature];
       return hasPermission(permission);
     },
@@ -80,6 +83,7 @@ export const usePermissions = () => {
    */
   const hasAnyPermission = useCallback(
     (permissionList: (PermissionType | string)[]): boolean => {
+      if (ALL_PERMISSION_CHECKS_DISABLED) return true;
       if (!Array.isArray(permissionList)) return false;
       return permissionList.some((permission) => hasPermission(permission));
     },
@@ -93,6 +97,7 @@ export const usePermissions = () => {
    */
   const hasAllPermissions = useCallback(
     (permissionList: (PermissionType | string)[]): boolean => {
+      if (ALL_PERMISSION_CHECKS_DISABLED) return true;
       if (!Array.isArray(permissionList)) return false;
       return permissionList.every((permission) => hasPermission(permission));
     },

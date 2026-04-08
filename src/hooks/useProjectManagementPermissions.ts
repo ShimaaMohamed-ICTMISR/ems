@@ -8,6 +8,7 @@ import {
   normalizePermission,
   toUniquePermissions,
 } from '../utils/permissionUtils';
+import { ALL_PERMISSION_CHECKS_DISABLED } from '../config/permissionChecks';
 
 export const useProjectManagementPermissions = () => {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -34,22 +35,34 @@ export const useProjectManagementPermissions = () => {
   );
 
   const can = useCallback(
-    (permission: string): boolean => hasPermissionInSet(normalizedPermissions, permission),
+    (permission: string): boolean => {
+      if (ALL_PERMISSION_CHECKS_DISABLED) return true;
+      return hasPermissionInSet(normalizedPermissions, permission);
+    },
     [normalizedPermissions],
   );
 
   const canAny = useCallback(
-    (permissionList: string[]): boolean => permissionList.some((permission) => can(permission)),
+    (permissionList: string[]): boolean => {
+      if (ALL_PERMISSION_CHECKS_DISABLED) return true;
+      return permissionList.some((permission) => can(permission));
+    },
     [can],
   );
 
   const canAll = useCallback(
-    (permissionList: string[]): boolean => permissionList.every((permission) => can(permission)),
+    (permissionList: string[]): boolean => {
+      if (ALL_PERMISSION_CHECKS_DISABLED) return true;
+      return permissionList.every((permission) => can(permission));
+    },
     [can],
   );
 
   const hasAnyProjectManagementAccess = useMemo(
-    () => canAny([...PM_ROUTE_PERMISSION_KEYS.HOME]),
+    () =>
+      ALL_PERMISSION_CHECKS_DISABLED
+        ? true
+        : canAny([...PM_ROUTE_PERMISSION_KEYS.HOME]),
     [canAny],
   );
 

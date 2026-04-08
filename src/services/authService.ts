@@ -10,6 +10,8 @@ export interface LoginResponse {
   refreshToken: string;
   tokenType: string;
   expiresIn: number;
+  serviceTicket?: string;
+  xServiceTicket?: string;
   user: {
     id: string;
     email: string;
@@ -32,6 +34,14 @@ export const authService = {
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
     try {
       const response = await apiClient.post<LoginResponse>('/Auth/login', credentials);
+      const ticketFromBody =
+        response.data?.serviceTicket?.trim() ||
+        response.data?.xServiceTicket?.trim();
+      const ticketFromHeader = response.headers?.['x-service-ticket']?.trim();
+      const ticket = ticketFromBody || ticketFromHeader;
+      if (ticket) {
+        localStorage.setItem('voting-service-ticket', ticket);
+      }
       console.log('Login response:', response.data);
       return response.data;
     } catch (error: any) {

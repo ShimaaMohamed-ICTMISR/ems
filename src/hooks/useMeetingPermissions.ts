@@ -7,6 +7,7 @@ import {
   normalizePermission,
   toUniquePermissions,
 } from '../utils/permissionUtils';
+import { ALL_PERMISSION_CHECKS_DISABLED } from '../config/permissionChecks';
 
 export const useMeetingPermissions = () => {
   const user = useSelector((state: RootState) => state.auth.user);
@@ -48,20 +49,26 @@ export const useMeetingPermissions = () => {
   );
 
   const can = useCallback(
-    (permission: string): boolean => hasPermissionInSet(normalizedPermissions, permission),
+    (permission: string): boolean => {
+      if (ALL_PERMISSION_CHECKS_DISABLED) return true;
+      return hasPermissionInSet(normalizedPermissions, permission);
+    },
     [normalizedPermissions],
   );
 
   const canAny = useCallback(
-    (permissionList: string[]): boolean => permissionList.some((permission) => can(permission)),
+    (permissionList: string[]): boolean => {
+      if (ALL_PERMISSION_CHECKS_DISABLED) return true;
+      return permissionList.some((permission) => can(permission));
+    },
     [can],
   );
 
   return {
     permissions: effectivePermissions,
-    isLoading,
-    isLoaded,
-    error,
+    isLoading: ALL_PERMISSION_CHECKS_DISABLED ? false : isLoading,
+    isLoaded: ALL_PERMISSION_CHECKS_DISABLED ? true : isLoaded,
+    error: ALL_PERMISSION_CHECKS_DISABLED ? null : error,
     can,
     canAny,
   };
