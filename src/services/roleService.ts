@@ -1,5 +1,27 @@
 import apiClient from './apiClient';
 
+const extractApiErrorMessage = (error: any, fallback: string): string => {
+  const responseData = error?.response?.data;
+
+  if (typeof responseData?.message === 'string' && responseData.message.trim()) {
+    return responseData.message;
+  }
+
+  if (Array.isArray(responseData?.errors) && responseData.errors.length > 0) {
+    return responseData.errors.join(', ');
+  }
+
+  if (typeof responseData?.error === 'string' && responseData.error.trim()) {
+    return responseData.error;
+  }
+
+  if (typeof error?.message === 'string' && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
 export interface Permission {
   id: string;
   code: string;
@@ -118,11 +140,16 @@ export const assignPermissionsToRole = async (
   roleId: string,
   data: AssignPermissionsDto
 ): Promise<Role> => {
-  const response = await apiClient.post(`/Role/${roleId}/permissions`, {
-    permissionCodes: data.permissionCodes,
-    replaceExisting: data.replaceExisting
-  });
-  return response.data;
+  try {
+    const response = await apiClient.post(`/Role/${roleId}/permissions`, data);
+    return response.data;
+  } catch (error: any) {
+    const message = extractApiErrorMessage(
+      error,
+      'Failed to assign role permissions.',
+    );
+    throw new Error(message);
+  }
 };
 
 // Remove a permission from a role

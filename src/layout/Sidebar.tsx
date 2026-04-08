@@ -11,6 +11,8 @@ import { useMeetingPermissions } from "../hooks/useMeetingPermissions";
 import { MEETING_ROUTE_PERMISSION_KEYS } from "../config/meetingPermissions";
 import { useVotingPermissions } from "../hooks/useVotingPermissions";
 import { VOTING_ROUTE_PERMISSION_KEYS } from "../config/votingPermissions";
+import { useOpportunitiesPermissions } from "../hooks/useOpportunitiesPermissions";
+import { OPPORTUNITY_ROUTE_PERMISSION_KEYS } from "../config/opportunitiesPermissions";
 
 interface NavItem {
   to: string;
@@ -104,6 +106,7 @@ function SidebarContent() {
   const { canAny: canAnyProjectManagement } = useProjectManagementPermissions();
   const { canAny: canAnyMeeting } = useMeetingPermissions();
   const { canAny: canAnyVoting } = useVotingPermissions();
+  const { canAny: canAnyOpportunities } = useOpportunitiesPermissions();
 
   const visibleModuleNavItems = moduleNavItems.filter((item) => {
     if (item.to === "/dashboard/hr") {
@@ -120,6 +123,10 @@ function SidebarContent() {
 
     if (item.to === "/dashboard/voting") {
       return canAnyVoting([...VOTING_ROUTE_PERMISSION_KEYS.HOME]);
+    }
+
+    if (item.to === "/dashboard/opportunities") {
+      return canAnyOpportunities([...OPPORTUNITY_ROUTE_PERMISSION_KEYS.HOME]);
     }
 
     return true;

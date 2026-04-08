@@ -477,9 +477,6 @@ export function Portfolios() {
         <section className="portfolio-form-card mb-4">
           <div className="form-card-header">
             <h2 className="h5 mb-1">Create Portfolio</h2>
-            <p className="mb-0">
-              Use the API `POST /api/project-admin/portfolios`.
-            </p>
           </div>
           <form onSubmit={handleCreateSubmit} className="row g-3">
             <div className="col-12 col-lg-6">

@@ -16,10 +16,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import projectService, { type Project } from ".././services/projectManagementServices/projectService";
+import projectService, {
+  type Project,
+} from ".././services/projectManagementServices/projectService";
 import taskService, { type Task } from "../services/taskService";
-import phaseService, { type Phase } from ".././services/projectManagementServices/phaseService";
-import milestoneService, { type Milestone } from ".././services/projectManagementServices/milestoneService";
+import phaseService, {
+  type Phase,
+} from ".././services/projectManagementServices/phaseService";
+import milestoneService, {
+  type Milestone,
+} from ".././services/projectManagementServices/milestoneService";
 import milestoneApprovalService, {
   type MilestoneApproval,
 } from ".././services/projectManagementServices/milestoneApprovalService";
@@ -2430,7 +2436,7 @@ export function ProjectDetails() {
                 required
               />
             </div>
-            <div className="col-12 col-lg-6">
+            {/* <div className="col-12 col-lg-6">
               <label className="form-label">Portfolio ID</label>
               <input
                 className="form-control"
@@ -2438,7 +2444,7 @@ export function ProjectDetails() {
                 value={editForm.portfolioId}
                 onChange={handleEditInputChange}
               />
-            </div>
+            </div> */}
             <div className="col-12 col-lg-4">
               <label className="form-label">Stage</label>
               <select
@@ -4079,10 +4085,10 @@ export function ProjectDetails() {
                             </div>
                           )}
                         </div>
-                        <div className="detail-row detail-id">
+                        {/* <div className="detail-row detail-id">
                           <span>Milestone ID</span>
                           <strong>{selectedMilestone.id}</strong>
-                        </div>
+                        </div> */}
                       </section>
                     )}
                   </>

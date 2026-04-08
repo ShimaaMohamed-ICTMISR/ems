@@ -3,11 +3,12 @@ import { useMeetingPermissions } from "../hooks/useMeetingPermissions";
 import { useHrPermissions } from "../hooks/useHrPermissions";
 import { useProjectManagementPermissions } from "../hooks/useProjectManagementPermissions";
 import { useVotingPermissions } from "../hooks/useVotingPermissions";
+import { useOpportunitiesPermissions } from "../hooks/useOpportunitiesPermissions";
 
 interface PermissionRouteProps {
   children: ReactNode;
   anyOf: string[];
-  scope?: "meeting" | "hr" | "projectManagement" | "voting";
+  scope?: "meeting" | "hr" | "projectManagement" | "voting" | "opportunities";
   title?: string;
   description?: string;
 }
@@ -23,6 +24,7 @@ export function PermissionRoute({
   const hrPermissions = useHrPermissions();
   const projectManagementPermissions = useProjectManagementPermissions();
   const votingPermissions = useVotingPermissions();
+  const opportunitiesPermissions = useOpportunitiesPermissions();
   const isDev = import.meta.env.DEV;
 
   const activePermissions =
@@ -32,7 +34,9 @@ export function PermissionRoute({
         ? projectManagementPermissions
         : scope === "voting"
           ? votingPermissions
-          : meetingPermissions;
+          : scope === "opportunities"
+            ? opportunitiesPermissions
+            : meetingPermissions;
   const { canAny, isLoading, isLoaded, permissions } = activePermissions;
   const permissionChecks = anyOf.map((permission) => ({
     permission,

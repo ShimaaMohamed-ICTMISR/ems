@@ -1,0 +1,152 @@
+/* Human Resources Dashboard - aligned with Project Management visual language */
+
+.hr-dashboard-page {
+  min-height: 100%;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(0, 180, 216, 0.12), transparent 34%),
+    radial-gradient(circle at 90% 0, rgba(58, 134, 255, 0.1), transparent 30%),
+    linear-gradient(180deg, #f6fbff 0%, #eef4fb 100%);
+}
+
+.hr-dashboard-hero {
+  border-radius: 16px;
+  padding: 1.5rem 1.5rem 1.25rem;
+  color: #f4fbff;
+  background: linear-gradient(135deg, #0b132b, #1c2541);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.15);
+  margin-bottom: 1.25rem;
+}
+
+.hr-dashboard-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.08rem;
+  font-size: 0.72rem;
+  color: #90e0ef;
+  margin-bottom: 0.25rem;
+}
+
+.hr-dashboard-title {
+  font-size: clamp(1.3rem, 2.6vw, 2rem);
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.hr-dashboard-subtitle {
+  color: rgba(245, 249, 255, 0.85);
+  font-size: 0.92rem;
+  margin-bottom: 0;
+  max-width: 700px;
+}
+
+.hr-nav-section {
+  margin-bottom: 1.5rem;
+}
+
+.hr-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1b4965;
+  margin-bottom: 1rem;
+}
+
+.hr-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.hr-nav-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.hr-nav-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  border-color: #00b4d8;
+}
+
+.hr-nav-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+
+.hr-nav-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.hr-nav-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.15rem;
+}
+
+.hr-nav-card-desc {
+  font-size: 0.8rem;
+  color: #6c757d;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.hr-nav-card-meta {
+  display: inline-block;
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03rem;
+}
+
+.hr-nav-card-arrow {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.hr-nav-card:hover .hr-nav-card-arrow {
+  transform: translateX(3px);
+  color: #00b4d8;
+}
+
+.hr-access-denied-wrap {
+  background: #fff;
+  border: 1px solid #dbe4ef;
+  border-radius: 14px;
+  padding: 1rem;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+}
+
+@media (max-width: 1200px) {
+  .hr-nav-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .hr-dashboard-page {
+    padding: 0.85rem;
+  }
+
+  .hr-nav-grid {
+    grid-template-columns: 1fr;
+  }
+}

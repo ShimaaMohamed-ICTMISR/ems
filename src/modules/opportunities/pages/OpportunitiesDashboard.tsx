@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   assignOpportunity,
   changeStage,
@@ -12,34 +12,39 @@ import {
   type CreateOpportunityPayload,
   type Opportunity,
   type OpportunityStage,
-} from '../api/opportunitiesService';
+} from "../api/opportunitiesService";
 import {
   isOpportunityClosedStage,
   normalizeStage,
   opportunityDisplayAmount,
   opportunityDisplayName,
-} from '../utils/opportunityFlow';
-import { useHrEmployees } from '../hooks/useHrEmployees';
-import './OpportunitiesDashboard.css';
+} from "../utils/opportunityFlow";
+import { useHrEmployees } from "../hooks/useHrEmployees";
+import { useOpportunitiesPermissions } from "../../../hooks/useOpportunitiesPermissions";
+import {
+  OPPORTUNITY_PERMISSION_KEYS,
+  OPPORTUNITY_ROUTE_PERMISSION_KEYS,
+} from "../../../config/opportunitiesPermissions";
+import "./OpportunitiesDashboard.css";
 
 const STAGE_LABELS: Record<OpportunityStage, string> = {
-  prospecting: 'Prospecting',
-  qualification: 'Qualification',
-  needs_analysis: 'Needs Analysis',
-  proposal: 'Proposal',
-  negotiation: 'Negotiation',
-  closed_won: 'Closed – Won',
-  closed_lost: 'Closed – Lost',
+  prospecting: "Prospecting",
+  qualification: "Qualification",
+  needs_analysis: "Needs Analysis",
+  proposal: "Proposal",
+  negotiation: "Negotiation",
+  closed_won: "Closed – Won",
+  closed_lost: "Closed – Lost",
 };
 
 const STAGE_BADGE_CLASS: Record<OpportunityStage, string> = {
-  prospecting: 'bg-info',
-  qualification: 'bg-primary',
-  needs_analysis: 'bg-secondary',
-  proposal: 'bg-warning text-dark',
-  negotiation: 'bg-dark',
-  closed_won: 'bg-success',
-  closed_lost: 'bg-danger',
+  prospecting: "bg-info",
+  qualification: "bg-primary",
+  needs_analysis: "bg-secondary",
+  proposal: "bg-warning text-dark",
+  negotiation: "bg-dark",
+  closed_won: "bg-success",
+  closed_lost: "bg-danger",
 };
 
 const PAGE_SIZE = 10;
@@ -54,16 +59,16 @@ export function OpportunitiesDashboard() {
 
   const [creating, setCreating] = useState(false);
   const [createForm, setCreateForm] = useState<CreateOpportunityPayload>({
-    name: '',
+    name: "",
     amount: 0,
-    stage: 'prospecting',
+    stage: "prospecting",
     expectedCloseDate: new Date().toISOString().slice(0, 10),
-    currency: 'USD',
-    type: '',
-    source: '',
-    description: '',
-    nextStep: '',
-    accountId: '',
+    currency: "USD",
+    type: "",
+    source: "",
+    description: "",
+    nextStep: "",
+    accountId: "",
   });
 
   const [stageModalOpen, setStageModalOpen] = useState(false);
@@ -71,22 +76,50 @@ export function OpportunitiesDashboard() {
   const [closeModalOpen, setCloseModalOpen] = useState(false);
   const [selected, setSelected] = useState<Opportunity | null>(null);
 
-  const [stageForm, setStageForm] = useState<Pick<ChangeStagePayload, 'stage'>>({
-    stage: 'prospecting',
+  const [stageForm, setStageForm] = useState<Pick<ChangeStagePayload, "stage">>(
+    {
+      stage: "prospecting",
+    },
+  );
+
+  const [assignForm, setAssignForm] = useState<{ userIds: string[] }>({
+    userIds: [],
   });
 
-  const [assignForm, setAssignForm] = useState<{ userIds: string[] }>({ userIds: [] });
-
   const [closeForm, setCloseForm] = useState<CloseOpportunityPayload>({
-    type: 'won',
-    reason: '',
+    type: "won",
+    reason: "",
   });
 
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const { employees: hrEmployees, loading: hrEmployeesLoading, loadError: hrEmployeesError } =
-    useHrEmployees();
+  const {
+    employees: hrEmployees,
+    loading: hrEmployeesLoading,
+    loadError: hrEmployeesError,
+  } = useHrEmployees();
+  const { canAny } = useOpportunitiesPermissions();
+
+  const canViewLeads = canAny([...OPPORTUNITY_ROUTE_PERMISSION_KEYS.LEADS]);
+  const canViewOpportunityDetails = canAny([
+    ...OPPORTUNITY_ROUTE_PERMISSION_KEYS.DETAILS,
+  ]);
+  const canCreateOpportunity = canAny([
+    ...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.CREATE,
+  ]);
+  const canChangeStageOpportunity = canAny([
+    ...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.CHANGE_STAGE,
+  ]);
+  const canAssignOpportunity = canAny([
+    ...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.ASSIGN,
+  ]);
+  const canCloseOpportunity = canAny([
+    ...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.CLOSE,
+  ]);
+  const canDeleteOpportunity = canAny([
+    ...OPPORTUNITY_PERMISSION_KEYS.OPPORTUNITIES.DELETE,
+  ]);
 
   const loadPage = async (targetPage: number) => {
     try {
@@ -101,7 +134,7 @@ export function OpportunitiesDashboard() {
       setTotalPages(pagination.totalPages);
       setTotalItems(pagination.total);
     } catch (err: any) {
-      setError(err?.message ?? 'Failed to load opportunities.');
+      setError(err?.message ?? "Failed to load opportunities.");
     } finally {
       setLoading(false);
     }
@@ -116,24 +149,27 @@ export function OpportunitiesDashboard() {
     try {
       setActionLoading(true);
       setError(null);
-      const name = String(createForm.name ?? '').trim();
+      const name = String(createForm.name ?? "").trim();
       if (!name) {
-        setError('Name is required.');
+        setError("Name is required.");
         return;
       }
       const amount = Number(createForm.amount);
       if (!Number.isFinite(amount) || amount < 0) {
-        setError('Amount must be a valid number (0 or more).');
+        setError("Amount must be a valid number (0 or more).");
         return;
       }
-      const expectedCloseDate = String(createForm.expectedCloseDate ?? '');
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(expectedCloseDate) || Number.isNaN(new Date(`${expectedCloseDate}T00:00:00Z`).getTime())) {
-        setError('Expected Close Date must be a valid date.');
+      const expectedCloseDate = String(createForm.expectedCloseDate ?? "");
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(expectedCloseDate) ||
+        Number.isNaN(new Date(`${expectedCloseDate}T00:00:00Z`).getTime())
+      ) {
+        setError("Expected Close Date must be a valid date.");
         return;
       }
-      const currency = String(createForm.currency ?? '').trim();
+      const currency = String(createForm.currency ?? "").trim();
       if (currency && currency.length !== 3) {
-        setError('Currency must be a 3-letter code (e.g. USD).');
+        setError("Currency must be a 3-letter code (e.g. USD).");
         return;
       }
       await createOpportunity({
@@ -145,15 +181,15 @@ export function OpportunitiesDashboard() {
       setCreating(false);
       setCreateForm((prev) => ({
         ...prev,
-        name: '',
+        name: "",
         amount: 0,
-        description: '',
-        nextStep: '',
+        description: "",
+        nextStep: "",
       }));
-      setSuccessMessage('Opportunity created successfully.');
+      setSuccessMessage("Opportunity created successfully.");
       await loadPage(1);
     } catch (err: any) {
-      setError(err?.message ?? 'Failed to create opportunity.');
+      setError(err?.message ?? "Failed to create opportunity.");
     } finally {
       setActionLoading(false);
     }
@@ -176,8 +212,8 @@ export function OpportunitiesDashboard() {
   const openCloseModal = (opp: Opportunity) => {
     setSelected(opp);
     setCloseForm({
-      type: opp.stage === 'closed_lost' ? 'lost' : 'won',
-      reason: '',
+      type: opp.stage === "closed_lost" ? "lost" : "won",
+      reason: "",
     });
     setCloseModalOpen(true);
   };
@@ -191,10 +227,10 @@ export function OpportunitiesDashboard() {
       await changeStage(selected.id, { stage: stageForm.stage });
       setStageModalOpen(false);
       setSelected(null);
-      setSuccessMessage('Stage updated successfully.');
+      setSuccessMessage("Stage updated successfully.");
       await loadPage(page);
     } catch (err: any) {
-      setError(err?.message ?? 'Failed to update stage.');
+      setError(err?.message ?? "Failed to update stage.");
     } finally {
       setActionLoading(false);
     }
@@ -206,21 +242,23 @@ export function OpportunitiesDashboard() {
     try {
       setActionLoading(true);
       setError(null);
-      
+
       // Assign to multiple employees
       for (const userId of assignForm.userIds) {
         await assignOpportunity(selected.id, {
           userId: userId,
-          role: 'owner',
+          role: "owner",
         });
       }
-      
+
       setAssignModalOpen(false);
       setSelected(null);
-      setSuccessMessage(`Opportunity assigned to ${assignForm.userIds.length} employee(s) successfully.`);
+      setSuccessMessage(
+        `Opportunity assigned to ${assignForm.userIds.length} employee(s) successfully.`,
+      );
       await loadPage(page);
     } catch (err: any) {
-      setError(err?.message ?? 'Failed to assign opportunity.');
+      setError(err?.message ?? "Failed to assign opportunity.");
     } finally {
       setActionLoading(false);
     }
@@ -232,33 +270,35 @@ export function OpportunitiesDashboard() {
     try {
       setActionLoading(true);
       setError(null);
-      if (closeForm.type === 'lost' && !String(closeForm.reason ?? '').trim()) {
-        setError('Please provide a note when closing as Lost.');
+      if (closeForm.type === "lost" && !String(closeForm.reason ?? "").trim()) {
+        setError("Please provide a note when closing as Lost.");
         return;
       }
       await closeOpportunity(selected.id, closeForm);
       setCloseModalOpen(false);
       setSelected(null);
-      setSuccessMessage('Opportunity closed successfully.');
+      setSuccessMessage("Opportunity closed successfully.");
       await loadPage(page);
     } catch (err: any) {
-      setError(err?.message ?? 'Failed to close opportunity.');
+      setError(err?.message ?? "Failed to close opportunity.");
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleDeleteOpportunity = async (opp: Opportunity) => {
-    const confirmed = window.confirm(`Delete opportunity "${opportunityDisplayName(opp)}"?`);
+    const confirmed = window.confirm(
+      `Delete opportunity "${opportunityDisplayName(opp)}"?`,
+    );
     if (!confirmed) return;
     try {
       setActionLoading(true);
       setError(null);
       await deleteOpportunity(opp.id);
-      setSuccessMessage('Opportunity deleted successfully.');
+      setSuccessMessage("Opportunity deleted successfully.");
       await loadPage(page);
     } catch (err: any) {
-      setError(err?.message ?? 'Failed to delete opportunity.');
+      setError(err?.message ?? "Failed to delete opportunity.");
     } finally {
       setActionLoading(false);
     }
@@ -270,34 +310,44 @@ export function OpportunitiesDashboard() {
   const canGoNext = page < totalPages;
 
   return (
-    <div className="container-fluid py-4 opportunities-dashboard" style={{ 
-      minHeight: '100vh'
-    }}>
+    <div
+      className="container-fluid py-4 opportunities-dashboard"
+      style={{
+        minHeight: "100vh",
+      }}
+    >
       <div className="d-flex justify-content-between align-items-center mb-4 opportunities-header">
         <div className="d-flex align-items-center">
           <div
             className="rounded-circle d-flex align-items-center justify-content-center me-3"
             style={{
-              width: '52px',
-              height: '52px',
-              background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)',
+              width: "52px",
+              height: "52px",
+              background: "linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)",
             }}
           >
             <i className="bi bi-graph-up-arrow text-white fs-4" />
           </div>
           <div>
-            <h2 className="mb-1 fw-bold" style={{ color: '#1f2937' }}>Opportunities</h2>
-            <p className="mb-0" style={{ color: '#6b7280' }}>
+            <h2 className="mb-1 fw-bold" style={{ color: "#1f2937" }}>
+              Opportunities
+            </h2>
+            <p className="mb-0" style={{ color: "#6b7280" }}>
               Track, assign, and close sales opportunities across your pipeline.
             </p>
           </div>
         </div>
-        <div className="d-flex gap-2 opportunities-header-actions">
-          <Link to="/dashboard/opportunities/leads" className="btn btn-opportunities-outline btn-lg">
-            <i className="bi bi-people me-2" />
-            Leads
-          </Link>
-        </div>
+        {canViewLeads && (
+          <div className="d-flex gap-2 opportunities-header-actions">
+            <Link
+              to="/dashboard/opportunities/leads"
+              className="btn btn-opportunities-outline btn-lg"
+            >
+              <i className="bi bi-people me-2" />
+              Leads
+            </Link>
+          </div>
+        )}
       </div>
 
       {error && (
@@ -331,17 +381,25 @@ export function OpportunitiesDashboard() {
         </div>
       )}
 
-      <div className="card border-0" style={{ 
-        background: 'transparent',
-        border: 'none'
-      }}>
-        <div className="card-header border-0 d-flex justify-content-between align-items-center" style={{ 
-          background: 'transparent',
-          borderRadius: '16px 16px 0 0'
-        }}>
+      <div
+        className="card border-0"
+        style={{
+          background: "transparent",
+          border: "none",
+        }}
+      >
+        <div
+          className="card-header border-0 d-flex justify-content-between align-items-center"
+          style={{
+            background: "transparent",
+            borderRadius: "16px 16px 0 0",
+          }}
+        >
           <div>
-            <h5 className="mb-1 fw-bold" style={{ color: '#1f2937' }}>Opportunity List</h5>
-            <small style={{ color: '#6b7280' }}>
+            <h5 className="mb-1 fw-bold" style={{ color: "#1f2937" }}>
+              Opportunity List
+            </h5>
+            <small style={{ color: "#6b7280" }}>
               Showing {visibleItems.length} of {totalItems} opportunities
             </small>
           </div>
@@ -350,141 +408,260 @@ export function OpportunitiesDashboard() {
           {loading ? (
             <div
               className="d-flex justify-content-center align-items-center py-5"
-              style={{ minHeight: '200px', backgroundColor: '#ffffff' }}
+              style={{ minHeight: "200px", backgroundColor: "#ffffff" }}
             >
               <div className="text-center">
-                <div className="spinner-border mb-3" style={{ color: '#06b6d4' }} role="status" />
-                <p className="mb-0" style={{ color: '#6b7280' }}>Loading opportunities...</p>
+                <div
+                  className="spinner-border mb-3"
+                  style={{ color: "#06b6d4" }}
+                  role="status"
+                />
+                <p className="mb-0" style={{ color: "#6b7280" }}>
+                  Loading opportunities...
+                </p>
               </div>
             </div>
           ) : visibleItems.length === 0 ? (
-            <div className="text-center py-5" style={{ backgroundColor: '#ffffff' }}>
-              <h5 className="mb-2" style={{ color: '#6b7280' }}>No opportunities yet</h5>
-              <p className="mb-4" style={{ color: '#6b7280' }}>
-                Start by creating your first opportunity to track potential revenue.
+            <div
+              className="text-center py-5"
+              style={{ backgroundColor: "#ffffff" }}
+            >
+              <h5 className="mb-2" style={{ color: "#6b7280" }}>
+                No opportunities yet
+              </h5>
+              <p className="mb-4" style={{ color: "#6b7280" }}>
+                Start by creating your first opportunity to track potential
+                revenue.
               </p>
-              <button
-                type="button"
-                className="btn btn-opportunities-primary btn-lg"
-                onClick={() => setCreating(true)}
-              >
-                <i className="bi bi-plus-circle me-2" />
-                Create Opportunity
-              </button>
+              {canCreateOpportunity ? (
+                <button
+                  type="button"
+                  className="btn btn-opportunities-primary btn-lg"
+                  onClick={() => setCreating(true)}
+                >
+                  <i className="bi bi-plus-circle me-2" />
+                  Create Opportunity
+                </button>
+              ) : (
+                <p className="mb-0 text-muted">
+                  You can view opportunities but do not currently have
+                  permission to create new ones.
+                </p>
+              )}
             </div>
           ) : (
             <div className="table-responsive">
-              <table className="table table-hover align-middle mb-0" style={{ backgroundColor: '#ffffff' }}>
-                <thead style={{ backgroundColor: '#f8fafc' }}>
+              <table
+                className="table table-hover align-middle mb-0"
+                style={{ backgroundColor: "#ffffff" }}
+              >
+                <thead style={{ backgroundColor: "#f8fafc" }}>
                   <tr>
-                    <th style={{ color: '#374151', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Name</th>
-                    <th style={{ color: '#374151', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Stage</th>
-                    <th style={{ color: '#374151', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Amount</th>
-                    <th style={{ color: '#374151', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Expected Close</th>
-                    <th className="text-end opp-actions-cell" style={{ color: '#374151', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Actions</th>
+                    <th
+                      style={{
+                        color: "#374151",
+                        fontWeight: "600",
+                        borderBottom: "1px solid #e5e7eb",
+                      }}
+                    >
+                      Name
+                    </th>
+                    <th
+                      style={{
+                        color: "#374151",
+                        fontWeight: "600",
+                        borderBottom: "1px solid #e5e7eb",
+                      }}
+                    >
+                      Stage
+                    </th>
+                    <th
+                      style={{
+                        color: "#374151",
+                        fontWeight: "600",
+                        borderBottom: "1px solid #e5e7eb",
+                      }}
+                    >
+                      Amount
+                    </th>
+                    <th
+                      style={{
+                        color: "#374151",
+                        fontWeight: "600",
+                        borderBottom: "1px solid #e5e7eb",
+                      }}
+                    >
+                      Expected Close
+                    </th>
+                    <th
+                      className="text-end opp-actions-cell"
+                      style={{
+                        color: "#374151",
+                        fontWeight: "600",
+                        borderBottom: "1px solid #e5e7eb",
+                      }}
+                    >
+                      Actions
+                    </th>
                   </tr>
                 </thead>
-                <tbody style={{ backgroundColor: '#ffffff' }}>
+                <tbody style={{ backgroundColor: "#ffffff" }}>
                   {visibleItems.map((opp) => {
                     const st = normalizeStage(String(opp.stage));
                     const closed = isOpportunityClosedStage(String(opp.stage));
                     return (
-                    <tr key={opp.id} style={{ borderBottom: '1px solid #f3f4f6' }}>
-                      <td style={{ backgroundColor: '#ffffff' }}>
-                        <div className="fw-semibold" style={{ color: '#1f2937' }}>{opportunityDisplayName(opp)}</div>
-                        {opp.description && (
-                          <small className="d-block text-truncate" style={{ maxWidth: '260px', color: '#6b7280' }}>
-                            {opp.description}
-                          </small>
-                        )}
-                      </td>
-                      <td style={{ backgroundColor: '#ffffff' }}>
-                        <span className={`badge ${STAGE_BADGE_CLASS[st] ?? 'bg-secondary'} px-3 py-2`}>
-                          {STAGE_LABELS[st] ?? st}
-                        </span>
-                      </td>
-                      <td style={{ backgroundColor: '#ffffff' }}>
-                        <div className="fw-semibold" style={{ color: '#1f2937' }}>
-                          {opportunityDisplayAmount(opp).toLocaleString()}
-                        </div>
-                        {opp.type && <small className="d-block" style={{ color: '#6b7280' }}>{opp.type}</small>}
-                      </td>
-                      <td style={{ backgroundColor: '#ffffff', color: '#374151' }}>
-                        {opp.expectedCloseDate
-                          ? new Date(opp.expectedCloseDate).toLocaleDateString()
-                          : '-'}
-                      </td>
-                      <td className="opp-actions-cell" style={{ backgroundColor: '#ffffff' }}>
-                        <div
-                          className="opp-actions-bar"
-                          role="toolbar"
-                          aria-label={`Actions for ${opportunityDisplayName(opp)}`}
+                      <tr
+                        key={opp.id}
+                        style={{ borderBottom: "1px solid #f3f4f6" }}
+                      >
+                        <td style={{ backgroundColor: "#ffffff" }}>
+                          <div
+                            className="fw-semibold"
+                            style={{ color: "#1f2937" }}
+                          >
+                            {opportunityDisplayName(opp)}
+                          </div>
+                          {opp.description && (
+                            <small
+                              className="d-block text-truncate"
+                              style={{ maxWidth: "260px", color: "#6b7280" }}
+                            >
+                              {opp.description}
+                            </small>
+                          )}
+                        </td>
+                        <td style={{ backgroundColor: "#ffffff" }}>
+                          <span
+                            className={`badge ${STAGE_BADGE_CLASS[st] ?? "bg-secondary"} px-3 py-2`}
+                          >
+                            {STAGE_LABELS[st] ?? st}
+                          </span>
+                        </td>
+                        <td style={{ backgroundColor: "#ffffff" }}>
+                          <div
+                            className="fw-semibold"
+                            style={{ color: "#1f2937" }}
+                          >
+                            {opportunityDisplayAmount(opp).toLocaleString()}
+                          </div>
+                          {opp.type && (
+                            <small
+                              className="d-block"
+                              style={{ color: "#6b7280" }}
+                            >
+                              {opp.type}
+                            </small>
+                          )}
+                        </td>
+                        <td
+                          style={{
+                            backgroundColor: "#ffffff",
+                            color: "#374151",
+                          }}
                         >
-                          <Link
-                            to={`/dashboard/opportunities/${opp.id}`}
-                            className="opp-action-btn opp-action-btn--view"
-                            title="View details"
-                            aria-label="View opportunity details"
+                          {opp.expectedCloseDate
+                            ? new Date(
+                                opp.expectedCloseDate,
+                              ).toLocaleDateString()
+                            : "-"}
+                        </td>
+                        <td
+                          className="opp-actions-cell"
+                          style={{ backgroundColor: "#ffffff" }}
+                        >
+                          <div
+                            className="opp-actions-bar"
+                            role="toolbar"
+                            aria-label={`Actions for ${opportunityDisplayName(opp)}`}
                           >
-                            <i className="bi bi-eye" aria-hidden />
-                            <span className="visually-hidden">View</span>
-                          </Link>
-                          <button
-                            type="button"
-                            className="opp-action-btn opp-action-btn--stage"
-                            disabled={closed}
-                            title={
-                              closed
-                                ? 'Closed — stage cannot be changed'
-                                : 'Change pipeline stage'
-                            }
-                            aria-label="Change stage"
-                            onClick={() => openStageModal(opp)}
-                          >
-                            <i className="bi bi-kanban" aria-hidden />
-                            <span className="visually-hidden">Stage</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="opp-action-btn opp-action-btn--assign"
-                            disabled={closed}
-                            title={
-                              closed
-                                ? 'Closed — cannot reassign'
-                                : 'Assign to an employee'
-                            }
-                            aria-label="Assign opportunity"
-                            onClick={() => openAssignModal(opp)}
-                          >
-                            <i className="bi bi-person-plus" aria-hidden />
-                            <span className="visually-hidden">Assign</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="opp-action-btn opp-action-btn--close"
-                            disabled={closed}
-                            title={closed ? 'Already closed' : 'Close opportunity (won / lost)'}
-                            aria-label="Close opportunity"
-                            onClick={() => openCloseModal(opp)}
-                          >
-                            <i className="bi bi-flag" aria-hidden />
-                            <span className="visually-hidden">Close</span>
-                          </button>
-                          <button
-                            type="button"
-                            className="opp-action-btn opp-action-btn--delete"
-                            title="Delete opportunity"
-                            aria-label="Delete opportunity"
-                            disabled={actionLoading}
-                            onClick={() => handleDeleteOpportunity(opp)}
-                          >
-                            <i className="bi bi-trash3" aria-hidden />
-                            <span className="visually-hidden">Delete</span>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
+                            {canViewOpportunityDetails && (
+                              <Link
+                                to={`/dashboard/opportunities/${opp.id}`}
+                                className="opp-action-btn opp-action-btn--view"
+                                title="View details"
+                                aria-label="View opportunity details"
+                              >
+                                <i className="bi bi-eye" aria-hidden />
+                                <span className="visually-hidden">View</span>
+                              </Link>
+                            )}
+                            {canChangeStageOpportunity && (
+                              <button
+                                type="button"
+                                className="opp-action-btn opp-action-btn--stage"
+                                disabled={closed}
+                                title={
+                                  closed
+                                    ? "Closed — stage cannot be changed"
+                                    : "Change pipeline stage"
+                                }
+                                aria-label="Change stage"
+                                onClick={() => openStageModal(opp)}
+                              >
+                                <i className="bi bi-kanban" aria-hidden />
+                                <span className="visually-hidden">Stage</span>
+                              </button>
+                            )}
+                            {canAssignOpportunity && (
+                              <button
+                                type="button"
+                                className="opp-action-btn opp-action-btn--assign"
+                                disabled={closed}
+                                title={
+                                  closed
+                                    ? "Closed — cannot reassign"
+                                    : "Assign to an employee"
+                                }
+                                aria-label="Assign opportunity"
+                                onClick={() => openAssignModal(opp)}
+                              >
+                                <i className="bi bi-person-plus" aria-hidden />
+                                <span className="visually-hidden">Assign</span>
+                              </button>
+                            )}
+                            {canCloseOpportunity && (
+                              <button
+                                type="button"
+                                className="opp-action-btn opp-action-btn--close"
+                                disabled={closed}
+                                title={
+                                  closed
+                                    ? "Already closed"
+                                    : "Close opportunity (won / lost)"
+                                }
+                                aria-label="Close opportunity"
+                                onClick={() => openCloseModal(opp)}
+                              >
+                                <i className="bi bi-flag" aria-hidden />
+                                <span className="visually-hidden">Close</span>
+                              </button>
+                            )}
+                            {canDeleteOpportunity && (
+                              <button
+                                type="button"
+                                className="opp-action-btn opp-action-btn--delete"
+                                title="Delete opportunity"
+                                aria-label="Delete opportunity"
+                                disabled={actionLoading}
+                                onClick={() => handleDeleteOpportunity(opp)}
+                              >
+                                <i className="bi bi-trash3" aria-hidden />
+                                <span className="visually-hidden">Delete</span>
+                              </button>
+                            )}
+                            {!canViewOpportunityDetails &&
+                              !canChangeStageOpportunity &&
+                              !canAssignOpportunity &&
+                              !canCloseOpportunity &&
+                              !canDeleteOpportunity && (
+                                <span className="small text-muted">
+                                  No actions available
+                                </span>
+                              )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
                   })}
                 </tbody>
               </table>
@@ -492,8 +669,14 @@ export function OpportunitiesDashboard() {
           )}
         </div>
         {!loading && visibleItems.length > 0 && (
-          <div className="card-footer d-flex justify-content-between align-items-center" style={{ backgroundColor: '#ffffff', borderTop: '1px solid #f3f4f6' }}>
-            <small style={{ color: '#6b7280' }}>
+          <div
+            className="card-footer d-flex justify-content-between align-items-center"
+            style={{
+              backgroundColor: "#ffffff",
+              borderTop: "1px solid #f3f4f6",
+            }}
+          >
+            <small style={{ color: "#6b7280" }}>
               Page {page} of {totalPages}
             </small>
             <div className="btn-group">
@@ -502,9 +685,9 @@ export function OpportunitiesDashboard() {
                 className="btn btn-outline-secondary btn-sm"
                 disabled={!canGoPrev}
                 onClick={() => canGoPrev && loadPage(page - 1)}
-                style={{ 
-                  borderColor: '#d1d5db',
-                  color: '#374151'
+                style={{
+                  borderColor: "#d1d5db",
+                  color: "#374151",
                 }}
               >
                 <i className="bi bi-chevron-left me-1" />
@@ -515,9 +698,9 @@ export function OpportunitiesDashboard() {
                 className="btn btn-outline-secondary btn-sm"
                 disabled={!canGoNext}
                 onClick={() => canGoNext && loadPage(page + 1)}
-                style={{ 
-                  borderColor: '#d1d5db',
-                  color: '#374151'
+                style={{
+                  borderColor: "#d1d5db",
+                  color: "#374151",
                 }}
               >
                 Next
@@ -529,9 +712,12 @@ export function OpportunitiesDashboard() {
       </div>
 
       {/* Create Opportunity Modal */}
-      {creating && (
+      {creating && canCreateOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
-          <div className="modal-dialog modal-lg modal-dialog-centered" role="document">
+          <div
+            className="modal-dialog modal-lg modal-dialog-centered"
+            role="document"
+          >
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Create Opportunity</h5>
@@ -551,7 +737,9 @@ export function OpportunitiesDashboard() {
                         type="text"
                         className="form-control"
                         value={createForm.name}
-                        onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                        onChange={(e) =>
+                          setCreateForm({ ...createForm, name: e.target.value })
+                        }
                         required
                       />
                     </div>
@@ -563,7 +751,10 @@ export function OpportunitiesDashboard() {
                         min={0}
                         value={createForm.amount}
                         onChange={(e) =>
-                          setCreateForm({ ...createForm, amount: Number(e.target.value) })
+                          setCreateForm({
+                            ...createForm,
+                            amount: Number(e.target.value),
+                          })
                         }
                         required
                       />
@@ -573,9 +764,12 @@ export function OpportunitiesDashboard() {
                       <input
                         type="text"
                         className="form-control"
-                        value={createForm.currency ?? ''}
+                        value={createForm.currency ?? ""}
                         onChange={(e) =>
-                          setCreateForm({ ...createForm, currency: e.target.value })
+                          setCreateForm({
+                            ...createForm,
+                            currency: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -585,7 +779,10 @@ export function OpportunitiesDashboard() {
                         className="form-select"
                         value={createForm.stage}
                         onChange={(e) =>
-                          setCreateForm({ ...createForm, stage: e.target.value as OpportunityStage })
+                          setCreateForm({
+                            ...createForm,
+                            stage: e.target.value as OpportunityStage,
+                          })
                         }
                       >
                         {Object.entries(STAGE_LABELS).map(([value, label]) => (
@@ -596,25 +793,35 @@ export function OpportunitiesDashboard() {
                       </select>
                     </div>
                     <div className="col-md-4">
-                      <label className="form-label fw-semibold">Expected Close Date</label>
+                      <label className="form-label fw-semibold">
+                        Expected Close Date
+                      </label>
                       <input
                         type="date"
                         className="form-control"
                         value={createForm.expectedCloseDate}
                         onChange={(e) =>
-                          setCreateForm({ ...createForm, expectedCloseDate: e.target.value })
+                          setCreateForm({
+                            ...createForm,
+                            expectedCloseDate: e.target.value,
+                          })
                         }
                         required
                       />
                     </div>
                     <div className="col-md-4">
-                      <label className="form-label fw-semibold">Account ID</label>
+                      <label className="form-label fw-semibold">
+                        Account ID
+                      </label>
                       <input
                         type="text"
                         className="form-control"
-                        value={createForm.accountId ?? ''}
+                        value={createForm.accountId ?? ""}
                         onChange={(e) =>
-                          setCreateForm({ ...createForm, accountId: e.target.value })
+                          setCreateForm({
+                            ...createForm,
+                            accountId: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -623,7 +830,7 @@ export function OpportunitiesDashboard() {
                       <input
                         type="text"
                         className="form-control"
-                        value={createForm.type ?? ''}
+                        value={createForm.type ?? ""}
                         onChange={(e) =>
                           setCreateForm({ ...createForm, type: e.target.value })
                         }
@@ -634,31 +841,44 @@ export function OpportunitiesDashboard() {
                       <input
                         type="text"
                         className="form-control"
-                        value={createForm.source ?? ''}
+                        value={createForm.source ?? ""}
                         onChange={(e) =>
-                          setCreateForm({ ...createForm, source: e.target.value })
+                          setCreateForm({
+                            ...createForm,
+                            source: e.target.value,
+                          })
                         }
                       />
                     </div>
                     <div className="col-12">
-                      <label className="form-label fw-semibold">Description</label>
+                      <label className="form-label fw-semibold">
+                        Description
+                      </label>
                       <textarea
                         className="form-control"
                         rows={3}
-                        value={createForm.description ?? ''}
+                        value={createForm.description ?? ""}
                         onChange={(e) =>
-                          setCreateForm({ ...createForm, description: e.target.value })
+                          setCreateForm({
+                            ...createForm,
+                            description: e.target.value,
+                          })
                         }
                       />
                     </div>
                     <div className="col-12">
-                      <label className="form-label fw-semibold">Next Step</label>
+                      <label className="form-label fw-semibold">
+                        Next Step
+                      </label>
                       <input
                         type="text"
                         className="form-control"
-                        value={createForm.nextStep ?? ''}
+                        value={createForm.nextStep ?? ""}
                         onChange={(e) =>
-                          setCreateForm({ ...createForm, nextStep: e.target.value })
+                          setCreateForm({
+                            ...createForm,
+                            nextStep: e.target.value,
+                          })
                         }
                       />
                     </div>
@@ -673,7 +893,11 @@ export function OpportunitiesDashboard() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-opportunities-primary" disabled={actionLoading}>
+                  <button
+                    type="submit"
+                    className="btn btn-opportunities-primary"
+                    disabled={actionLoading}
+                  >
                     {actionLoading ? (
                       <>
                         <span
@@ -698,12 +922,17 @@ export function OpportunitiesDashboard() {
       )}
 
       {/* Change Stage Modal */}
-      {stageModalOpen && selected && (
+      {stageModalOpen && selected && canChangeStageOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
-          <div className="modal-dialog modal-md modal-dialog-centered" role="document">
+          <div
+            className="modal-dialog modal-md modal-dialog-centered"
+            role="document"
+          >
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Change Stage – {opportunityDisplayName(selected)}</h5>
+                <h5 className="modal-title">
+                  Change Stage – {opportunityDisplayName(selected)}
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -741,8 +970,12 @@ export function OpportunitiesDashboard() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-opportunities-primary" disabled={actionLoading}>
-                    {actionLoading ? 'Updating...' : 'Update Stage'}
+                  <button
+                    type="submit"
+                    className="btn btn-opportunities-primary"
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "Updating..." : "Update Stage"}
                   </button>
                 </div>
               </form>
@@ -752,9 +985,12 @@ export function OpportunitiesDashboard() {
       )}
 
       {/* Assign Modal */}
-      {assignModalOpen && selected && (
+      {assignModalOpen && selected && canAssignOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
-          <div className="modal-dialog modal-md modal-dialog-centered" role="document">
+          <div
+            className="modal-dialog modal-md modal-dialog-centered"
+            role="document"
+          >
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
@@ -772,29 +1008,42 @@ export function OpportunitiesDashboard() {
                   <div className="mb-3">
                     <label className="form-label fw-semibold">Employees</label>
                     {hrEmployeesLoading && (
-                      <div className="small text-muted mb-1">Loading employees…</div>
+                      <div className="small text-muted mb-1">
+                        Loading employees…
+                      </div>
                     )}
                     {hrEmployeesError && (
-                      <div className="alert alert-warning py-2 small mb-2">{hrEmployeesError}</div>
+                      <div className="alert alert-warning py-2 small mb-2">
+                        {hrEmployeesError}
+                      </div>
                     )}
-                    
+
                     {/* Selected employees display */}
                     {assignForm.userIds.length > 0 && (
                       <div className="mb-3">
-                        <div className="small text-muted mb-2">Selected employees:</div>
+                        <div className="small text-muted mb-2">
+                          Selected employees:
+                        </div>
                         <div className="d-flex flex-wrap gap-2">
                           {assignForm.userIds.map((userId) => {
-                            const employee = hrEmployees.find(emp => emp.id === userId);
+                            const employee = hrEmployees.find(
+                              (emp) => emp.id === userId,
+                            );
                             return employee ? (
-                              <span key={userId} className="badge bg-primary d-flex align-items-center gap-1">
+                              <span
+                                key={userId}
+                                className="badge bg-primary d-flex align-items-center gap-1"
+                              >
                                 {employee.firstName} {employee.lastName}
                                 <button
                                   type="button"
                                   className="btn-close btn-close-white"
-                                  style={{ fontSize: '0.7rem' }}
+                                  style={{ fontSize: "0.7rem" }}
                                   onClick={() => {
                                     setAssignForm({
-                                      userIds: assignForm.userIds.filter(id => id !== userId)
+                                      userIds: assignForm.userIds.filter(
+                                        (id) => id !== userId,
+                                      ),
                                     });
                                   }}
                                   aria-label="Remove employee"
@@ -805,15 +1054,18 @@ export function OpportunitiesDashboard() {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Employee selection dropdown */}
                     <select
                       className="form-select"
                       value=""
                       onChange={(e) => {
-                        if (e.target.value && !assignForm.userIds.includes(e.target.value)) {
+                        if (
+                          e.target.value &&
+                          !assignForm.userIds.includes(e.target.value)
+                        ) {
                           setAssignForm({
-                            userIds: [...assignForm.userIds, e.target.value]
+                            userIds: [...assignForm.userIds, e.target.value],
                           });
                         }
                       }}
@@ -821,17 +1073,18 @@ export function OpportunitiesDashboard() {
                     >
                       <option value="">Select employee to add…</option>
                       {hrEmployees
-                        .filter(emp => !assignForm.userIds.includes(emp.id))
+                        .filter((emp) => !assignForm.userIds.includes(emp.id))
                         .map((emp) => (
                           <option key={emp.id} value={emp.id}>
                             {emp.firstName} {emp.lastName} — {emp.email}
                           </option>
                         ))}
                     </select>
-                    
+
                     {assignForm.userIds.length === 0 && (
                       <div className="form-text text-muted">
-                        Select one or more employees to assign this opportunity to.
+                        Select one or more employees to assign this opportunity
+                        to.
                       </div>
                     )}
                   </div>
@@ -848,9 +1101,15 @@ export function OpportunitiesDashboard() {
                   <button
                     type="submit"
                     className="btn btn-opportunities-primary"
-                    disabled={actionLoading || hrEmployeesLoading || assignForm.userIds.length === 0}
+                    disabled={
+                      actionLoading ||
+                      hrEmployeesLoading ||
+                      assignForm.userIds.length === 0
+                    }
                   >
-                    {actionLoading ? 'Assigning...' : `Assign to ${assignForm.userIds.length} Employee${assignForm.userIds.length !== 1 ? 's' : ''}`}
+                    {actionLoading
+                      ? "Assigning..."
+                      : `Assign to ${assignForm.userIds.length} Employee${assignForm.userIds.length !== 1 ? "s" : ""}`}
                   </button>
                 </div>
               </form>
@@ -860,12 +1119,17 @@ export function OpportunitiesDashboard() {
       )}
 
       {/* Close Modal */}
-      {closeModalOpen && selected && (
+      {closeModalOpen && selected && canCloseOpportunity && (
         <div className="modal d-block" tabIndex={-1} role="dialog">
-          <div className="modal-dialog modal-md modal-dialog-centered" role="document">
+          <div
+            className="modal-dialog modal-md modal-dialog-centered"
+            role="document"
+          >
             <div className="modal-content">
               <div className="modal-header">
-                <h5 className="modal-title">Close Opportunity – {selected.name}</h5>
+                <h5 className="modal-title">
+                  Close Opportunity – {selected.name}
+                </h5>
                 <button
                   type="button"
                   className="btn-close"
@@ -883,7 +1147,8 @@ export function OpportunitiesDashboard() {
                       onChange={(e) =>
                         setCloseForm({
                           ...closeForm,
-                          type: e.target.value as CloseOpportunityPayload['type'],
+                          type: e.target
+                            .value as CloseOpportunityPayload["type"],
                         })
                       }
                     >
@@ -896,7 +1161,7 @@ export function OpportunitiesDashboard() {
                     <textarea
                       className="form-control"
                       rows={3}
-                      value={closeForm.reason ?? ''}
+                      value={closeForm.reason ?? ""}
                       onChange={(e) =>
                         setCloseForm({
                           ...closeForm,
@@ -915,8 +1180,12 @@ export function OpportunitiesDashboard() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-opportunities-primary" disabled={actionLoading}>
-                    {actionLoading ? 'Closing...' : 'Close Opportunity'}
+                  <button
+                    type="submit"
+                    className="btn btn-opportunities-primary"
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "Closing..." : "Close Opportunity"}
                   </button>
                 </div>
               </form>
@@ -924,7 +1193,7 @@ export function OpportunitiesDashboard() {
           </div>
         </div>
       )}
-      
+
       {/* Force override all gray backgrounds with inline styles */}
       <style>{`
         /* Light theme for opportunities dashboard */
@@ -1006,4 +1275,3 @@ export function OpportunitiesDashboard() {
     </div>
   );
 }
-

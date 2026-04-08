@@ -188,14 +188,66 @@ const Roles = () => {
 
   const handleSavePermissions = async () => {
     if (!selectedRole) return;
+
+    const assignablePermissions = allPermissions.filter(
+      (permission) => permission.isActive !== false,
+    );
+    const assignablePermissionMap = new Map(
+      assignablePermissions.map((permission) => [permission.id, permission]),
+    );
+    const normalizedPermissionIds = Array.from(
+      new Set(
+        selectedRolePermissions.filter(
+          (permissionId) =>
+            typeof permissionId === "string" &&
+            permissionId.trim().length > 0 &&
+            assignablePermissionMap.has(permissionId),
+        ),
+      ),
+    );
+
     try {
       await roleService.assignPermissionsToRole(selectedRole.id, {
         permissionCodes: selectedRolePermissions,
         replaceExisting: true,
       });
+
+      const refreshedRole = await roleService.getRoleById(selectedRole.id);
+      const persistedPermissionIds = Array.from(
+        new Set(
+          (refreshedRole.permissions || [])
+            .map((permission) => permission.id)
+            .filter(Boolean),
+        ),
+      );
+
+      const missingPermissionIds = normalizedPermissionIds.filter(
+        (permissionId) => !persistedPermissionIds.includes(permissionId),
+      );
+
+      if (missingPermissionIds.length > 0) {
+        const missingLabels = missingPermissionIds
+          .slice(0, 5)
+          .map((permissionId) => {
+            const permission = assignablePermissionMap.get(permissionId);
+            return permission?.code || permission?.name || permissionId;
+          })
+          .join(", ");
+
+        setSelectedRole(refreshedRole);
+        setSelectedRolePermissions(persistedPermissionIds);
+        setError(
+          `Some permissions were not persisted by the server: ${missingLabels}${
+            missingPermissionIds.length > 5 ? " ..." : ""
+          }`,
+        );
+        return;
+      }
+
       await fetchRoles();
       setShowPermissionsModal(false);
       setSelectedRole(null);
+      setError(null);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to update permissions",
@@ -235,12 +287,47 @@ const Roles = () => {
     }
   };
 
-  const handlePermissionToggle = (permissionCode: string) => {
+  const handlePermissionToggle = (permissionId: string) => {
+    const permission = allPermissions.find((item) => item.id === permissionId);
+    if (permission?.isActive === false) return;
+
     setSelectedRolePermissions((prev) =>
-      prev.includes(permissionCode)
-        ? prev.filter((code) => code !== permissionCode)
-        : [...prev, permissionCode],
+      prev.includes(permissionId)
+        ? prev.filter((id) => id !== permissionId)
+        : [...prev, permissionId],
     );
+  };
+
+  const filteredModalPermissions = allPermissions.filter((permission) => {
+    const searchValue = permissionsSearchInput.trim().toLowerCase();
+    if (!searchValue) return true;
+
+    return (
+      permission.name?.toLowerCase().includes(searchValue) ||
+      permission.code?.toLowerCase().includes(searchValue) ||
+      permission.description?.toLowerCase().includes(searchValue) ||
+      permission.category?.toLowerCase().includes(searchValue)
+    );
+  });
+
+  const allPermissionIds = allPermissions
+    .filter((permission) => permission.isActive !== false)
+    .map((permission) => permission.id);
+  const areAllPermissionsSelected =
+    allPermissionIds.length > 0 &&
+    allPermissionIds.every((permissionId) =>
+      selectedRolePermissions.includes(permissionId),
+    );
+  const hasSomePermissionsSelected =
+    !areAllPermissionsSelected && selectedRolePermissions.length > 0;
+
+  const handleToggleSelectAllPermissions = (checked: boolean) => {
+    if (checked) {
+      setSelectedRolePermissions(allPermissionIds);
+      return;
+    }
+
+    setSelectedRolePermissions([]);
   };
 
   const filteredModalPermissions = allPermissions.filter((permission) => {
