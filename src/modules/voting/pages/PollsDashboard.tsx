@@ -6,6 +6,7 @@ import { fetchPolls } from "../api/votingApi";
 import { PollCard } from "../components/PollCard";
 import type { Poll } from "../types/voting.types";
 import { useVotingPermissions } from "../../../hooks/useVotingPermissions";
+import { useVotingAuthUser } from "../hooks/useVotingAuthUser";
 import {
   VOTING_PERMISSION_KEYS,
   VOTING_ROUTE_PERMISSION_KEYS,
@@ -14,6 +15,7 @@ import "../styles/voting.css";
 
 export function PollsDashboard() {
   const user = useSelector((state: RootState) => state.auth.user);
+  const { user: votingUser, isInitialized: votingAuthReady } = useVotingAuthUser();
   const [polls, setPolls] = useState<Poll[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,22 +41,24 @@ export function PollsDashboard() {
       return;
     }
 
+    // Wait for voting auth to be ready
+    if (!votingAuthReady) {
+      setLoading(true);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      if (!user?.id) {
-        setPolls([]);
-        setError("Sign in to view your polls.");
-        return;
-      }
-      const { polls: data } = await fetchPolls(user.id);
+      // fetchPolls now calls /auth/me internally and backend filters by logged-in user
+      const { polls: data } = await fetchPolls();
       setPolls(data ?? []);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to load polls");
     } finally {
       setLoading(false);
     }
-  }, [user?.id, canViewPolls]);
+  }, [canViewPolls, votingAuthReady]);
 
   useEffect(() => {
     if (!permissionsLoaded || permissionsLoading) return;

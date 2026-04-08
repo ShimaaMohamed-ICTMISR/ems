@@ -11,39 +11,9 @@ import type {
   CreateEligibilityRequest,
   VoteRequest,
 } from '../types/voting.types';
+import { getVotingServiceHeaders } from '../services/votingAuthService';
 
-// const BASE_URL = (
-//   import.meta.env.VITE_VOTING_API_BASE_URL ??
-//   import.meta.env.VITE_API_BASE_URL ??
-//   'https://ems-voting-service.onrender.com/'
-// ).replace(/\/+$/, '');
-const BASE_URL='http://apigetway.runasp.net/api/voting'
-
-/** Voting service ticket — do not use global VITE_SERVICE_TICKET (other services may differ). */
-const VOTING_TICKET_DEFAULT = 'TEST-SECRET-TICKET-2026';
-
-function getServiceTicket(): string {
-  const fromEnv = (import.meta.env.VITE_VOTING_SERVICE_TICKET as string | undefined)?.trim();
-  if (fromEnv) return fromEnv;
-  const fromStorage = localStorage.getItem('voting-service-ticket')?.trim();
-  if (fromStorage) return fromStorage;
-  return VOTING_TICKET_DEFAULT;
-}
-
-function getHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'X-Service-Ticket': getServiceTicket(),
-  };
-  
-  // Add authorization token if available
-  const authToken = localStorage.getItem('authToken');
-  if (authToken) {
-    headers['Authorization'] = `Bearer ${authToken}`;
-  }
-  
-  return headers;
-}
+const BASE_URL = 'http://apigetway.runasp.net/api/voting';
 
 async function handleResponse<T>(res: Response): Promise<T> {
   const text = await res.text();
@@ -65,9 +35,7 @@ async function handleResponse<T>(res: Response): Promise<T> {
         lower.includes('service ticket')
       ) {
         throw new Error(
-          'Voting API requires a valid X-Service-Ticket. Check .env.local (VITE_VOTING_SERVICE_TICKET, default ' +
-            VOTING_TICKET_DEFAULT +
-            ') and ensure the backend is running at ' +
+          'Voting API requires a valid X-Service-Ticket. Check .env.local (VITE_VOTING_SERVICE_TICKET) and ensure the backend is running at ' +
             BASE_URL +
             '.'
         );
@@ -89,13 +57,10 @@ async function handleResponse<T>(res: Response): Promise<T> {
   return (data ?? {}) as T;
 }
 
-// Polls — GET /polls?createdBy=<userId> lists polls created by that user (Voting Service API)
-export async function fetchPolls(createdBy?: string): Promise<{ polls: Poll[] }> {
-  const params = new URLSearchParams();
-  if (createdBy) params.set('createdBy', createdBy);
-  const qs = params.toString();
-  const url = qs ? `${BASE_URL}/polls?${qs}` : `${BASE_URL}/polls`;
-  const res = await fetch(url, { headers: getHeaders() });
+// Polls — GET /polls (backend filters by logged-in user automatically)
+export async function fetchPolls(): Promise<{ polls: Poll[] }> {
+  const url = `${BASE_URL}/polls`;
+  const res = await fetch(url, { headers: getVotingServiceHeaders() });
   const data = await handleResponse<{ polls?: Poll[]; data?: Poll[] } | Poll[]>(res);
   // Support both { polls: [] } and top-level array from backend
   const list = Array.isArray(data)
@@ -105,14 +70,14 @@ export async function fetchPolls(createdBy?: string): Promise<{ polls: Poll[] }>
 }
 
 export async function fetchPoll(id: string): Promise<Poll> {
-  const res = await fetch(`${BASE_URL}/polls/${id}`, { headers: getHeaders() });
+  const res = await fetch(`${BASE_URL}/polls/${id}`, { headers: getVotingServiceHeaders() });
   return handleResponse(res);
 }
 
 export async function createPoll(body: CreatePollRequest): Promise<Poll> {
   const res = await fetch(`${BASE_URL}/polls`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
     body: JSON.stringify(body),
   });
   return handleResponse(res);
@@ -121,7 +86,7 @@ export async function createPoll(body: CreatePollRequest): Promise<Poll> {
 export async function activatePoll(id: string): Promise<Poll> {
   const res = await fetch(`${BASE_URL}/polls/${id}/activate`, {
     method: 'PATCH',
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
   });
   return handleResponse(res);
 }
@@ -129,7 +94,7 @@ export async function activatePoll(id: string): Promise<Poll> {
 export async function closePoll(id: string): Promise<Poll> {
   const res = await fetch(`${BASE_URL}/polls/${id}/close`, {
     method: 'PATCH',
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
   });
   return handleResponse(res);
 }
@@ -137,7 +102,7 @@ export async function closePoll(id: string): Promise<Poll> {
 export async function deletePoll(id: string): Promise<void> {
   const res = await fetch(`${BASE_URL}/polls/${id}`, {
     method: 'DELETE',
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
   });
   if (!res.ok) await handleResponse(res);
 }
@@ -146,7 +111,7 @@ export async function deletePoll(id: string): Promise<void> {
 export async function fetchPollOptions(
   pollId: string
 ): Promise<{ options: PollOption[] }> {
-  const res = await fetch(`${BASE_URL}/polls/${pollId}/options`, { headers: getHeaders() });
+  const res = await fetch(`${BASE_URL}/polls/${pollId}/options`, { headers: getVotingServiceHeaders() });
   const data = await handleResponse<{ options?: PollOption[]; data?: PollOption[] } | PollOption[]>(res);
   const list = Array.isArray(data)
     ? data
@@ -160,7 +125,7 @@ export async function createPollOption(
 ): Promise<PollOption> {
   const res = await fetch(`${BASE_URL}/polls/${pollId}/options`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
     body: JSON.stringify({
       optionText: body.title,
       ...(body.displayOrder != null && { displayOrder: body.displayOrder }),
@@ -179,7 +144,7 @@ export async function bulkCreatePollOptions(
 ): Promise<{ options: PollOption[] }> {
   const res = await fetch(`${BASE_URL}/polls/${pollId}/options/bulk`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
     body: JSON.stringify({
       options: body.options.map((o) => ({
         optionText: o.title,
@@ -200,7 +165,7 @@ export async function updatePollOption(
   if (body.displayOrder != null) payload.displayOrder = body.displayOrder;
   const res = await fetch(`${BASE_URL}/polls/${pollId}/options/${optionId}`, {
     method: 'PUT',
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
     body: JSON.stringify(payload),
   });
   return handleResponse(res);
@@ -212,7 +177,7 @@ export async function deletePollOption(
 ): Promise<void> {
   const res = await fetch(`${BASE_URL}/polls/${pollId}/options/${optionId}`, {
     method: 'DELETE',
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
   });
   if (!res.ok) await handleResponse(res);
 }
@@ -222,7 +187,7 @@ export async function fetchEligibility(
   pollId: string
 ): Promise<{ eligibility: PollEligibility[] }> {
   const res = await fetch(`${BASE_URL}/polls/${pollId}/participants/eligibility`, {
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
   });
   return handleResponse(res);
 }
@@ -233,7 +198,7 @@ export async function createEligibility(
 ): Promise<PollEligibility> {
   const res = await fetch(`${BASE_URL}/polls/${pollId}/participants/eligibility`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
     body: JSON.stringify(body),
   });
   return handleResponse(res);
@@ -245,7 +210,7 @@ export async function deleteEligibility(
 ): Promise<void> {
   const res = await fetch(
     `${BASE_URL}/polls/${pollId}/participants/eligibility/${eligibilityId}`,
-    { method: 'DELETE', headers: getHeaders() }
+    { method: 'DELETE', headers: getVotingServiceHeaders() }
   );
   if (!res.ok) await handleResponse(res);
 }
@@ -257,7 +222,7 @@ export async function submitVote(
 ): Promise<unknown> {
   const res = await fetch(`${BASE_URL}/polls/${pollId}/vote`, {
     method: 'POST',
-    headers: getHeaders(),
+    headers: getVotingServiceHeaders(),
     body: JSON.stringify(body),
   });
   return handleResponse(res);
@@ -265,7 +230,7 @@ export async function submitVote(
 
 // Results
 export async function fetchPollResults(pollId: string): Promise<PollResults> {
-  const res = await fetch(`${BASE_URL}/polls/${pollId}/results`, { headers: getHeaders() });
+  const res = await fetch(`${BASE_URL}/polls/${pollId}/results`, { headers: getVotingServiceHeaders() });
   const data = await handleResponse<
     | PollResults
     | {

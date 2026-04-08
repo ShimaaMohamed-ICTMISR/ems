@@ -65,6 +65,10 @@ const authSlice = createSlice({
       state.error = null;
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
+      // Clear service tickets on logout
+      localStorage.removeItem('voting-service-ticket');
+      localStorage.removeItem('meeting-service-ticket');
+      localStorage.removeItem('opportunity-service-ticket');
     },
 
     // Restore from localStorage

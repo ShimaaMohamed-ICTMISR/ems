@@ -22,6 +22,10 @@ export interface LoginResponse {
   };
   mfaRequired: boolean;
   mfaToken?: string;
+  // Service tickets for different services
+  votingServiceTicket?: string;
+  meetingServiceTicket?: string;
+  opportunityServiceTicket?: string;
 }
 
 export const authService = {
@@ -51,6 +55,10 @@ export const authService = {
       // Always clear local storage
       localStorage.removeItem('authToken');
       localStorage.removeItem('user');
+      // Clear service tickets on logout
+      localStorage.removeItem('voting-service-ticket');
+      localStorage.removeItem('meeting-service-ticket');
+      localStorage.removeItem('opportunity-service-ticket');
     }
   },
 

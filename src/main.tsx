@@ -7,6 +7,7 @@ import "bootstrap-icons/font/bootstrap-icons.css";
 import "./index.css";
 import { AppRouter } from "./app/router";
 import { AuthInitializer } from "./Components/AuthInitializer";
+import { VotingAuthProvider } from "./modules/voting/context/VotingAuthContext";
 import { store } from "./store/store";
 
 // Import Bootstrap JS
@@ -32,7 +33,9 @@ createRoot(document.getElementById("root")!).render(
   <Provider store={store}>
     <QueryClientProvider client={queryClient}>
       <AuthInitializer>
-        <AppRouter />
+        <VotingAuthProvider>
+          <AppRouter />
+        </VotingAuthProvider>
       </AuthInitializer>
       <Toaster position="top-right" />
     </QueryClientProvider>
