@@ -36,7 +36,7 @@ export function PermissionRoute({
           ? votingPermissions
           : scope === "opportunities"
             ? opportunitiesPermissions
-          : meetingPermissions;
+            : meetingPermissions;
   const { canAny, isLoading, isLoaded, permissions } = activePermissions;
   const permissionChecks = anyOf.map((permission) => ({
     permission,

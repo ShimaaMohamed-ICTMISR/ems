@@ -1,9 +1,9 @@
-import { Routes, Route } from 'react-router-dom';
-import { PermissionRoute } from '../../../app/PermissionRoute';
-import { OPPORTUNITY_ROUTE_PERMISSION_KEYS } from '../../../config/opportunitiesPermissions';
-import { OpportunitiesDashboard } from '../pages/OpportunitiesDashboard';
-import { OpportunityDetailsPage } from '../pages/OpportunityDetailsPage';
-import { LeadsPage } from '../pages/LeadsPage';
+import { Routes, Route } from "react-router-dom";
+import { PermissionRoute } from "../../../app/PermissionRoute";
+import { OPPORTUNITY_ROUTE_PERMISSION_KEYS } from "../../../config/opportunitiesPermissions";
+import { OpportunitiesDashboard } from "../pages/OpportunitiesDashboard";
+import { OpportunityDetailsPage } from "../pages/OpportunityDetailsPage";
+import { LeadsPage } from "../pages/LeadsPage";
 
 export function OpportunityRoutes() {
   return (

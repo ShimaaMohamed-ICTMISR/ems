@@ -1,43 +1,48 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   convertLeadToOpportunity,
   createLead,
   deleteLead,
   getLeads,
   qualifyLead,
-} from '../api/opportunityApi';
-import type { ConvertLeadDto, CreateLeadDto, Lead, LeadSource } from '../types/opportunity.types';
-import { isLeadQualifiedForConvert } from '../utils/opportunityFlow';
-import { useOpportunitiesPermissions } from '../../../hooks/useOpportunitiesPermissions';
+} from "../api/opportunityApi";
+import type {
+  ConvertLeadDto,
+  CreateLeadDto,
+  Lead,
+  LeadSource,
+} from "../types/opportunity.types";
+import { isLeadQualifiedForConvert } from "../utils/opportunityFlow";
+import { useOpportunitiesPermissions } from "../../../hooks/useOpportunitiesPermissions";
 import {
   OPPORTUNITY_PERMISSION_KEYS,
   OPPORTUNITY_ROUTE_PERMISSION_KEYS,
-} from '../../../config/opportunitiesPermissions';
-import './LeadsPage.css';
+} from "../../../config/opportunitiesPermissions";
+import "./LeadsPage.css";
 
 const SOURCE_OPTIONS: { value: LeadSource; label: string }[] = [
-  { value: 'website', label: 'Website' },
-  { value: 'referral', label: 'Referral' },
-  { value: 'cold_call', label: 'Cold call' },
-  { value: 'social_media', label: 'Social media' },
-  { value: 'event', label: 'Event' },
-  { value: 'other', label: 'Other' },
+  { value: "website", label: "Website" },
+  { value: "referral", label: "Referral" },
+  { value: "cold_call", label: "Cold call" },
+  { value: "social_media", label: "Social media" },
+  { value: "event", label: "Event" },
+  { value: "other", label: "Other" },
 ];
 
 function statusBadgeClass(status: string | undefined): string {
-  const s = String(status ?? '').toUpperCase();
+  const s = String(status ?? "").toUpperCase();
   switch (s) {
-    case 'NEW':
-      return 'bg-info';
-    case 'CONTACTED':
-      return 'bg-primary';
-    case 'QUALIFIED':
-      return 'bg-success';
-    case 'UNQUALIFIED':
-      return 'bg-danger';
+    case "NEW":
+      return "bg-info";
+    case "CONTACTED":
+      return "bg-primary";
+    case "QUALIFIED":
+      return "bg-success";
+    case "UNQUALIFIED":
+      return "bg-danger";
     default:
-      return 'bg-secondary';
+      return "bg-secondary";
   }
 }
 
@@ -49,15 +54,15 @@ export function LeadsPage() {
 
   const [creating, setCreating] = useState(false);
   const [createForm, setCreateForm] = useState<CreateLeadDto>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    company: '',
-    title: '',
-    source: 'website',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    company: "",
+    title: "",
+    source: "website",
     estimatedValue: undefined,
-    notes: '',
+    notes: "",
   });
   const [createTouched, setCreateTouched] = useState(false);
   const [createErrors, setCreateErrors] = useState<{
@@ -73,22 +78,24 @@ export function LeadsPage() {
 
   const [qualifyModalOpen, setQualifyModalOpen] = useState(false);
   const [qualifyLeadId, setQualifyLeadId] = useState<string | null>(null);
-  const [qualifyNotes, setQualifyNotes] = useState('');
+  const [qualifyNotes, setQualifyNotes] = useState("");
 
   const [convertModalOpen, setConvertModalOpen] = useState(false);
   const [convertLeadId, setConvertLeadId] = useState<string | null>(null);
   const [convertForm, setConvertForm] = useState<ConvertLeadDto>({
-    opportunityName: '',
+    opportunityName: "",
     amount: 0,
     expectedCloseDate: new Date().toISOString().slice(0, 10),
-    stage: 'prospecting',
-    conversionReason: '',
+    stage: "prospecting",
+    conversionReason: "",
   });
 
   const [actionLoading, setActionLoading] = useState(false);
   const { canAny } = useOpportunitiesPermissions();
 
-  const canViewOpportunitiesDashboard = canAny([...OPPORTUNITY_ROUTE_PERMISSION_KEYS.DASHBOARD]);
+  const canViewOpportunitiesDashboard = canAny([
+    ...OPPORTUNITY_ROUTE_PERMISSION_KEYS.DASHBOARD,
+  ]);
   const canCreateLead = canAny([...OPPORTUNITY_PERMISSION_KEYS.LEADS.CREATE]);
   const canQualifyLead = canAny([...OPPORTUNITY_PERMISSION_KEYS.LEADS.QUALIFY]);
   const canConvertLead = canAny([...OPPORTUNITY_PERMISSION_KEYS.LEADS.CONVERT]);
@@ -101,7 +108,7 @@ export function LeadsPage() {
       const data = await getLeads();
       setLeads(Array.isArray(data) ? data : []);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to load leads.');
+      setError(err instanceof Error ? err.message : "Failed to load leads.");
     } finally {
       setLoading(false);
     }
@@ -123,39 +130,43 @@ export function LeadsPage() {
     try {
       setActionLoading(true);
       const nextErrors: typeof createErrors = {};
-      const firstName = String(createForm.firstName ?? '').trim();
-      const lastName = String(createForm.lastName ?? '').trim();
-      if (!firstName) nextErrors.firstName = 'First name is required.';
-      if (!lastName) nextErrors.lastName = 'Last name is required.';
+      const firstName = String(createForm.firstName ?? "").trim();
+      const lastName = String(createForm.lastName ?? "").trim();
+      if (!firstName) nextErrors.firstName = "First name is required.";
+      if (!lastName) nextErrors.lastName = "Last name is required.";
 
-      const email = String(createForm.email ?? '').trim();
-      if (!email) nextErrors.email = 'Email is required.';
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) nextErrors.email = 'Please enter a valid email address.';
+      const email = String(createForm.email ?? "").trim();
+      if (!email) nextErrors.email = "Email is required.";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+        nextErrors.email = "Please enter a valid email address.";
 
-      const phone = String(createForm.phone ?? '').trim();
-      if (!phone) nextErrors.phone = 'Phone is required.';
+      const phone = String(createForm.phone ?? "").trim();
+      if (!phone) nextErrors.phone = "Phone is required.";
 
-      const company = String(createForm.company ?? '').trim();
-      if (!company) nextErrors.company = 'Company is required.';
+      const company = String(createForm.company ?? "").trim();
+      if (!company) nextErrors.company = "Company is required.";
 
-      const title = String(createForm.title ?? '').trim();
-      if (!title) nextErrors.title = 'Job title is required.';
+      const title = String(createForm.title ?? "").trim();
+      if (!title) nextErrors.title = "Job title is required.";
 
-      const source = String(createForm.source ?? '').trim();
-      if (!source) nextErrors.source = 'Source is required.';
+      const source = String(createForm.source ?? "").trim();
+      if (!source) nextErrors.source = "Source is required.";
 
       const est =
-        createForm.estimatedValue !== undefined && createForm.estimatedValue !== null
+        createForm.estimatedValue !== undefined &&
+        createForm.estimatedValue !== null
           ? Number(createForm.estimatedValue)
           : undefined;
-      if (est === undefined) nextErrors.estimatedValue = 'Estimated value is required.';
-      else if (!Number.isFinite(est) || est < 0) nextErrors.estimatedValue = 'Estimated value must be 0 or more.';
+      if (est === undefined)
+        nextErrors.estimatedValue = "Estimated value is required.";
+      else if (!Number.isFinite(est) || est < 0)
+        nextErrors.estimatedValue = "Estimated value must be 0 or more.";
 
-      const notes = String(createForm.notes ?? '').trim();
+      const notes = String(createForm.notes ?? "").trim();
 
       if (Object.keys(nextErrors).length > 0) {
         setCreateErrors(nextErrors);
-        setError('Please fix the highlighted fields.');
+        setError("Please fix the highlighted fields.");
         return;
       }
       setCreateErrors({});
@@ -174,22 +185,22 @@ export function LeadsPage() {
       await createLead(payload);
       setCreating(false);
       setCreateForm({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        company: '',
-        title: '',
-        source: 'website',
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        company: "",
+        title: "",
+        source: "website",
         estimatedValue: undefined,
-        notes: '',
+        notes: "",
       });
       setCreateTouched(false);
       setCreateErrors({});
-      setSuccess('Lead created successfully.');
+      setSuccess("Lead created successfully.");
       await loadLeads();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to create lead.');
+      setError(err instanceof Error ? err.message : "Failed to create lead.");
     } finally {
       setActionLoading(false);
     }
@@ -198,7 +209,7 @@ export function LeadsPage() {
   const openQualify = (lead: Lead) => {
     resetAlerts();
     setQualifyLeadId(lead.id);
-    setQualifyNotes('');
+    setQualifyNotes("");
     setQualifyModalOpen(true);
   };
 
@@ -211,10 +222,10 @@ export function LeadsPage() {
       await qualifyLead(qualifyLeadId, { notes: qualifyNotes || undefined });
       setQualifyModalOpen(false);
       setQualifyLeadId(null);
-      setSuccess('Lead qualified successfully.');
+      setSuccess("Lead qualified successfully.");
       await loadLeads();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to qualify lead.');
+      setError(err instanceof Error ? err.message : "Failed to qualify lead.");
     } finally {
       setActionLoading(false);
     }
@@ -224,11 +235,12 @@ export function LeadsPage() {
     resetAlerts();
     setConvertLeadId(lead.id);
     setConvertForm({
-      opportunityName: `${lead.company ?? ''} ${lead.firstName} ${lead.lastName}`.trim(),
+      opportunityName:
+        `${lead.company ?? ""} ${lead.firstName} ${lead.lastName}`.trim(),
       amount: lead.estimatedValue ?? 0,
       expectedCloseDate: new Date().toISOString().slice(0, 10),
-      stage: 'prospecting',
-      conversionReason: '',
+      stage: "prospecting",
+      conversionReason: "",
     });
     setConvertModalOpen(true);
   };
@@ -239,19 +251,22 @@ export function LeadsPage() {
     resetAlerts();
     try {
       setActionLoading(true);
-      const opportunityName = String(convertForm.opportunityName ?? '').trim();
+      const opportunityName = String(convertForm.opportunityName ?? "").trim();
       if (!opportunityName) {
-        setError('Opportunity name is required.');
+        setError("Opportunity name is required.");
         return;
       }
       const amount = Number(convertForm.amount);
       if (!Number.isFinite(amount) || amount < 0) {
-        setError('Expected budget must be a valid number (0 or more).');
+        setError("Expected budget must be a valid number (0 or more).");
         return;
       }
-      const expectedCloseDate = String(convertForm.expectedCloseDate ?? '');
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(expectedCloseDate) || Number.isNaN(new Date(`${expectedCloseDate}T00:00:00Z`).getTime())) {
-        setError('Expected close date must be a valid date.');
+      const expectedCloseDate = String(convertForm.expectedCloseDate ?? "");
+      if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(expectedCloseDate) ||
+        Number.isNaN(new Date(`${expectedCloseDate}T00:00:00Z`).getTime())
+      ) {
+        setError("Expected close date must be a valid date.");
         return;
       }
       await convertLeadToOpportunity(convertLeadId, {
@@ -262,10 +277,10 @@ export function LeadsPage() {
       });
       setConvertModalOpen(false);
       setConvertLeadId(null);
-      setSuccess('Lead converted to opportunity successfully.');
+      setSuccess("Lead converted to opportunity successfully.");
       await loadLeads();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to convert lead.');
+      setError(err instanceof Error ? err.message : "Failed to convert lead.");
     } finally {
       setActionLoading(false);
     }
@@ -280,10 +295,10 @@ export function LeadsPage() {
     try {
       setActionLoading(true);
       await deleteLead(lead.id);
-      setSuccess('Lead deleted successfully.');
+      setSuccess("Lead deleted successfully.");
       await loadLeads();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Failed to delete lead.');
+      setError(err instanceof Error ? err.message : "Failed to delete lead.");
     } finally {
       setActionLoading(false);
     }
@@ -296,9 +311,9 @@ export function LeadsPage() {
           <div
             className="rounded-circle d-flex align-items-center justify-content-center me-3"
             style={{
-              width: '48px',
-              height: '48px',
-              background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+              width: "48px",
+              height: "48px",
+              background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
             }}
           >
             <i className="bi bi-people text-white fs-4" />
@@ -309,7 +324,10 @@ export function LeadsPage() {
         </div>
         <div className="d-flex gap-2">
           {canViewOpportunitiesDashboard && (
-            <Link to="/dashboard/opportunities" className="btn btn-outline-secondary btn-lg">
+            <Link
+              to="/dashboard/opportunities"
+              className="btn btn-outline-secondary btn-lg"
+            >
               <i className="bi bi-graph-up-arrow me-2" />
               Opportunities
             </Link>
@@ -327,7 +345,11 @@ export function LeadsPage() {
         </div>
       </div>
 
-      {error && <div className="alert alert-danger border-0 shadow-sm mb-3">{error}</div>}
+      {error && (
+        <div className="alert alert-danger border-0 shadow-sm mb-3">
+          {error}
+        </div>
+      )}
       {success && (
         <div className="alert alert-success border-0 shadow-sm mb-3">
           {success}
@@ -351,7 +373,10 @@ export function LeadsPage() {
           {loading ? (
             <div className="d-flex justify-content-center align-items-center py-5">
               <div className="text-center">
-                <div className="spinner-border text-primary mb-3" role="status" />
+                <div
+                  className="spinner-border text-primary mb-3"
+                  role="status"
+                />
                 <p className="text-muted mb-0">Loading leads...</p>
               </div>
             </div>
@@ -368,7 +393,8 @@ export function LeadsPage() {
                 </button>
               ) : (
                 <p className="mb-0 text-muted">
-                  You can view leads but do not currently have permission to create new ones.
+                  You can view leads but do not currently have permission to
+                  create new ones.
                 </p>
               )}
             </div>
@@ -394,22 +420,32 @@ export function LeadsPage() {
                           <div className="fw-semibold text-dark">
                             {lead.firstName} {lead.lastName}
                           </div>
-                          <small className="text-muted">{lead.title ?? lead.jobTitle ?? '—'}</small>
+                          <small className="text-muted">
+                            {lead.title ?? lead.jobTitle ?? "—"}
+                          </small>
                         </td>
                         <td>
-                          <span className={`badge ${statusBadgeClass(lead.status)} px-3 py-2`}>
-                            {lead.status ?? '—'}
+                          <span
+                            className={`badge ${statusBadgeClass(lead.status)} px-3 py-2`}
+                          >
+                            {lead.status ?? "—"}
                           </span>
                           {lead.isQualified === true && (
-                            <span className="badge bg-success ms-1">Qualified</span>
+                            <span className="badge bg-success ms-1">
+                              Qualified
+                            </span>
                           )}
                         </td>
                         <td>
-                          <div>{lead.email ?? '—'}</div>
-                          {lead.phone && <small className="text-muted d-block">{lead.phone}</small>}
+                          <div>{lead.email ?? "—"}</div>
+                          {lead.phone && (
+                            <small className="text-muted d-block">
+                              {lead.phone}
+                            </small>
+                          )}
                         </td>
-                        <td>{lead.company || '—'}</td>
-                        <td>{lead.source || '—'}</td>
+                        <td>{lead.company || "—"}</td>
+                        <td>{lead.source || "—"}</td>
                         <td className="lead-actions-cell">
                           <div
                             className="lead-actions-bar"
@@ -421,8 +457,14 @@ export function LeadsPage() {
                                 type="button"
                                 className="lead-action-btn lead-action-btn--qualify"
                                 onClick={() => openQualify(lead)}
-                                disabled={actionLoading || lead.isQualified === true}
-                                title={lead.isQualified === true ? 'Lead is already qualified' : 'Qualify lead'}
+                                disabled={
+                                  actionLoading || lead.isQualified === true
+                                }
+                                title={
+                                  lead.isQualified === true
+                                    ? "Lead is already qualified"
+                                    : "Qualify lead"
+                                }
                                 aria-label="Qualify lead"
                               >
                                 <i className="bi bi-patch-check" aria-hidden />
@@ -437,12 +479,15 @@ export function LeadsPage() {
                                 disabled={actionLoading || !canConvert}
                                 title={
                                   !canConvert
-                                    ? 'Qualify the lead first, then convert to opportunity'
-                                    : 'Convert to opportunity'
+                                    ? "Qualify the lead first, then convert to opportunity"
+                                    : "Convert to opportunity"
                                 }
                                 aria-label="Convert to opportunity"
                               >
-                                <i className="bi bi-box-arrow-up-right" aria-hidden />
+                                <i
+                                  className="bi bi-box-arrow-up-right"
+                                  aria-hidden
+                                />
                                 <span className="visually-hidden">Convert</span>
                               </button>
                             )}
@@ -459,9 +504,13 @@ export function LeadsPage() {
                                 <span className="visually-hidden">Delete</span>
                               </button>
                             )}
-                            {!canQualifyLead && !canConvertLead && !canDeleteLead && (
-                              <span className="small text-muted">No actions available</span>
-                            )}
+                            {!canQualifyLead &&
+                              !canConvertLead &&
+                              !canDeleteLead && (
+                                <span className="small text-muted">
+                                  No actions available
+                                </span>
+                              )}
                           </div>
                         </td>
                       </tr>
@@ -496,109 +545,169 @@ export function LeadsPage() {
                   )}
                   <div className="row g-3">
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">First name *</label>
+                      <label className="form-label fw-semibold">
+                        First name *
+                      </label>
                       <input
-                        className={`form-control ${createTouched && createErrors.firstName ? 'is-invalid' : ''}`}
+                        className={`form-control ${createTouched && createErrors.firstName ? "is-invalid" : ""}`}
                         value={createForm.firstName}
                         onChange={(e) => {
-                          setCreateForm({ ...createForm, firstName: e.target.value });
+                          setCreateForm({
+                            ...createForm,
+                            firstName: e.target.value,
+                          });
                           if (createErrors.firstName) {
-                            setCreateErrors((p) => ({ ...p, firstName: undefined }));
+                            setCreateErrors((p) => ({
+                              ...p,
+                              firstName: undefined,
+                            }));
                           }
                         }}
                         required
                       />
                       {createTouched && createErrors.firstName && (
-                        <div className="invalid-feedback">{createErrors.firstName}</div>
+                        <div className="invalid-feedback">
+                          {createErrors.firstName}
+                        </div>
                       )}
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">Last name *</label>
+                      <label className="form-label fw-semibold">
+                        Last name *
+                      </label>
                       <input
-                        className={`form-control ${createTouched && createErrors.lastName ? 'is-invalid' : ''}`}
+                        className={`form-control ${createTouched && createErrors.lastName ? "is-invalid" : ""}`}
                         value={createForm.lastName}
                         onChange={(e) => {
-                          setCreateForm({ ...createForm, lastName: e.target.value });
+                          setCreateForm({
+                            ...createForm,
+                            lastName: e.target.value,
+                          });
                           if (createErrors.lastName) {
-                            setCreateErrors((p) => ({ ...p, lastName: undefined }));
+                            setCreateErrors((p) => ({
+                              ...p,
+                              lastName: undefined,
+                            }));
                           }
                         }}
                         required
                       />
                       {createTouched && createErrors.lastName && (
-                        <div className="invalid-feedback">{createErrors.lastName}</div>
+                        <div className="invalid-feedback">
+                          {createErrors.lastName}
+                        </div>
                       )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Email</label>
                       <input
                         type="email"
-                        className={`form-control ${createTouched && createErrors.email ? 'is-invalid' : ''}`}
-                        value={createForm.email ?? ''}
+                        className={`form-control ${createTouched && createErrors.email ? "is-invalid" : ""}`}
+                        value={createForm.email ?? ""}
                         onChange={(e) => {
-                          setCreateForm({ ...createForm, email: e.target.value });
+                          setCreateForm({
+                            ...createForm,
+                            email: e.target.value,
+                          });
                           if (createErrors.email) {
-                            setCreateErrors((p) => ({ ...p, email: undefined }));
+                            setCreateErrors((p) => ({
+                              ...p,
+                              email: undefined,
+                            }));
                           }
                         }}
                         required
                       />
                       {createTouched && createErrors.email && (
-                        <div className="invalid-feedback">{createErrors.email}</div>
+                        <div className="invalid-feedback">
+                          {createErrors.email}
+                        </div>
                       )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Phone</label>
                       <input
-                        className={`form-control ${createTouched && createErrors.phone ? 'is-invalid' : ''}`}
-                        value={createForm.phone ?? ''}
+                        className={`form-control ${createTouched && createErrors.phone ? "is-invalid" : ""}`}
+                        value={createForm.phone ?? ""}
                         onChange={(e) => {
-                          setCreateForm({ ...createForm, phone: e.target.value });
-                          if (createErrors.phone) setCreateErrors((p) => ({ ...p, phone: undefined }));
+                          setCreateForm({
+                            ...createForm,
+                            phone: e.target.value,
+                          });
+                          if (createErrors.phone)
+                            setCreateErrors((p) => ({
+                              ...p,
+                              phone: undefined,
+                            }));
                         }}
                         required
                       />
                       {createTouched && createErrors.phone && (
-                        <div className="invalid-feedback">{createErrors.phone}</div>
+                        <div className="invalid-feedback">
+                          {createErrors.phone}
+                        </div>
                       )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Company</label>
                       <input
-                        className={`form-control ${createTouched && createErrors.company ? 'is-invalid' : ''}`}
-                        value={createForm.company ?? ''}
+                        className={`form-control ${createTouched && createErrors.company ? "is-invalid" : ""}`}
+                        value={createForm.company ?? ""}
                         onChange={(e) => {
-                          setCreateForm({ ...createForm, company: e.target.value });
-                          if (createErrors.company) setCreateErrors((p) => ({ ...p, company: undefined }));
+                          setCreateForm({
+                            ...createForm,
+                            company: e.target.value,
+                          });
+                          if (createErrors.company)
+                            setCreateErrors((p) => ({
+                              ...p,
+                              company: undefined,
+                            }));
                         }}
                         required
                       />
                       {createTouched && createErrors.company && (
-                        <div className="invalid-feedback">{createErrors.company}</div>
+                        <div className="invalid-feedback">
+                          {createErrors.company}
+                        </div>
                       )}
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">Job title</label>
+                      <label className="form-label fw-semibold">
+                        Job title
+                      </label>
                       <input
-                        className={`form-control ${createTouched && createErrors.title ? 'is-invalid' : ''}`}
-                        value={createForm.title ?? ''}
+                        className={`form-control ${createTouched && createErrors.title ? "is-invalid" : ""}`}
+                        value={createForm.title ?? ""}
                         onChange={(e) => {
-                          setCreateForm({ ...createForm, title: e.target.value });
-                          if (createErrors.title) setCreateErrors((p) => ({ ...p, title: undefined }));
+                          setCreateForm({
+                            ...createForm,
+                            title: e.target.value,
+                          });
+                          if (createErrors.title)
+                            setCreateErrors((p) => ({
+                              ...p,
+                              title: undefined,
+                            }));
                         }}
                         required
                       />
                       {createTouched && createErrors.title && (
-                        <div className="invalid-feedback">{createErrors.title}</div>
+                        <div className="invalid-feedback">
+                          {createErrors.title}
+                        </div>
                       )}
                     </div>
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">Source</label>
                       <select
-                        className={`form-select ${createTouched && createErrors.source ? 'is-invalid' : ''}`}
+                        className={`form-select ${createTouched && createErrors.source ? "is-invalid" : ""}`}
                         value={createForm.source}
                         onChange={(e) =>
-                          setCreateForm({ ...createForm, source: e.target.value as LeadSource })
+                          setCreateForm({
+                            ...createForm,
+                            source: e.target.value as LeadSource,
+                          })
                         }
                         required
                       >
@@ -609,26 +718,34 @@ export function LeadsPage() {
                         ))}
                       </select>
                       {createTouched && createErrors.source && (
-                        <div className="invalid-feedback">{createErrors.source}</div>
+                        <div className="invalid-feedback">
+                          {createErrors.source}
+                        </div>
                       )}
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label fw-semibold">Estimated value</label>
+                      <label className="form-label fw-semibold">
+                        Estimated value
+                      </label>
                       <input
                         type="number"
-                        className={`form-control ${createTouched && createErrors.estimatedValue ? 'is-invalid' : ''}`}
+                        className={`form-control ${createTouched && createErrors.estimatedValue ? "is-invalid" : ""}`}
                         min={0}
-                        value={createForm.estimatedValue ?? ''}
+                        value={createForm.estimatedValue ?? ""}
                         onChange={(e) =>
                           setCreateForm({
                             ...createForm,
-                            estimatedValue: e.target.value ? Number(e.target.value) : undefined,
+                            estimatedValue: e.target.value
+                              ? Number(e.target.value)
+                              : undefined,
                           })
                         }
                         required
                       />
                       {createTouched && createErrors.estimatedValue && (
-                        <div className="invalid-feedback">{createErrors.estimatedValue}</div>
+                        <div className="invalid-feedback">
+                          {createErrors.estimatedValue}
+                        </div>
                       )}
                     </div>
                     <div className="col-12">
@@ -636,9 +753,12 @@ export function LeadsPage() {
                       <textarea
                         className="form-control"
                         rows={3}
-                        value={createForm.notes ?? ''}
+                        value={createForm.notes ?? ""}
                         onChange={(e) => {
-                          setCreateForm({ ...createForm, notes: e.target.value });
+                          setCreateForm({
+                            ...createForm,
+                            notes: e.target.value,
+                          });
                         }}
                       />
                     </div>
@@ -653,8 +773,12 @@ export function LeadsPage() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-meetings-primary" disabled={actionLoading}>
-                    {actionLoading ? 'Saving...' : 'Create Lead'}
+                  <button
+                    type="submit"
+                    className="btn btn-meetings-primary"
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "Saving..." : "Create Lead"}
                   </button>
                 </div>
               </form>
@@ -694,8 +818,12 @@ export function LeadsPage() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-meetings-primary" disabled={actionLoading}>
-                    {actionLoading ? 'Saving...' : 'Submit qualification'}
+                  <button
+                    type="submit"
+                    className="btn btn-meetings-primary"
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "Saving..." : "Submit qualification"}
                   </button>
                 </div>
               </form>
@@ -719,18 +847,25 @@ export function LeadsPage() {
               <form onSubmit={handleConvert}>
                 <div className="modal-body">
                   <div className="mb-3">
-                    <label className="form-label fw-semibold">Opportunity name *</label>
+                    <label className="form-label fw-semibold">
+                      Opportunity name *
+                    </label>
                     <input
                       className="form-control"
                       required
                       value={convertForm.opportunityName}
                       onChange={(e) =>
-                        setConvertForm({ ...convertForm, opportunityName: e.target.value })
+                        setConvertForm({
+                          ...convertForm,
+                          opportunityName: e.target.value,
+                        })
                       }
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label fw-semibold">Excepected Budget *</label>
+                    <label className="form-label fw-semibold">
+                      Excepected Budget *
+                    </label>
                     <input
                       type="number"
                       className="form-control"
@@ -738,19 +873,27 @@ export function LeadsPage() {
                       required
                       value={convertForm.amount}
                       onChange={(e) =>
-                        setConvertForm({ ...convertForm, amount: Number(e.target.value) })
+                        setConvertForm({
+                          ...convertForm,
+                          amount: Number(e.target.value),
+                        })
                       }
                     />
                   </div>
                   <div className="mb-3">
-                    <label className="form-label fw-semibold">Expected close date *</label>
+                    <label className="form-label fw-semibold">
+                      Expected close date *
+                    </label>
                     <input
                       type="date"
                       className="form-control"
                       required
                       value={convertForm.expectedCloseDate}
                       onChange={(e) =>
-                        setConvertForm({ ...convertForm, expectedCloseDate: e.target.value })
+                        setConvertForm({
+                          ...convertForm,
+                          expectedCloseDate: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -759,9 +902,12 @@ export function LeadsPage() {
                     <textarea
                       className="form-control"
                       rows={2}
-                      value={convertForm.conversionReason ?? ''}
+                      value={convertForm.conversionReason ?? ""}
                       onChange={(e) =>
-                        setConvertForm({ ...convertForm, conversionReason: e.target.value })
+                        setConvertForm({
+                          ...convertForm,
+                          conversionReason: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -775,8 +921,12 @@ export function LeadsPage() {
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-meetings-primary" disabled={actionLoading}>
-                    {actionLoading ? 'Converting...' : 'Convert'}
+                  <button
+                    type="submit"
+                    className="btn btn-meetings-primary"
+                    disabled={actionLoading}
+                  >
+                    {actionLoading ? "Converting..." : "Convert"}
                   </button>
                 </div>
               </form>
