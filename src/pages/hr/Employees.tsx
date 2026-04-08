@@ -197,6 +197,7 @@ export default function Employees() {
                               onClick={() =>
                                 navigate(
                                   `/dashboard/hr/employees/${emp.id}/edit`,
+                                  { state: { employee: emp } },
                                 )
                               }
                             >

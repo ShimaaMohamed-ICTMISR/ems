@@ -5,6 +5,7 @@ import hrService from "../../services/hrProjectManagementService";
 import { useHrPermissions } from "../../hooks/useHrPermissions";
 import { HR_PERMISSION_KEYS } from "../../config/hrPermissions";
 import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import { hrToast } from "../../utils/hrToast";
 import "../styles/LeaveRequests.css";
 
 export default function LeaveRequests() {
@@ -57,7 +58,7 @@ export default function LeaveRequests() {
     status: LeaveRequest["status"],
   ) => {
     if (!canEditLeaveRequest) {
-      alert("You do not have permission to update leave requests.");
+      hrToast.warning("You do not have permission to update leave requests.");
       return;
     }
 
@@ -68,26 +69,26 @@ export default function LeaveRequests() {
         status,
         approverComments: comments || undefined,
       });
-      alert(`Leave request ${status.toLowerCase()} successfully!`);
+      hrToast.success(`Leave request ${status.toLowerCase()} successfully!`);
       fetchRequests();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to update");
+      hrToast.error(err.response?.data?.message || "Failed to update");
     }
   };
 
   const handleCancel = async (id: string) => {
     if (!canDeleteLeaveRequest && !canEditLeaveRequest) {
-      alert("You do not have permission to cancel leave requests.");
+      hrToast.warning("You do not have permission to cancel leave requests.");
       return;
     }
 
     if (!confirm("Cancel this leave request?")) return;
     try {
       await hrService.cancelLeaveRequest(id);
-      alert("Leave request cancelled!");
+      hrToast.success("Leave request cancelled!");
       fetchRequests();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to cancel");
+      hrToast.error(err.response?.data?.message || "Failed to cancel");
     }
   };
 

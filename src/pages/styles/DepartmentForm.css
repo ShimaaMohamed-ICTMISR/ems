@@ -159,3 +159,60 @@
     width: 100%;
   }
 }
+
+/* Unified HR theme overrides (Department + Position forms) */
+.department-form-container {
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 14% 8%, rgba(0, 180, 216, 0.12), transparent 32%),
+    radial-gradient(circle at 88% 0, rgba(27, 73, 101, 0.08), transparent 30%),
+    linear-gradient(180deg, #f6fbff 0%, #ecf3fa 100%) !important;
+}
+
+.form-card {
+  border: 1px solid #dbe7f3;
+  border-radius: 16px;
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.14);
+}
+
+.form-header {
+  border-bottom: 2px solid #8fd3e6;
+}
+
+.form-header h2 {
+  color: #1b4965;
+}
+
+.form-subtitle {
+  color: #64748b;
+}
+
+.form-control,
+.form-select {
+  border-color: #d4e4f1;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #00b4d8;
+  box-shadow: 0 0 0 0.2rem rgba(0, 180, 216, 0.13);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #1b4965 0%, #0f766e 100%) !important;
+}
+
+.btn-primary:hover:not(:disabled) {
+  box-shadow: 0 10px 20px rgba(27, 73, 101, 0.35);
+}
+
+.btn-outline-secondary {
+  color: #1b4965;
+  border-color: #9fb7cd;
+}
+
+.btn-outline-secondary:hover:not(:disabled) {
+  background: #effbff;
+  border-color: #00b4d8;
+  color: #0b4f6c;
+}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Department, Position, CreateEmployeeRequest } from '../../services/hrProjectManagementService';
 import hrService from '../../services/hrProjectManagementService';
+import { hrToast } from '../../utils/hrToast';
 import '../styles/Employees.css';
 
 export default function CreateEmployee() {
@@ -30,10 +31,10 @@ export default function CreateEmployee() {
         setLoading(true);
         try {
             await hrService.createEmployee(form);
-            alert('Employee created successfully!');
+            hrToast.success('Employee created successfully!');
             navigate('/dashboard/hr/employees');
         } catch (err: any) {
-            alert(err.response?.data?.message || 'Failed to create employee');
+            hrToast.error(err.response?.data?.message || 'Failed to create employee');
         } finally { setLoading(false); }
     };
 

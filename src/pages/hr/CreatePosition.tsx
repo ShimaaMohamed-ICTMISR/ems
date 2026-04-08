@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import type { Department, Position } from '../../services/hrProjectManagementService';
 import hrService from '../../services/hrProjectManagementService';
+import { hrToast } from '../../utils/hrToast';
 import '../styles/Departments.css';
 
 export default function CreatePosition() {
@@ -70,7 +71,7 @@ export default function CreatePosition() {
         salaryBandMax,
         description: description || undefined,
       });
-      alert('Position created successfully!');
+      hrToast.success('Position created successfully!');
       navigate('/dashboard/hr/positions');
     } catch (err: any) {
       console.error('Error creating position:', err);

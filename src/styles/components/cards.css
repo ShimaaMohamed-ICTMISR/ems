@@ -1,0 +1,29 @@
+/* Reusable container/card classes */
+.app-card {
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius-md);
+  background: var(--app-color-surface);
+  box-shadow: var(--app-shadow-sm);
+}
+
+.app-card-header {
+  border-bottom: 1px solid var(--app-color-border);
+  border-radius: var(--app-radius-md) var(--app-radius-md) 0 0;
+  padding: 0.875rem 1rem;
+  background: linear-gradient(135deg, #f8fcff, #f2f8ff);
+  color: var(--app-color-secondary);
+  font-weight: var(--app-font-weight-semibold);
+}
+
+.app-card-body {
+  padding: 1rem;
+}
+
+.app-card-interactive {
+  transition: all 0.2s ease;
+}
+
+.app-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--app-shadow-md);
+}

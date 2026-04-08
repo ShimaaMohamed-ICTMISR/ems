@@ -297,3 +297,68 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Unified HR theme overrides (Leave Requests + Leave Balances) */
+.leave-requests-container,
+.lr-form-container,
+.leave-balances-container {
+    background:
+        radial-gradient(circle at 14% 8%, rgba(0, 180, 216, 0.12), transparent 32%),
+        radial-gradient(circle at 88% 0, rgba(27, 73, 101, 0.08), transparent 30%),
+        linear-gradient(180deg, #f6fbff 0%, #ecf3fa 100%);
+    min-height: 100%;
+}
+
+.leave-requests-header {
+    border-radius: 16px;
+    padding: 1.15rem 1.35rem;
+    background: linear-gradient(135deg, #0b132b, #1c2541);
+    box-shadow: 0 16px 28px rgba(15, 23, 42, 0.16);
+    margin-bottom: 1.5rem;
+}
+
+.lr-table-wrapper,
+.lr-form,
+.lb-card {
+    border: 1px solid #dbe7f3;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.lr-table thead {
+    background: linear-gradient(135deg, #1b4965 0%, #247ba0 100%);
+}
+
+.lr-table tr:hover td {
+    background: #f4fbff;
+}
+
+.lr-form .form-control,
+.lb-controls .form-control,
+.lb-controls .form-select {
+    border: 1px solid #d4e4f1;
+    border-radius: 10px;
+}
+
+.lr-form .form-control:focus,
+.lb-controls .form-control:focus,
+.lb-controls .form-select:focus {
+    border-color: #00b4d8;
+    box-shadow: 0 0 0 .2rem rgba(0, 180, 216, .13);
+}
+
+.status-PENDING { background: #fef3c7; color: #92400e; }
+.status-APPROVED { background: #dcfce7; color: #166534; }
+.status-REJECTED { background: #fee2e2; color: #991b1b; }
+.status-CANCELLED { background: #e2e8f0; color: #334155; }
+.status-IN_PROGRESS { background: #dbeafe; color: #1d4ed8; }
+.status-COMPLETED { background: #e0f2fe; color: #075985; }
+
+.lb-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 28px rgba(15, 23, 42, 0.14);
+}
+
+.lb-remaining {
+    color: #1b4965;
+}
