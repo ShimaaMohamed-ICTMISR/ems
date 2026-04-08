@@ -69,3 +69,59 @@
   .employees-header { flex-direction: column; align-items: stretch; gap: 1rem; }
   .employees-controls { flex-direction: column; }
 }
+
+/* Unified HR theme overrides (Employees) */
+.employees-container,
+.employee-form-container {
+  background:
+    radial-gradient(circle at 14% 8%, rgba(0, 180, 216, 0.12), transparent 32%),
+    radial-gradient(circle at 88% 0, rgba(27, 73, 101, 0.08), transparent 30%),
+    linear-gradient(180deg, #f6fbff 0%, #ecf3fa 100%);
+  min-height: 100%;
+}
+
+.employees-header {
+  border-radius: 16px;
+  padding: 1.15rem 1.35rem;
+  background: linear-gradient(135deg, #0b132b, #1c2541);
+  box-shadow: 0 16px 28px rgba(15, 23, 42, 0.16);
+  margin-bottom: 1.5rem;
+}
+
+.employees-table-wrapper,
+.employee-form {
+  border: 1px solid #dbe7f3;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.employees-table thead {
+  background: linear-gradient(135deg, #1b4965 0%, #247ba0 100%);
+}
+
+.employees-table tr:hover td {
+  background: #f4fbff;
+}
+
+.employee-form label {
+  color: #334155;
+}
+
+.employee-form .form-control {
+  border-color: #d4e4f1;
+}
+
+.employee-form .form-control:focus {
+  border-color: #00b4d8;
+  box-shadow: 0 0 0 0.2rem rgba(0, 180, 216, 0.13);
+}
+
+.status-badge {
+  border: 1px solid transparent;
+}
+
+.status-ACTIVE { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.status-INACTIVE { background: #e2e8f0; color: #334155; border-color: #cbd5e1; }
+.status-ON_LEAVE { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+.status-SUSPENDED { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.status-TERMINATED { background: #ffe4e6; color: #9f1239; border-color: #fecdd3; }

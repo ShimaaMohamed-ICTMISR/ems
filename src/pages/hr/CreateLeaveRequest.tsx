@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Employee, LeaveType, CreateLeaveRequestRequest } from '../../services/hrProjectManagementService';
 import hrService from '../../services/hrProjectManagementService';
+import { hrToast } from '../../utils/hrToast';
 import '../styles/LeaveRequests.css';
 
 export default function CreateLeaveRequest() {
@@ -55,9 +56,9 @@ export default function CreateLeaveRequest() {
         setLoading(true);
         try {
             await hrService.createLeaveRequest(form);
-            alert('Leave request created successfully!');
+            hrToast.success('Leave request created successfully!');
             navigate('/dashboard/hr/leave-requests');
-        } catch (err: any) { alert(err.response?.data?.message || 'Failed to create leave request'); }
+        } catch (err: any) { hrToast.error(err.response?.data?.message || 'Failed to create leave request'); }
         finally { setLoading(false); }
     };
 

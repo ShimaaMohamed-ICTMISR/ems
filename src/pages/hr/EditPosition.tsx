@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import type { Department } from '../../services/hrProjectManagementService';
 import hrService from '../../services/hrProjectManagementService';
+import { hrToast } from '../../utils/hrToast';
 import '../styles/Departments.css';
 
 export default function EditPosition() {
@@ -87,7 +88,7 @@ export default function EditPosition() {
         isActive,
         inheritsParentPermissions,
       });
-      alert('Position updated successfully!');
+      hrToast.success('Position updated successfully!');
       navigate('/dashboard/hr/positions');
     } catch (err: any) {
       console.error('Error updating position:', err);

@@ -1,0 +1,20 @@
+/* Reusable title/header classes */
+.app-header-kicker {
+  margin-bottom: var(--app-space-1);
+  font-size: var(--app-font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.08rem;
+  color: #90e0ef;
+  font-weight: var(--app-font-weight-semibold);
+}
+
+.app-header-title {
+  margin: 0;
+  color: #f8fbff;
+  font-size: var(--app-font-size-2xl);
+}
+
+.app-header-subtitle {
+  margin: var(--app-space-1) 0 0;
+  color: rgba(241, 245, 249, 0.88);
+}

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { CreateLeaveTypeRequest } from "../../services/hrProjectManagementService";
 import hrService from "../../services/hrProjectManagementService";
+import { hrToast } from "../../utils/hrToast";
 import "../styles/LeaveTypes.css";
 
 export default function CreateLeaveType() {
@@ -36,10 +37,10 @@ export default function CreateLeaveType() {
     setLoading(true);
     try {
       await hrService.createLeaveType(form);
-      alert("Leave type created successfully!");
+      hrToast.success("Leave type created successfully!");
       navigate("/dashboard/hr/leave-types");
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to create leave type");
+      hrToast.error(err.response?.data?.message || "Failed to create leave type");
     } finally {
       setLoading(false);
     }

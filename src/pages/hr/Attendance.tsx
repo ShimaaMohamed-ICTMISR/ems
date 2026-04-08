@@ -4,6 +4,7 @@ import hrService from "../../services/hrProjectManagementService";
 import { useHrPermissions } from "../../hooks/useHrPermissions";
 import { HR_PERMISSION_KEYS } from "../../config/hrPermissions";
 import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import { hrToast } from "../../utils/hrToast";
 import "../styles/Attendance.css";
 
 export default function Attendance() {
@@ -80,49 +81,58 @@ export default function Attendance() {
 
   const handleCheckIn = async () => {
     if (!canManageAttendance) {
-      alert("You do not have permission to manage attendance records.");
+      hrToast.warning("You do not have permission to manage attendance records.");
       return;
     }
 
-    if (!selectedEmployee) return alert("Select an employee first");
+    if (!selectedEmployee) {
+      hrToast.info("Select an employee first");
+      return;
+    }
     try {
       await hrService.checkIn({
         employeeId: selectedEmployee,
         checkInTime: new Date().toISOString(),
       });
-      alert("Check-in successful!");
+      hrToast.success("Check-in successful!");
       fetchRecords();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Check-in failed");
+      hrToast.error(err.response?.data?.message || "Check-in failed");
     }
   };
 
   const handleCheckOut = async () => {
     if (!canManageAttendance) {
-      alert("You do not have permission to manage attendance records.");
+      hrToast.warning("You do not have permission to manage attendance records.");
       return;
     }
 
-    if (!selectedEmployee) return alert("Select an employee first");
+    if (!selectedEmployee) {
+      hrToast.info("Select an employee first");
+      return;
+    }
     try {
       await hrService.checkOut({
         employeeId: selectedEmployee,
         checkOutTime: new Date().toISOString(),
       });
-      alert("Check-out successful!");
+      hrToast.success("Check-out successful!");
       fetchRecords();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Check-out failed");
+      hrToast.error(err.response?.data?.message || "Check-out failed");
     }
   };
 
   const handleMarkAbsence = async () => {
     if (!canManageAttendance) {
-      alert("You do not have permission to manage attendance records.");
+      hrToast.warning("You do not have permission to manage attendance records.");
       return;
     }
 
-    if (!selectedEmployee) return alert("Select an employee first");
+    if (!selectedEmployee) {
+      hrToast.info("Select an employee first");
+      return;
+    }
     const reason = prompt("Enter absence reason:");
     try {
       await hrService.markAbsence({
@@ -130,10 +140,10 @@ export default function Attendance() {
         date: new Date().toISOString().split("T")[0],
         reason: reason || undefined,
       });
-      alert("Absence recorded!");
+      hrToast.success("Absence recorded!");
       fetchRecords();
     } catch (err: any) {
-      alert(err.response?.data?.message || "Failed to mark absence");
+      hrToast.error(err.response?.data?.message || "Failed to mark absence");
     }
   };
 

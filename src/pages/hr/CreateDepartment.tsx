@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import DepartmentForm from './DepartmentForm';
 import hrService from '../../services/hrProjectManagementService';
+import { hrToast } from '../../utils/hrToast';
 
 export function CreateDepartment() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const handleSubmit = async (data: any) => {
       if (data.parent) payload.parentId = data.parent;
 
       await hrService.createDepartment(payload);
-      alert('Department created successfully!');
+      hrToast.success('Department created successfully!');
       navigate('/dashboard/hr/departments');
     } catch (error) {
       console.error('Error creating department:', error);

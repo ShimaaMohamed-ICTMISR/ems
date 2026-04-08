@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import DepartmentForm from './DepartmentForm';
 import type { Department } from '../../services/hrProjectManagementService';
 import hrService from '../../services/hrProjectManagementService';
+import { hrToast } from '../../utils/hrToast';
 
 
 export function EditDepartment() {
@@ -40,7 +41,7 @@ export function EditDepartment() {
         const { code, ...updateData } = data;
         await hrService.updateDepartment(id, updateData);
       }
-      alert('Department updated successfully!');
+      hrToast.success('Department updated successfully!');
       navigate('/dashboard/hr/departments');
     } catch (error) {
       console.error('Error updating department:', error);

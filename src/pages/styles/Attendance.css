@@ -192,3 +192,64 @@
         grid-template-columns: 1fr 1fr;
     }
 }
+
+/* Unified HR theme overrides (Attendance) */
+.attendance-container {
+    background:
+        radial-gradient(circle at 14% 8%, rgba(0, 180, 216, 0.12), transparent 32%),
+        radial-gradient(circle at 88% 0, rgba(27, 73, 101, 0.08), transparent 30%),
+        linear-gradient(180deg, #f6fbff 0%, #ecf3fa 100%);
+    min-height: 100%;
+}
+
+.attendance-header {
+    border-radius: 16px;
+    padding: 1.15rem 1.35rem;
+    background: linear-gradient(135deg, #0b132b, #1c2541);
+    box-shadow: 0 16px 28px rgba(15, 23, 42, 0.16);
+    margin-bottom: 1.5rem;
+}
+
+.attendance-controls,
+.attendance-table-wrapper,
+.action-card,
+.stat-card {
+    border: 1px solid #dbe7f3;
+    border-radius: 14px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    background: #ffffff;
+}
+
+.attendance-controls {
+    padding: 0.9rem;
+}
+
+.attendance-table thead {
+    background: linear-gradient(135deg, #1b4965 0%, #247ba0 100%);
+}
+
+.attendance-table tr:hover td {
+    background: #f4fbff;
+}
+
+.action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 28px rgba(15, 23, 42, .14);
+    border-color: #8fd3e6;
+}
+
+.action-card .action-icon.check-in {
+    background: linear-gradient(135deg, #0f766e, #14b8a6);
+}
+
+.action-card .action-icon.check-out {
+    background: linear-gradient(135deg, #b91c1c, #ef4444);
+}
+
+.action-card .action-icon.absence {
+    background: linear-gradient(135deg, #b45309, #f59e0b);
+}
+
+.stat-card .stat-value {
+    color: #1b4965;
+}

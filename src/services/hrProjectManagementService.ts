@@ -327,7 +327,22 @@ export const hrService = {
   // ─── Employees ───────────────────────────
   getEmployees: (params?: { page?: number; limit?: number; departmentId?: string; positionId?: string; status?: string }) =>
     hrApiClient.get('/v1/employees', { params }),
-  getEmployeeById: (id: string) => hrApiClient.get(`/v1/employees?id=${id}`),
+  getEmployeeById: async (id: string) => {
+    const safeId = encodeURIComponent(id);
+
+    try {
+      return await hrApiClient.get(`/v1/employees?id=${safeId}`);
+    } catch (error: any) {
+      const status = error?.response?.status;
+
+      // Some backend deployments reject query-based single lookups and only support /:id.
+      if (status === 400 || status === 404) {
+        return hrApiClient.get(`/v1/employees/${safeId}`);
+      }
+
+      throw error;
+    }
+  },
   createEmployee: (data: CreateEmployeeRequest) => hrApiClient.post('/v1/employees', data),
   updateEmployee: (id: string, data: UpdateEmployeeRequest) => hrApiClient.patch(`/v1/employees/${id}`, data),
   deleteEmployee: (id: string) => hrApiClient.delete(`/v1/employees/${id}`),

@@ -5,6 +5,7 @@ import hrService from "../../services/hrProjectManagementService";
 import { useHrPermissions } from "../../hooks/useHrPermissions";
 import { HR_PERMISSION_KEYS } from "../../config/hrPermissions";
 import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import { hrToast } from "../../utils/hrToast";
 import "../styles/Departments.css";
 
 export function Departments() {
@@ -88,7 +89,7 @@ export function Departments() {
     try {
       await hrService.deleteDepartment(id);
       setDepartments(departments.filter((d) => d.id !== id));
-      alert("Department deleted successfully!");
+      hrToast.success("Department deleted successfully!");
     } catch (err) {
       console.error("Error deleting department:", err);
       setError("Failed to delete department");

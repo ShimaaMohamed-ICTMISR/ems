@@ -8,6 +8,7 @@ import hrService from "../../services/hrProjectManagementService";
 import { useHrPermissions } from "../../hooks/useHrPermissions";
 import { HR_PERMISSION_KEYS } from "../../config/hrPermissions";
 import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import { hrToast } from "../../utils/hrToast";
 import "../styles/Departments.css";
 
 export function Positions() {
@@ -182,7 +183,7 @@ export function Positions() {
     try {
       await hrService.deletePosition(id);
       setPositions((p) => p.filter((x) => x.id !== id));
-      alert("Position deleted");
+      hrToast.success("Position deleted");
     } catch (err) {
       console.error("Error deleting position:", err);
       setError("Failed to delete position");
@@ -245,7 +246,9 @@ export function Positions() {
       setSubInherits(true);
     } catch (err: any) {
       console.error("Error creating sub-position:", err);
-      alert(err.response?.data?.message || "Failed to create sub-position");
+      hrToast.error(
+        err.response?.data?.message || "Failed to create sub-position",
+      );
     } finally {
       setSubSubmitting(false);
     }
@@ -270,7 +273,7 @@ export function Positions() {
       }));
     } catch (err) {
       console.error("Error deleting sub-position:", err);
-      alert("Failed to delete sub-position");
+      hrToast.error("Failed to delete sub-position");
     }
   };
 
@@ -349,7 +352,7 @@ export function Positions() {
       );
 
       if (failedPermissions.length > 0) {
-        alert(
+        hrToast.warning(
           `Assigned package partially. Failed permissions: ${failedPermissions.join(", ")}`,
         );
       }
@@ -357,7 +360,7 @@ export function Positions() {
       setSelectedPermissionPackage("");
     } catch (err: any) {
       console.error("Error assigning permission package:", err);
-      alert(
+      hrToast.error(
         err.response?.data?.message || "Failed to assign permission package",
       );
     } finally {
@@ -383,7 +386,7 @@ export function Positions() {
       );
     } catch (err) {
       console.error("Error removing permission:", err);
-      alert("Failed to remove permission");
+      hrToast.error("Failed to remove permission");
     }
   };
 
