@@ -7,6 +7,7 @@ export interface PortfolioProject {
   healthStatus?: number;
   startDateUtc?: string;
   endDateUtc?: string;
+  isDeleted?: boolean;
 }
 
 export interface Portfolio {
@@ -18,6 +19,21 @@ export interface Portfolio {
   projects?: PortfolioProject[] | null;
   createdDateUtc?: string;
   updatedDateUtc?: string | null;
+}
+
+function isDeletedEntity(value: unknown): boolean {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  return (value as { isDeleted?: boolean }).isDeleted === true;
+}
+
+function sanitizePortfolio(portfolio: Portfolio): Portfolio {
+  return {
+    ...portfolio,
+    projects: (portfolio.projects || []).filter((project) => !isDeletedEntity(project)),
+  };
 }
 
 export interface PortfolioCreateDTO {
@@ -56,7 +72,8 @@ function extractPayload<T>(response: { data: unknown }): T {
 export const portfolioService = {
   getPortfolios: async (): Promise<Portfolio[]> => {
     const response = await projectManagementApiClient.get('/project-admin/portfolios');
-    return extractPayload<Portfolio[]>(response) || [];
+    const portfolios = extractPayload<Portfolio[]>(response) || [];
+    return portfolios.map(sanitizePortfolio);
   },
 
   createPortfolio: async (payload: PortfolioCreateDTO): Promise<Portfolio> => {
@@ -66,7 +83,8 @@ export const portfolioService = {
 
   getPortfolioById: async (id: string): Promise<Portfolio> => {
     const response = await projectManagementApiClient.get(`/project-admin/portfolios/${id}`);
-    return extractPayload<Portfolio>(response);
+    const portfolio = extractPayload<Portfolio>(response);
+    return sanitizePortfolio(portfolio);
   },
 
   updatePortfolioById: async (id: string, payload: PortfolioUpdateDTO): Promise<Portfolio | void> => {

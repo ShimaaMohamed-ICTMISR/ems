@@ -9,6 +9,8 @@ import taskService, {
 import taskDocumentService, {
   type TaskDocument,
 } from "../../services/projectManagementServices/taskDocumentService";
+import phaseService from "../../services/projectManagementServices/phaseService";
+import milestoneService from "../../services/projectManagementServices/milestoneService";
 import memberService, {
   type ProjectMember,
 } from "../../services/projectManagementServices/memberService";
@@ -24,18 +26,20 @@ import { PM_PERMISSION_KEYS } from "../../config/projectManagementPermissions";
 import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
 import { AccessDeniedState } from "../../Components/AccessDeniedState";
 import type { RootState } from "../../store/store";
+import { extractApiErrorMessage } from "../../utils/apiError";
+import {
+  formatDateOnly,
+  toDateInputValue,
+  toUtcDateOnly,
+} from "../../utils/dateOnly";
 import ".././styles/TaskDetails.css";
 
 function formatDate(value?: string | null) {
-  if (!value) return "N/A";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "N/A" : date.toLocaleString();
+  return formatDateOnly(value);
 }
 
-function toDateInputValue(value?: string | null) {
-  if (!value) return "";
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "" : date.toISOString().slice(0, 10);
+function formatTaskDateOrNull(value?: string | null) {
+  return value ? formatDate(value) : "null";
 }
 
 function safeInt(value: string | undefined, fallback = 0): number {
@@ -107,6 +111,7 @@ const statusColor: Record<number, string> = {
 export function TaskDetails() {
   const navigate = useNavigate();
   const { portfolioId, projectId, taskId } = useParams();
+  const isProjectTaskContext = Boolean(portfolioId && projectId);
   const { canAny } = useProjectManagementPermissions();
   const canViewTask = canAny([...PM_PERMISSION_KEYS.TASKS.VIEW]);
   const canEditTask = canAny([...PM_PERMISSION_KEYS.TASKS.EDIT]);
@@ -131,6 +136,8 @@ export function TaskDetails() {
   const [editForm, setEditForm] = useState<EditTaskFormState>(initialEditForm);
   const [projectMembers, setProjectMembers] = useState<ProjectMember[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [phaseName, setPhaseName] = useState("N/A");
+  const [milestoneName, setMilestoneName] = useState("N/A");
   const [employeesLoading, setEmployeesLoading] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
   const [showMemberDropdown, setShowMemberDropdown] = useState(false);
@@ -155,7 +162,7 @@ export function TaskDetails() {
     const taskEmployerId = (data as Task & { employerId?: string | null })
       .employerId;
 
-    const isProjectTask = Boolean(data.projectId || projectId);
+    const isProjectTask = isProjectTaskContext;
 
     setEditForm({
       title: data.title || "",
@@ -192,7 +199,9 @@ export function TaskDetails() {
         setFormFromTask(data);
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load task details.");
+        toast.error(
+          extractApiErrorMessage(error, "Failed to load task details."),
+        );
       } finally {
         setLoading(false);
       }
@@ -220,7 +229,7 @@ export function TaskDetails() {
         | (Task & { employerId?: string | null })
         | null;
       const employerId = withEmployerId?.employerId?.trim();
-      const isProjectTask = Boolean(task?.projectId || projectId);
+      const isProjectTask = isProjectTaskContext;
       const fallbackEmployerId = !isProjectTask
         ? task?.assignedToMemberId?.trim()
         : undefined;
@@ -238,14 +247,82 @@ export function TaskDetails() {
         setEmployees(Array.isArray(payload) ? payload : []);
       } catch (error) {
         console.error("Failed to load employees", error);
-        toast.error("Failed to load employees for task assignment.");
+        toast.error(
+          extractApiErrorMessage(
+            error,
+            "Failed to load employees for task assignment.",
+          ),
+        );
       } finally {
         setEmployeesLoading(false);
       }
     }
 
     fetchEmployees();
-  }, [isEditing, task, projectId, employees.length]);
+  }, [isEditing, task, employees.length, isProjectTaskContext]);
+
+  useEffect(() => {
+    if (!isProjectTaskContext || !task) {
+      setPhaseName("N/A");
+      setMilestoneName("N/A");
+      return;
+    }
+
+    const currentTask = task;
+
+    const withTaskNames = currentTask as Task & {
+      projectPhaseName?: string | null;
+      phaseName?: string | null;
+      milestoneName?: string | null;
+    };
+
+    const inlinePhaseName =
+      withTaskNames.projectPhaseName?.trim() || withTaskNames.phaseName?.trim();
+    const inlineMilestoneName = withTaskNames.milestoneName?.trim();
+
+    setPhaseName(inlinePhaseName || "N/A");
+    setMilestoneName(inlineMilestoneName || "N/A");
+
+    let cancelled = false;
+
+    async function resolveNames() {
+      const resolvedMilestone = currentTask.milestoneId
+        ? await milestoneService
+            .getMilestoneById(currentTask.milestoneId)
+            .catch(() => null)
+        : null;
+
+      const resolvedMilestoneName = resolvedMilestone?.name?.trim() || null;
+      const resolvedPhaseId =
+        currentTask.projectPhaseId?.trim() ||
+        resolvedMilestone?.projectPhaseId?.trim();
+
+      const resolvedPhaseName = resolvedPhaseId
+        ? await phaseService
+            .getPhaseById(resolvedPhaseId)
+            .then((phase) => phase.name?.trim() || null)
+            .catch(() => null)
+        : null;
+
+      if (cancelled) {
+        return;
+      }
+
+      if (resolvedPhaseName) {
+        setPhaseName(resolvedPhaseName);
+      }
+
+      if (resolvedMilestoneName) {
+        setMilestoneName(resolvedMilestoneName);
+      }
+    }
+
+    resolveNames();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isProjectTaskContext, task]);
 
   useEffect(() => {
     if (!canViewTaskDocuments) {
@@ -265,7 +342,9 @@ export function TaskDetails() {
         setDocuments(docs);
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load task documents.");
+        toast.error(
+          extractApiErrorMessage(error, "Failed to load task documents."),
+        );
       } finally {
         setDocumentsLoading(false);
       }
@@ -375,7 +454,7 @@ export function TaskDetails() {
     try {
       setSaving(true);
 
-      const isProjectTask = Boolean(task.projectId || projectId);
+      const isProjectTask = isProjectTaskContext;
 
       await taskService.updateTaskById(taskId, {
         id: taskId,
@@ -391,12 +470,8 @@ export function TaskDetails() {
         description: editForm.description.trim() || undefined,
         priority: safeInt(editForm.priority, 1),
         status: safeInt(editForm.status),
-        startDateUtc: editForm.startDateUtc
-          ? new Date(editForm.startDateUtc).toISOString()
-          : undefined,
-        dueDateUtc: editForm.dueDateUtc
-          ? new Date(editForm.dueDateUtc).toISOString()
-          : undefined,
+        startDateUtc: toUtcDateOnly(editForm.startDateUtc),
+        dueDateUtc: toUtcDateOnly(editForm.dueDateUtc),
         completionPercentage: safeFloat(editForm.completionPercentage),
         effortEstimateHours: safeFloat(editForm.effortEstimateHours),
         assignedToMemberId: editForm.assignedToMemberId.trim() || undefined,
@@ -409,7 +484,7 @@ export function TaskDetails() {
       toast.success("Task updated successfully.");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update task.");
+      toast.error(extractApiErrorMessage(error, "Failed to update task."));
     } finally {
       setSaving(false);
     }
@@ -434,7 +509,7 @@ export function TaskDetails() {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete task.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete task."));
     } finally {
       setSaving(false);
       setConfirmDelete(false);
@@ -500,7 +575,9 @@ export function TaskDetails() {
       setDocuments(refreshed);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to upload task document.");
+      toast.error(
+        extractApiErrorMessage(error, "Failed to upload task document."),
+      );
     } finally {
       setUploadingDocument(false);
     }
@@ -522,7 +599,9 @@ export function TaskDetails() {
       toast.success("Task document deleted.");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete task document.");
+      toast.error(
+        extractApiErrorMessage(error, "Failed to delete task document."),
+      );
     } finally {
       setConfirmDeleteDocId(null);
     }
@@ -589,7 +668,7 @@ export function TaskDetails() {
   const taskEmployerId = (
     task as Task & { employerId?: string | null }
   ).employerId?.trim();
-  const isProjectTask = Boolean(task.projectId || projectId);
+  const isProjectTask = isProjectTaskContext;
   const resolvedEmployerId =
     taskEmployerId || (!isProjectTask ? task.assignedToMemberId?.trim() : "");
   const assigneeType = resolvedEmployerId
@@ -778,7 +857,7 @@ export function TaskDetails() {
               />
             </div>
             <div className="col-12 col-lg-6">
-              {task.projectId || projectId ? (
+              {isProjectTask ? (
                 <>
                   <label className="form-label">
                     Assign To (Project Member)
@@ -930,22 +1009,18 @@ export function TaskDetails() {
       <section className="task-details-grid">
         <article className="task-info-card">
           <h2 className="h6">Task Info</h2>
-          <div className="task-info-row">
-            <span>ID</span>
-            <strong>{task.id}</strong>
-          </div>
-          {/* <div className="task-info-row">
-            <span>Project ID</span>
-            <strong>{task.projectId || "N/A"}</strong>
-          </div> */}
-          <div className="task-info-row">
-            <span>Phase ID</span>
-            <strong>{task.projectPhaseId || "N/A"}</strong>
-          </div>
-          {/* <div className="task-info-row">
-            <span>Milestone ID</span>
-            <strong>{task.milestoneId || "N/A"}</strong>
-          </div> */}
+          {isProjectTask && (
+            <div className="task-info-row">
+              <span>Phase</span>
+              <strong>{phaseName}</strong>
+            </div>
+          )}
+          {isProjectTask && (
+            <div className="task-info-row">
+              <span>Milestone</span>
+              <strong>{milestoneName}</strong>
+            </div>
+          )}
           <div className="task-info-row">
             <span>Priority</span>
             <strong style={{ color: priorityColor[priorityVal] }}>
@@ -966,21 +1041,23 @@ export function TaskDetails() {
             <span>Effort Estimate</span>
             <strong>{task.effortEstimateHours ?? 0}h</strong>
           </div>
-          <div className="task-info-row">
-            <span>Assigned To</span>
-            <div className="task-assignee-display">
-              <strong>{assigneeLabel}</strong>
-              {assigneeType && (
-                <span
-                  className={`task-assignee-badge ${
-                    assigneeType === "hr" ? "hr" : "member"
-                  }`}
-                >
-                  {assigneeType === "hr" ? "HR employee" : "Project member"}
-                </span>
-              )}
+          {isProjectTask && (
+            <div className="task-info-row">
+              <span>Assigned To</span>
+              <div className="task-assignee-display">
+                <strong>{assigneeLabel}</strong>
+                {assigneeType && (
+                  <span
+                    className={`task-assignee-badge ${
+                      assigneeType === "hr" ? "hr" : "member"
+                    }`}
+                  >
+                    {assigneeType === "hr" ? "HR employee" : "Project member"}
+                  </span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
           {!isProjectTask && (
             <div className="task-info-row">
               <span>Employer ID</span>
@@ -993,11 +1070,11 @@ export function TaskDetails() {
           <h2 className="h6">Schedule</h2>
           <div className="task-info-row">
             <span>Start Date</span>
-            <strong>{formatDate(task.startDateUtc)}</strong>
+            <strong>{formatTaskDateOrNull(task.startDateUtc)}</strong>
           </div>
           <div className="task-info-row">
             <span>Due Date</span>
-            <strong>{formatDate(task.dueDateUtc)}</strong>
+            <strong>{formatTaskDateOrNull(task.dueDateUtc)}</strong>
           </div>
           <div className="task-info-row">
             <span>Created</span>

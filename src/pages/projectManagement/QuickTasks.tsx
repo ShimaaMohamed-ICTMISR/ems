@@ -7,6 +7,7 @@ import { useProjectManagementPermissions } from "../../hooks/useProjectManagemen
 import taskService, {
   type Task,
 } from "../../services/projectManagementServices/taskService";
+import { extractApiErrorMessage } from "../../utils/apiError";
 import {
   PriorityLevel,
   TaskStatus as TaskStatusEnum,
@@ -71,7 +72,9 @@ export function QuickTasks() {
         setTasks(independentTasks);
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load quick tasks.");
+        toast.error(
+          extractApiErrorMessage(error, "Failed to load quick tasks."),
+        );
       } finally {
         setLoading(false);
       }

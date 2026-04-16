@@ -13,6 +13,7 @@ import portfolioService, {
   type PortfolioCreateDTO,
   type PortfolioUpdateDTO,
 } from "../../services/projectManagementServices/portfolioService";
+import { extractApiErrorMessage } from "../../utils/apiError";
 import ".././styles/Portfolios.css";
 
 type FormState = {
@@ -184,7 +185,10 @@ export function Portfolios() {
       setError(null);
     } catch (fetchError) {
       console.error(fetchError);
-      const message = "Failed to load portfolios. Please try again.";
+      const message = extractApiErrorMessage(
+        fetchError,
+        "Failed to load portfolios. Please try again.",
+      );
       setError(message);
       toast.error(message);
     } finally {
@@ -250,7 +254,9 @@ export function Portfolios() {
       await fetchPortfolios();
     } catch (submitError) {
       console.error(submitError);
-      toast.error("Failed to create portfolio.");
+      toast.error(
+        extractApiErrorMessage(submitError, "Failed to create portfolio."),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -268,7 +274,12 @@ export function Portfolios() {
       setDetailsPortfolio(data);
     } catch (detailsError) {
       console.error(detailsError);
-      toast.error("Unable to load portfolio details.");
+      toast.error(
+        extractApiErrorMessage(
+          detailsError,
+          "Unable to load portfolio details.",
+        ),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -291,7 +302,12 @@ export function Portfolios() {
       });
     } catch (editError) {
       console.error(editError);
-      toast.error("Unable to load portfolio for editing.");
+      toast.error(
+        extractApiErrorMessage(
+          editError,
+          "Unable to load portfolio for editing.",
+        ),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -339,7 +355,9 @@ export function Portfolios() {
       await fetchPortfolios();
     } catch (updateError) {
       console.error(updateError);
-      toast.error("Failed to update portfolio.");
+      toast.error(
+        extractApiErrorMessage(updateError, "Failed to update portfolio."),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -359,7 +377,9 @@ export function Portfolios() {
       await fetchPortfolios();
     } catch (deleteError) {
       console.error(deleteError);
-      toast.error("Failed to delete portfolio.");
+      toast.error(
+        extractApiErrorMessage(deleteError, "Failed to delete portfolio."),
+      );
     } finally {
       setSubmitting(false);
     }

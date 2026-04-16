@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import axios from "axios";
 import portfolioService from "../../services/projectManagementServices/portfolioService";
 import { resourceService } from "../../services/projectManagementServices/resourceService";
 import { resourceRequestService } from "../../services/projectManagementServices/resourceService";
@@ -22,6 +21,8 @@ import {
 } from "../../config/projectManagementPermissions";
 import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
 import { AccessDeniedState } from "../../Components/AccessDeniedState";
+import { extractApiErrorMessage } from "../../utils/apiError";
+import { toUtcDateOnly } from "../../utils/dateOnly";
 import ".././styles/ProjectManagement.css";
 
 interface DashboardStats {
@@ -105,7 +106,12 @@ export function ProjectManagement() {
         setEmployees(Array.isArray(payload) ? payload : []);
       } catch (error) {
         console.error("Failed to load employees", error);
-        toast.error("Failed to load employees for task assignment.");
+        toast.error(
+          extractApiErrorMessage(
+            error,
+            "Failed to load employees for task assignment.",
+          ),
+        );
       } finally {
         setEmployeesLoading(false);
       }
@@ -266,6 +272,15 @@ export function ProjectManagement() {
       return;
     }
 
+    if (
+      newTask.startDateUtc &&
+      newTask.dueDateUtc &&
+      newTask.dueDateUtc <= newTask.startDateUtc
+    ) {
+      toast.error("Due date must be greater than start date.");
+      return;
+    }
+
     try {
       setCreatingTask(true);
 
@@ -274,12 +289,8 @@ export function ProjectManagement() {
         description: newTask.description.trim() || undefined,
         priority: parseInt(newTask.priority, 10),
         status: parseInt(newTask.status, 10),
-        startDateUtc: newTask.startDateUtc
-          ? new Date(newTask.startDateUtc).toISOString()
-          : undefined,
-        dueDateUtc: newTask.dueDateUtc
-          ? new Date(newTask.dueDateUtc).toISOString()
-          : undefined,
+        startDateUtc: toUtcDateOnly(newTask.startDateUtc),
+        dueDateUtc: toUtcDateOnly(newTask.dueDateUtc),
         completionPercentage: Number(newTask.completionPercentage || 0),
         effortEstimateHours: Number(newTask.effortEstimateHours || 0),
         employerId: newTask.employerId || undefined,
@@ -306,14 +317,9 @@ export function ProjectManagement() {
       }
     } catch (error) {
       console.error(error);
-      const apiMessage =
-        axios.isAxiosError(error) &&
-        typeof error.response?.data === "object" &&
-        error.response?.data &&
-        "message" in error.response.data
-          ? String(error.response.data.message)
-          : undefined;
-      toast.error(apiMessage || "Failed to create independent task.");
+      toast.error(
+        extractApiErrorMessage(error, "Failed to create independent task."),
+      );
     } finally {
       setCreatingTask(false);
     }

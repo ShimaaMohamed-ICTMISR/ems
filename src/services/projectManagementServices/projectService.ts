@@ -16,6 +16,7 @@ export interface Project {
   rowVersion?: string | null;
   createdDateUtc?: string;
   updatedDateUtc?: string | null;
+  isDeleted?: boolean;
 }
 
 export interface ProjectCreateDTO {
@@ -115,10 +116,33 @@ function sleep(ms: number): Promise<void> {
   });
 }
 
-async function isProjectMissing(id: string): Promise<boolean> {
+function isDeletedEntity(value: unknown): boolean {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  return (value as { isDeleted?: boolean }).isDeleted === true;
+}
+
+async function isProjectDeleted(id: string): Promise<boolean> {
   try {
-    const response = await projectManagementApiClient.get(`/Projects/${id}`);
+    const response = await projectManagementApiClient.get(`/Projects/${id}`, {
+      params: { _ts: Date.now() },
+      headers: {
+        'Cache-Control': 'no-cache',
+        Pragma: 'no-cache',
+      },
+    });
     const message = extractApiMessage(response.data);
+    const project = extractPayload<Project | null | undefined>(response);
+
+    if (!project) {
+      return true;
+    }
+
+    if (isDeletedEntity(project)) {
+      return true;
+    }
 
     if (response.data && typeof response.data === 'object' && 'data' in response.data) {
       const data = (response.data as { data?: unknown }).data;
@@ -146,10 +170,10 @@ async function isProjectMissing(id: string): Promise<boolean> {
   }
 }
 
-async function waitForProjectMissing(id: string, attempts = 4, delayMs = 300): Promise<boolean> {
+async function waitForProjectDeleted(id: string, attempts = 4, delayMs = 300): Promise<boolean> {
   for (let attempt = 0; attempt < attempts; attempt += 1) {
-    const missing = await isProjectMissing(id);
-    if (missing) {
+    const deleted = await isProjectDeleted(id);
+    if (deleted) {
       return true;
     }
 
@@ -164,7 +188,8 @@ async function waitForProjectMissing(id: string, attempts = 4, delayMs = 300): P
 export const projectService = {
   getProjects: async (): Promise<Project[]> => {
     const response = await projectManagementApiClient.get('/Projects');
-    return extractPayload<Project[]>(response) || [];
+    const projects = extractPayload<Project[]>(response) || [];
+    return projects.filter((project) => !isDeletedEntity(project));
   },
 
   createProject: async (payload: ProjectCreateDTO): Promise<Project> => {
@@ -174,7 +199,13 @@ export const projectService = {
 
   getProjectById: async (id: string): Promise<Project> => {
     const response = await projectManagementApiClient.get(`/Projects/${id}`);
-    return extractPayload<Project>(response);
+    const project = extractPayload<Project>(response);
+
+    if (isDeletedEntity(project)) {
+      throw new Error('Project not found.');
+    }
+
+    return project;
   },
 
   updateProjectById: async (id: string, payload: ProjectUpdateDTO): Promise<Project | void> => {
@@ -189,9 +220,9 @@ export const projectService = {
       throw new Error(extractApiMessage(response.data) || 'Failed to delete project.');
     }
 
-    const deleted = await waitForProjectMissing(id);
+    const deleted = await waitForProjectDeleted(id);
     if (!deleted) {
-      throw new Error('Delete request was sent, but the project still exists.');
+      throw new Error('Delete request was sent, but the project is not marked as deleted yet.');
     }
   },
 };
