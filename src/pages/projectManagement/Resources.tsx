@@ -19,6 +19,8 @@ import projectService, {
   type Project,
 } from "../../services/projectManagementServices/projectService";
 import { ResourceType, RequestStatus } from "../../config/enums";
+import { extractApiErrorMessage } from "../../utils/apiError";
+import { formatDateOnly } from "../../utils/dateOnly";
 import ".././styles/Resources.css";
 
 const initialForm = {
@@ -118,7 +120,7 @@ export function Resources() {
       setResources(data);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to load resources.");
+      toast.error(extractApiErrorMessage(error, "Failed to load resources."));
     } finally {
       setLoading(false);
     }
@@ -166,7 +168,7 @@ export function Resources() {
       await fetchResources();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create resource.");
+      toast.error(extractApiErrorMessage(error, "Failed to create resource."));
     } finally {
       setCreating(false);
     }
@@ -214,7 +216,7 @@ export function Resources() {
       await fetchResources();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update resource.");
+      toast.error(extractApiErrorMessage(error, "Failed to update resource."));
     }
   }
 
@@ -230,7 +232,7 @@ export function Resources() {
       setResources((prev) => prev.filter((r) => r.id !== id));
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete resource.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete resource."));
     } finally {
       setConfirmDeleteId(null);
     }
@@ -389,19 +391,11 @@ export function Resources() {
               </div>
               <div className="resource-detail-row">
                 <span>Created</span>
-                <strong>
-                  {detailResource.createdDateUtc
-                    ? new Date(detailResource.createdDateUtc).toLocaleString()
-                    : "N/A"}
-                </strong>
+                <strong>{formatDateOnly(detailResource.createdDateUtc)}</strong>
               </div>
               <div className="resource-detail-row">
                 <span>Updated</span>
-                <strong>
-                  {detailResource.updatedDateUtc
-                    ? new Date(detailResource.updatedDateUtc).toLocaleString()
-                    : "N/A"}
-                </strong>
+                <strong>{formatDateOnly(detailResource.updatedDateUtc)}</strong>
               </div>
 
               {/* Project Requests */}

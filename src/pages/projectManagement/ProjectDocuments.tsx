@@ -16,6 +16,8 @@ import { AccessDeniedState } from "../../Components/AccessDeniedState";
 import { PM_PERMISSION_KEYS } from "../../config/projectManagementPermissions";
 import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
 import type { RootState } from "../../store/store";
+import { extractApiErrorMessage } from "../../utils/apiError";
+import { formatDateOnly } from "../../utils/dateOnly";
 import ".././styles/ProjectDocuments.css";
 
 type CreateDocumentFormState = {
@@ -78,9 +80,8 @@ function parseApiUtcDate(value?: string | null): Date | null {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
-function formatApiDateTime(value?: string | null): string {
-  const parsed = parseApiUtcDate(value);
-  return parsed ? parsed.toLocaleString() : "N/A";
+function formatApiDate(value?: string | null): string {
+  return formatDateOnly(value);
 }
 
 function trimExtension(fileName: string): string {
@@ -168,7 +169,9 @@ export function ProjectDocuments() {
         setDocuments(docsData);
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load project documents.");
+        toast.error(
+          extractApiErrorMessage(error, "Failed to load project documents."),
+        );
       } finally {
         setLoading(false);
       }
@@ -277,7 +280,7 @@ export function ProjectDocuments() {
       setDocuments(refreshed);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to add document.");
+      toast.error(extractApiErrorMessage(error, "Failed to add document."));
     } finally {
       setCreating(false);
     }
@@ -346,7 +349,7 @@ export function ProjectDocuments() {
       setDocuments(refreshed);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update document.");
+      toast.error(extractApiErrorMessage(error, "Failed to update document."));
     }
   }
 
@@ -364,7 +367,7 @@ export function ProjectDocuments() {
       setDocuments((prev) => prev.filter((d) => d.id !== id));
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete document.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete document."));
     } finally {
       setConfirmDeleteId(null);
     }
@@ -497,7 +500,7 @@ export function ProjectDocuments() {
               <label className="form-label">Uploaded At</label>
               <input
                 className="form-control"
-                value={new Date().toLocaleString()}
+                value={formatDateOnly(new Date().toISOString())}
                 disabled
                 readOnly
               />
@@ -623,8 +626,8 @@ export function ProjectDocuments() {
                       className="form-control form-control-sm"
                       value={
                         selectedEditFile
-                          ? new Date().toLocaleString()
-                          : formatApiDateTime(doc.uploadedAtUtc)
+                          ? formatDateOnly(new Date().toISOString())
+                          : formatApiDate(doc.uploadedAtUtc)
                       }
                       readOnly
                       disabled
@@ -685,7 +688,7 @@ export function ProjectDocuments() {
                   </div>
                   <div className="project-document-meta-item">
                     <span>Uploaded At</span>
-                    <strong>{formatApiDateTime(doc.uploadedAtUtc)}</strong>
+                    <strong>{formatApiDate(doc.uploadedAtUtc)}</strong>
                   </div>
                 </div>
 

@@ -6,9 +6,17 @@ import toast from "react-hot-toast";
 import projectService, {
   type ProjectCreateDTO,
 } from "../../services/projectManagementServices/projectService";
+import { extractApiErrorMessage } from "../../utils/apiError";
+import { toUtcDateOnly } from "../../utils/dateOnly";
 
-import portfolioService, { type Portfolio } from "../../services/projectManagementServices/portfolioService";
-import { ProjectStage, HealthStatus, MethodologyType } from "../../config/enums";
+import portfolioService, {
+  type Portfolio,
+} from "../../services/projectManagementServices/portfolioService";
+import {
+  ProjectStage,
+  HealthStatus,
+  MethodologyType,
+} from "../../config/enums";
 import ".././styles/CreateProject.css";
 
 function safeInt(value: string | undefined, fallback = 0): number {
@@ -87,16 +95,21 @@ export function CreateProject() {
       return;
     }
 
+    if (
+      form.startDateUtc &&
+      form.endDateUtc &&
+      form.startDateUtc > form.endDateUtc
+    ) {
+      toast.error("Start date must be on or before end date.");
+      return;
+    }
+
     const payload: ProjectCreateDTO = {
       name,
       objectives: form.objectives.trim() || undefined,
       scope: form.scope.trim() || undefined,
-      startDateUtc: form.startDateUtc
-        ? new Date(form.startDateUtc).toISOString()
-        : undefined,
-      endDateUtc: form.endDateUtc
-        ? new Date(form.endDateUtc).toISOString()
-        : undefined,
+      startDateUtc: toUtcDateOnly(form.startDateUtc),
+      endDateUtc: toUtcDateOnly(form.endDateUtc),
       stage: safeInt(form.stage),
       healthStatus: safeInt(form.healthStatus),
       methodology: safeInt(form.methodology),
@@ -115,7 +128,7 @@ export function CreateProject() {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create project.");
+      toast.error(extractApiErrorMessage(error, "Failed to create project."));
     } finally {
       setSubmitting(false);
     }

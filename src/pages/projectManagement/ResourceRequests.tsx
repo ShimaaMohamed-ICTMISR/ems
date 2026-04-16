@@ -16,6 +16,8 @@ import projectService, {
   type Project,
 } from "../../services/projectManagementServices/projectService";
 import { ResourceType, RequestStatus } from "../../config/enums";
+import { extractApiErrorMessage } from "../../utils/apiError";
+import { formatDateOnly } from "../../utils/dateOnly";
 import ".././styles/ResourceRequests.css";
 
 const statusColor: Record<number, string> = {
@@ -97,7 +99,9 @@ export function ResourceRequests() {
       setProjects(projData);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to load resource requests.");
+      toast.error(
+        extractApiErrorMessage(error, "Failed to load resource requests."),
+      );
     } finally {
       setLoading(false);
     }
@@ -136,7 +140,7 @@ export function ResourceRequests() {
       await fetchAll();
     } catch (error) {
       console.error(error);
-      toast.error("Action failed.");
+      toast.error(extractApiErrorMessage(error, "Action failed."));
     } finally {
       setActioning(false);
     }
@@ -154,7 +158,7 @@ export function ResourceRequests() {
       setRequests((prev) => prev.filter((r) => r.id !== id));
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete request.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete request."));
     }
   }
 
@@ -258,7 +262,7 @@ export function ResourceRequests() {
                   <td className="rr-comments-cell">{req.comments || "—"}</td>
                   <td>
                     {req.createdDateUtc
-                      ? new Date(req.createdDateUtc).toLocaleDateString()
+                      ? formatDateOnly(req.createdDateUtc)
                       : "—"}
                   </td>
                   <td>
@@ -438,7 +442,7 @@ export function ResourceRequests() {
                 <span>Decided At</span>
                 <strong>
                   {detailRequest.decidedAtUtc
-                    ? new Date(detailRequest.decidedAtUtc).toLocaleString()
+                    ? formatDateOnly(detailRequest.decidedAtUtc)
                     : "—"}
                 </strong>
               </div>
@@ -446,7 +450,7 @@ export function ResourceRequests() {
                 <span>Created</span>
                 <strong>
                   {detailRequest.createdDateUtc
-                    ? new Date(detailRequest.createdDateUtc).toLocaleString()
+                    ? formatDateOnly(detailRequest.createdDateUtc)
                     : "—"}
                 </strong>
               </div>
@@ -454,7 +458,7 @@ export function ResourceRequests() {
                 <span>Updated</span>
                 <strong>
                   {detailRequest.updatedDateUtc
-                    ? new Date(detailRequest.updatedDateUtc).toLocaleString()
+                    ? formatDateOnly(detailRequest.updatedDateUtc)
                     : "—"}
                 </strong>
               </div>

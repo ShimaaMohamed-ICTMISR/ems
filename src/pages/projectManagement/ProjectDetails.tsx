@@ -3,19 +3,6 @@ import type { ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import projectService, {
   type Project,
 } from "../../services/projectManagementServices/projectService";
@@ -58,47 +45,30 @@ import {
   ProjectStage,
   HealthStatus,
   MethodologyType,
-  PriorityLevel,
-  TaskStatus as TaskStatusEnum,
   BudgetCategory,
-  ResourceType,
-  RequestStatus,
-  ApprovalStatus,
-  RiskImpact,
-  RiskProbability,
-  RiskEventStatus,
 } from "../../config/enums";
-import { AccessDeniedState } from "../../Components/AccessDeniedState";
 import { PM_PERMISSION_KEYS } from "../../config/projectManagementPermissions";
 import { useProjectManagementPermissions } from "../../hooks/useProjectManagementPermissions";
 import type { RootState } from "../../store/store";
+import { extractApiErrorMessage } from "../../utils/apiError";
+import {
+  formatDateOnly,
+  toDateInputValue,
+  toUtcDateOnly,
+} from "../../utils/dateOnly";
+import {
+  ProjectFinanceTab,
+  ProjectOverviewTab,
+  ProjectPhasesTab,
+  ProjectResourcesTab,
+  ProjectRisksTab,
+  ProjectTeamTab,
+} from "./projectDetailsTabs";
 import ".././styles/ProjectDetails.css";
 import ".././styles/TaskDetails.css";
 
 function formatDate(value?: string | null) {
-  if (!value) {
-    return "N/A";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "N/A";
-  }
-
-  return date.toLocaleString();
-}
-
-function toDateInputValue(value?: string | null) {
-  if (!value) {
-    return "";
-  }
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) {
-    return "";
-  }
-
-  return date.toISOString().slice(0, 10);
+  return formatDateOnly(value);
 }
 
 function toDateTimeLocalInputValue(value?: string | null) {
@@ -652,7 +622,9 @@ export function ProjectDetails() {
         setFormFromProject(data);
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load project details.");
+        toast.error(
+          extractApiErrorMessage(error, "Failed to load project details."),
+        );
       } finally {
         setLoading(false);
       }
@@ -998,7 +970,9 @@ export function ProjectDetails() {
         setMilestoneApprovals(data);
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load milestone approvals.");
+        toast.error(
+          extractApiErrorMessage(error, "Failed to load milestone approvals."),
+        );
       } finally {
         setApprovalsLoading(false);
       }
@@ -1128,7 +1102,7 @@ export function ProjectDetails() {
         setRisksLoaded(true);
       } catch (error) {
         console.error(error);
-        toast.error("Failed to load risks.");
+        toast.error(extractApiErrorMessage(error, "Failed to load risks."));
       } finally {
         setRisksLoading(false);
       }
@@ -1150,7 +1124,7 @@ export function ProjectDetails() {
       setRisksLoaded(true);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to refresh risks.");
+      toast.error(extractApiErrorMessage(error, "Failed to refresh risks."));
     } finally {
       setRisksLoading(false);
     }
@@ -1197,7 +1171,7 @@ export function ProjectDetails() {
       setRiskEventsByRisk((prev) => ({ ...prev, [riskId]: data }));
     } catch (error) {
       console.error(error);
-      toast.error("Failed to load risk events.");
+      toast.error(extractApiErrorMessage(error, "Failed to load risk events."));
     } finally {
       setRiskEventsLoadingByRisk((prev) => ({ ...prev, [riskId]: false }));
     }
@@ -1251,6 +1225,11 @@ export function ProjectDetails() {
       return;
     }
 
+    if (!currentUserId) {
+      toast.error("Unable to detect the logged-in user.");
+      return;
+    }
+
     try {
       setCreatingRisk(true);
       await riskService.createRisk({
@@ -1259,7 +1238,7 @@ export function ProjectDetails() {
         probability: safeInt(newRisk.probability),
         impact: safeInt(newRisk.impact),
         mitigationPlan: newRisk.mitigationPlan.trim() || undefined,
-        ownerId: newRisk.ownerId.trim() || undefined,
+        ownerId: currentUserId,
       });
 
       toast.success("Risk created successfully.");
@@ -1274,7 +1253,7 @@ export function ProjectDetails() {
       await refreshRisks();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create risk.");
+      toast.error(extractApiErrorMessage(error, "Failed to create risk."));
     } finally {
       setCreatingRisk(false);
     }
@@ -1327,7 +1306,7 @@ export function ProjectDetails() {
       await refreshRisks();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update risk.");
+      toast.error(extractApiErrorMessage(error, "Failed to update risk."));
     }
   }
 
@@ -1352,7 +1331,7 @@ export function ProjectDetails() {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete risk.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete risk."));
     } finally {
       setConfirmDeleteRiskId(null);
     }
@@ -1413,7 +1392,9 @@ export function ProjectDetails() {
       await loadRiskEvents(riskId, true);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create risk event.");
+      toast.error(
+        extractApiErrorMessage(error, "Failed to create risk event."),
+      );
     } finally {
       setCreatingRiskEvent(false);
     }
@@ -1465,7 +1446,9 @@ export function ProjectDetails() {
       await loadRiskEvents(riskId, true);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update risk event.");
+      toast.error(
+        extractApiErrorMessage(error, "Failed to update risk event."),
+      );
     }
   }
 
@@ -1481,7 +1464,9 @@ export function ProjectDetails() {
       await loadRiskEvents(riskId, true);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete risk event.");
+      toast.error(
+        extractApiErrorMessage(error, "Failed to delete risk event."),
+      );
     } finally {
       setConfirmDeleteRiskEventId(null);
     }
@@ -1677,11 +1662,13 @@ export function ProjectDetails() {
       if (axiosErr.response?.status === 409) {
         await refreshMembers();
         toast.error(
-          axiosErr.response?.data?.message ||
+          extractApiErrorMessage(
+            error,
             "Backend constraint is blocking additional members for this project (409).",
+          ),
         );
       } else {
-        toast.error("Failed to add member.");
+        toast.error(extractApiErrorMessage(error, "Failed to add member."));
       }
     } finally {
       setAddingMember(false);
@@ -1711,17 +1698,7 @@ export function ProjectDetails() {
       await refreshMembers();
     } catch (error: unknown) {
       console.error(error);
-      const axiosErr = error as {
-        response?: { data?: unknown; status?: number };
-      };
-      const detail = axiosErr.response?.data;
-      const msg =
-        typeof detail === "string"
-          ? detail
-          : detail && typeof detail === "object" && "title" in detail
-            ? (detail as { title: string }).title
-            : "Failed to update member.";
-      toast.error(msg);
+      toast.error(extractApiErrorMessage(error, "Failed to update member."));
     }
   }
 
@@ -1746,17 +1723,7 @@ export function ProjectDetails() {
       toast.success("Member removed.");
     } catch (error: unknown) {
       console.error(error);
-      const axiosErr = error as {
-        response?: { data?: unknown; status?: number };
-      };
-      const detail = axiosErr.response?.data;
-      const msg =
-        typeof detail === "string"
-          ? detail
-          : detail && typeof detail === "object" && "title" in detail
-            ? (detail as { title: string }).title
-            : "Failed to remove member.";
-      toast.error(msg);
+      toast.error(extractApiErrorMessage(error, "Failed to remove member."));
     }
   }
 
@@ -1799,12 +1766,8 @@ export function ProjectDetails() {
         name: editForm.name.trim(),
         objectives: editForm.objectives.trim() || undefined,
         scope: editForm.scope.trim() || undefined,
-        startDateUtc: editForm.startDateUtc
-          ? new Date(editForm.startDateUtc).toISOString()
-          : undefined,
-        endDateUtc: editForm.endDateUtc
-          ? new Date(editForm.endDateUtc).toISOString()
-          : undefined,
+        startDateUtc: toUtcDateOnly(editForm.startDateUtc),
+        endDateUtc: toUtcDateOnly(editForm.endDateUtc),
         stage: safeInt(editForm.stage),
         healthStatus: safeInt(editForm.healthStatus),
         methodology: safeInt(editForm.methodology),
@@ -1819,7 +1782,7 @@ export function ProjectDetails() {
       toast.success("Project updated successfully.");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update project.");
+      toast.error(extractApiErrorMessage(error, "Failed to update project."));
     } finally {
       setSaving(false);
     }
@@ -1839,7 +1802,7 @@ export function ProjectDetails() {
       navigate("/dashboard/portfolios");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete project.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete project."));
     } finally {
       setSaving(false);
       setConfirmDeleteProject(false);
@@ -1873,6 +1836,16 @@ export function ProjectDetails() {
       toast.error("Task title is required.");
       return;
     }
+
+    if (
+      newTask.startDateUtc &&
+      newTask.dueDateUtc &&
+      newTask.dueDateUtc <= newTask.startDateUtc
+    ) {
+      toast.error("Due date must be greater than start date.");
+      return;
+    }
+
     try {
       setCreatingTask(true);
 
@@ -1883,12 +1856,8 @@ export function ProjectDetails() {
         description: newTask.description.trim() || undefined,
         priority: safeInt(newTask.priority, 1),
         status: safeInt(newTask.status),
-        startDateUtc: newTask.startDateUtc
-          ? new Date(newTask.startDateUtc).toISOString()
-          : undefined,
-        dueDateUtc: newTask.dueDateUtc
-          ? new Date(newTask.dueDateUtc).toISOString()
-          : undefined,
+        startDateUtc: toUtcDateOnly(newTask.startDateUtc),
+        dueDateUtc: toUtcDateOnly(newTask.dueDateUtc),
         completionPercentage: parseFloat(newTask.completionPercentage) || 0,
         effortEstimateHours: parseFloat(newTask.effortEstimateHours) || 0,
         assignedToMemberId: newTask.assignedToMemberId.trim() || undefined,
@@ -1913,7 +1882,7 @@ export function ProjectDetails() {
       setTasks(refreshed);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create task.");
+      toast.error(extractApiErrorMessage(error, "Failed to create task."));
     } finally {
       setCreatingTask(false);
     }
@@ -1931,7 +1900,7 @@ export function ProjectDetails() {
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete task.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete task."));
     } finally {
       setConfirmDeleteTaskId(null);
     }
@@ -1970,12 +1939,8 @@ export function ProjectDetails() {
       await phaseService.createPhase({
         projectId,
         name: newPhase.name.trim(),
-        startDateUtc: newPhase.startDateUtc
-          ? new Date(newPhase.startDateUtc).toISOString()
-          : undefined,
-        endDateUtc: newPhase.endDateUtc
-          ? new Date(newPhase.endDateUtc).toISOString()
-          : undefined,
+        startDateUtc: toUtcDateOnly(newPhase.startDateUtc),
+        endDateUtc: toUtcDateOnly(newPhase.endDateUtc),
         deliverables: newPhase.deliverables.trim() || undefined,
         isGatePassed: newPhase.isGatePassed,
       });
@@ -1993,7 +1958,7 @@ export function ProjectDetails() {
       setPhasesLoaded(true);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create phase.");
+      toast.error(extractApiErrorMessage(error, "Failed to create phase."));
     } finally {
       setCreatingPhase(false);
     }
@@ -2041,12 +2006,8 @@ export function ProjectDetails() {
         projectId,
         rowVersion: full.rowVersion || phase.rowVersion || "",
         name: editPhaseForm.name.trim(),
-        startDateUtc: editPhaseForm.startDateUtc
-          ? new Date(editPhaseForm.startDateUtc).toISOString()
-          : undefined,
-        endDateUtc: editPhaseForm.endDateUtc
-          ? new Date(editPhaseForm.endDateUtc).toISOString()
-          : undefined,
+        startDateUtc: toUtcDateOnly(editPhaseForm.startDateUtc),
+        endDateUtc: toUtcDateOnly(editPhaseForm.endDateUtc),
         deliverables: editPhaseForm.deliverables.trim() || undefined,
         isGatePassed: editPhaseForm.isGatePassed,
       });
@@ -2057,7 +2018,7 @@ export function ProjectDetails() {
       setPhasesLoaded(true);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update phase.");
+      toast.error(extractApiErrorMessage(error, "Failed to update phase."));
     }
   }
 
@@ -2079,7 +2040,7 @@ export function ProjectDetails() {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete phase.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete phase."));
     } finally {
       setConfirmDeletePhaseId(null);
     }
@@ -2120,9 +2081,7 @@ export function ProjectDetails() {
         projectId,
         projectPhaseId: selectedPhaseId ?? undefined,
         name: newMilestone.name.trim(),
-        targetDateUtc: newMilestone.targetDateUtc
-          ? new Date(newMilestone.targetDateUtc).toISOString()
-          : undefined,
+        targetDateUtc: toUtcDateOnly(newMilestone.targetDateUtc),
         successCriteria: newMilestone.successCriteria.trim() || undefined,
         isCompleted: newMilestone.isCompleted,
       });
@@ -2143,7 +2102,7 @@ export function ProjectDetails() {
       setMilestones(refreshed);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create milestone.");
+      toast.error(extractApiErrorMessage(error, "Failed to create milestone."));
     } finally {
       setCreatingMilestone(false);
     }
@@ -2199,12 +2158,8 @@ export function ProjectDetails() {
         projectPhaseId: resolvedProjectPhaseId,
         rowVersion: full.rowVersion || milestone.rowVersion || "",
         name: editMilestoneForm.name.trim(),
-        targetDateUtc: editMilestoneForm.targetDateUtc
-          ? new Date(editMilestoneForm.targetDateUtc).toISOString()
-          : undefined,
-        actualDateUtc: editMilestoneForm.actualDateUtc
-          ? new Date(editMilestoneForm.actualDateUtc).toISOString()
-          : undefined,
+        targetDateUtc: toUtcDateOnly(editMilestoneForm.targetDateUtc),
+        actualDateUtc: toUtcDateOnly(editMilestoneForm.actualDateUtc),
         successCriteria: editMilestoneForm.successCriteria.trim() || undefined,
         isCompleted: editMilestoneForm.isCompleted,
       });
@@ -2218,7 +2173,7 @@ export function ProjectDetails() {
       setMilestones(refreshed);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update milestone.");
+      toast.error(extractApiErrorMessage(error, "Failed to update milestone."));
     }
   }
 
@@ -2238,7 +2193,7 @@ export function ProjectDetails() {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete milestone.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete milestone."));
     } finally {
       setConfirmDeleteMilestoneId(null);
     }
@@ -2323,7 +2278,7 @@ export function ProjectDetails() {
       await refreshMilestoneApprovals();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to add approval.");
+      toast.error(extractApiErrorMessage(error, "Failed to add approval."));
     } finally {
       setCreatingApproval(false);
     }
@@ -2364,7 +2319,7 @@ export function ProjectDetails() {
       await refreshMilestoneApprovals();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update approval.");
+      toast.error(extractApiErrorMessage(error, "Failed to update approval."));
     }
   }
 
@@ -2380,7 +2335,7 @@ export function ProjectDetails() {
       setMilestoneApprovals((prev) => prev.filter((a) => a.id !== approvalId));
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete approval.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete approval."));
     } finally {
       setConfirmDeleteApprovalId(null);
     }
@@ -2439,7 +2394,9 @@ export function ProjectDetails() {
       setResourceRequestsLoaded(true);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create resource request.");
+      toast.error(
+        extractApiErrorMessage(error, "Failed to create resource request."),
+      );
     } finally {
       setCreatingResourceReq(false);
     }
@@ -2457,7 +2414,9 @@ export function ProjectDetails() {
       setResourceRequests((prev) => prev.filter((r) => r.id !== id));
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete resource request.");
+      toast.error(
+        extractApiErrorMessage(error, "Failed to delete resource request."),
+      );
     } finally {
       setConfirmDeleteReqId(null);
     }
@@ -2545,7 +2504,7 @@ export function ProjectDetails() {
       setBudgetsLoaded(true);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to create budget.");
+      toast.error(extractApiErrorMessage(error, "Failed to create budget."));
     } finally {
       setCreatingBudget(false);
     }
@@ -2603,7 +2562,7 @@ export function ProjectDetails() {
       setBudgetsLoaded(true);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to update budget.");
+      toast.error(extractApiErrorMessage(error, "Failed to update budget."));
     }
   }
 
@@ -2619,7 +2578,7 @@ export function ProjectDetails() {
       setBudgets((prev) => prev.filter((b) => b.id !== budgetId));
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete budget.");
+      toast.error(extractApiErrorMessage(error, "Failed to delete budget."));
     } finally {
       setConfirmDeleteBudgetId(null);
     }
@@ -3146,3164 +3105,264 @@ export function ProjectDetails() {
       )}
 
       {activeTab === "overview" && (
-        <section className="project-details-grid">
-          <article className="details-card">
-            <h2 className="h6">Project Overview</h2>
-            {/* <div className="details-row">
-              <span>ID</span>
-              <strong>{project.id}</strong>
-            </div> */}
-            <div className="details-row">
-              <span>Stage</span>
-              <strong>{ProjectStage[project.stage ?? 0]}</strong>
-            </div>
-            <div className="details-row">
-              <span>Health</span>
-              <strong>{HealthStatus[project.healthStatus ?? 0]}</strong>
-            </div>
-            <div className="details-row">
-              <span>Methodology</span>
-              <strong>{MethodologyType[project.methodology ?? 0]}</strong>
-            </div>
-            {/* <div className="details-row">
-              <span>Portfolio</span>
-              <strong>{project.portfolioId || "N/A"}</strong>
-            </div> */}
-          </article>
-
-          <article className="details-card">
-            <h2 className="h6">Schedule</h2>
-            <div className="details-row">
-              <span>Start Date</span>
-              <strong>{formatDate(project.startDateUtc)}</strong>
-            </div>
-            <div className="details-row">
-              <span>End Date</span>
-              <strong>{formatDate(project.endDateUtc)}</strong>
-            </div>
-            <div className="details-row">
-              <span>Created</span>
-              <strong>{formatDate(project.createdDateUtc)}</strong>
-            </div>
-            <div className="details-row">
-              <span>Updated</span>
-              <strong>{formatDate(project.updatedDateUtc)}</strong>
-            </div>
-          </article>
-
-          <article className="details-card full-width">
-            <h2 className="h6">Objectives</h2>
-            <p className="mb-0">
-              {project.objectives || "No objectives provided."}
-            </p>
-          </article>
-
-          <article className="details-card full-width">
-            <h2 className="h6">Scope</h2>
-            <p className="mb-0">{project.scope || "No scope provided."}</p>
-          </article>
-
-          <article className="details-card full-width documents-workspace-card">
-            <div className="documents-workspace-head">
-              <div className="documents-workspace-icon" aria-hidden="true">
-                <i className="bi bi-folder2-open" />
-              </div>
-              <div>
-                <h2 className="h6 mb-1">Documents Workspace</h2>
-                <p className="documents-workspace-subtitle mb-0">
-                  Centralize plans, specs, reports, and contracts with version
-                  tracking.
-                </p>
-              </div>
-            </div>
-
-            <div className="documents-workspace-body">
-              <div className="documents-workspace-feature">
-                <i className="bi bi-check2-circle" />
-                <span>Project-scoped document list</span>
-              </div>
-              <div className="documents-workspace-feature">
-                <i className="bi bi-check2-circle" />
-                <span>Create, update, and delete operations</span>
-              </div>
-              <div className="documents-workspace-feature">
-                <i className="bi bi-check2-circle" />
-                <span>Uploader and timestamp metadata</span>
-              </div>
-            </div>
-
-            <div className="documents-workspace-actions">
-              {canAccessDocumentsWorkspace ? (
-                <button
-                  type="button"
-                  className="btn btn-info text-white"
-                  onClick={openDocumentsWorkspace}
-                >
-                  <i className="bi bi-folder2-open me-2" />
-                  Open Documents Workspace
-                </button>
-              ) : (
-                <div
-                  className="alert alert-light border mb-0 py-2 px-3"
-                  role="status"
-                >
-                  <i className="bi bi-shield-lock me-2" />
-                  Documents workspace is not available for your permissions.
-                </div>
-              )}
-            </div>
-          </article>
-        </section>
+        <ProjectOverviewTab
+          project={project}
+          canAccessDocumentsWorkspace={canAccessDocumentsWorkspace}
+          openDocumentsWorkspace={openDocumentsWorkspace}
+          formatDate={formatDate}
+        />
       )}
 
-      {/* ── Team Members Section ── */}
       {activeTab === "team" && canAccessTeamTab && (
-        <section className="members-section">
-          <div className="members-section-header">
-            <h2>
-              <i className="bi bi-people-fill me-2" />
-              Team Members
-            </h2>
-            {canCreateTeamMembers && (
-              <button
-                type="button"
-                className="btn btn-info text-white btn-sm"
-                onClick={() => setShowAddMember((prev) => !prev)}
-              >
-                <i
-                  className={`bi ${showAddMember ? "bi-x-circle" : "bi-person-plus"} me-1`}
-                />
-                {showAddMember ? "Close" : "Add Member"}
-              </button>
-            )}
-          </div>
-
-          {canCreateTeamMembers && showAddMember && (
-            <div className="member-add-card">
-              <h3 className="h6 mb-3">Add HR Employee to Project</h3>
-              <input
-                className="form-control form-control-sm mb-3"
-                placeholder="Search employees by name or email..."
-                value={employeeSearch}
-                onChange={(e) => setEmployeeSearch(e.target.value)}
-              />
-              <div className="member-add-list">
-                {filteredAvailableEmployees.length === 0 ? (
-                  <div className="member-add-empty">
-                    <i className="bi bi-people" />
-                    <span>No available employees found.</span>
-                  </div>
-                ) : (
-                  filteredAvailableEmployees.map((emp) => (
-                    <div key={emp.id} className="member-add-item">
-                      <div className="member-add-avatar">
-                        {emp.firstName.charAt(0)}
-                        {emp.lastName.charAt(0)}
-                      </div>
-                      <div className="member-add-info">
-                        <span className="member-add-name">
-                          {emp.firstName} {emp.lastName}
-                        </span>
-                        <span className="member-add-meta">
-                          {emp.position?.title || "No position"} ·{" "}
-                          {emp.department?.name || "No dept"}
-                          {emp.email ? ` · ${emp.email}` : ""}
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn btn-outline-success btn-sm"
-                        disabled={addingMember}
-                        onClick={() => handleAddMemberFromEmployee(emp)}
-                      >
-                        <i className="bi bi-plus-lg me-1" />
-                        Add
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-
-          {!canViewTeamMembers ? (
-            <AccessDeniedState
-              title="Team members are restricted"
-              description="You can access this tab, but your role does not include Admin.Members.View to view the members list."
-            />
-          ) : membersLoading ? (
-            <div className="text-center py-4">
-              <div
-                className="spinner-border spinner-border-sm text-info"
-                role="status"
-              />
-            </div>
-          ) : projectMembers.length === 0 ? (
-            <div className="members-empty">
-              <i className="bi bi-person-x" />
-              <p className="mb-0">
-                No members yet. Click "Add Member" to add HR employees to this
-                project.
-              </p>
-            </div>
-          ) : (
-            <div className="members-grid">
-              {projectMembers.map((member) => {
-                const emp = employees.find(
-                  (e) => resolveEmployeeUserId(e) === member.userId,
-                );
-                const initials = member.fullName
-                  .split(" ")
-                  .map((n) => n.charAt(0))
-                  .join("")
-                  .slice(0, 2);
-                return (
-                  <div key={member.id} className="member-card">
-                    <div className="member-card-header">
-                      <div className="member-card-avatar">{initials}</div>
-                      {(canEditTeamMembers || canDeleteTeamMembers) && (
-                        <div className="member-card-actions">
-                          {canEditTeamMembers && (
-                            <button
-                              type="button"
-                              className="btn btn-outline-primary btn-sm"
-                              title="Edit Role"
-                              onClick={() => {
-                                setEditingMemberId(member.id);
-                                setEditMemberRole(member.role);
-                              }}
-                            >
-                              <i className="bi bi-pencil" />
-                            </button>
-                          )}
-                          {canDeleteTeamMembers && (
-                            <button
-                              type="button"
-                              className="btn btn-outline-danger btn-sm"
-                              title="Remove Member"
-                              onClick={() => handleDeleteMember(member)}
-                            >
-                              <i className="bi bi-trash" />
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                    <div className="member-card-body">
-                      <h4 className="member-card-name">{member.fullName}</h4>
-                      {editingMemberId === member.id ? (
-                        <div className="member-card-edit-role">
-                          <input
-                            className="form-control form-control-sm"
-                            value={editMemberRole}
-                            onChange={(e) => setEditMemberRole(e.target.value)}
-                            placeholder="Role"
-                          />
-                          <div className="member-card-edit-actions">
-                            <button
-                              type="button"
-                              className="btn btn-success btn-sm"
-                              onClick={() => handleUpdateMemberRole(member)}
-                            >
-                              <i className="bi bi-check" />
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-sm"
-                              onClick={() => setEditingMemberId(null)}
-                            >
-                              <i className="bi bi-x" />
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="member-card-role">{member.role}</span>
-                      )}
-                      {emp && (
-                        <span className="member-card-dept">
-                          {emp.department?.name || "No dept"}{" "}
-                          {emp.email ? `· ${emp.email}` : ""}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
+        <ProjectTeamTab
+          canCreateTeamMembers={canCreateTeamMembers}
+          showAddMember={showAddMember}
+          setShowAddMember={setShowAddMember}
+          employeeSearch={employeeSearch}
+          setEmployeeSearch={setEmployeeSearch}
+          filteredAvailableEmployees={filteredAvailableEmployees}
+          addingMember={addingMember}
+          handleAddMemberFromEmployee={handleAddMemberFromEmployee}
+          canViewTeamMembers={canViewTeamMembers}
+          membersLoading={membersLoading}
+          projectMembers={projectMembers}
+          employees={employees}
+          resolveEmployeeUserId={resolveEmployeeUserId}
+          canEditTeamMembers={canEditTeamMembers}
+          canDeleteTeamMembers={canDeleteTeamMembers}
+          setEditingMemberId={setEditingMemberId}
+          setEditMemberRole={setEditMemberRole}
+          handleDeleteMember={handleDeleteMember}
+          editingMemberId={editingMemberId}
+          editMemberRole={editMemberRole}
+          handleUpdateMemberRole={handleUpdateMemberRole}
+        />
       )}
 
-      {/* ── Phases Section ── */}
       {activeTab === "phases" && canAccessPhasesTab && (
-        <section className="tasks-section">
-          <div className="tasks-section-header">
-            <h2>
-              <i className="bi bi-diagram-3 me-2" />
-              Execution Drill-Down
-            </h2>
-            <div className="drilldown-breadcrumb">
-              <span>{selectedPhaseId ? "Phase selected" : "Phase"}</span>
-              <i className="bi bi-chevron-right" />
-              <span>
-                {selectedMilestoneId ? "Milestone selected" : "Milestone"}
-              </span>
-              <i className="bi bi-chevron-right" />
-              <span>Tasks</span>
-            </div>
-          </div>
-
-          <div className="hierarchy-layout">
-            <div className="hierarchy-grid">
-              <article className="hierarchy-column">
-                <div className="hierarchy-column-head">
-                  <h3>
-                    <i className="bi bi-layers me-1" />
-                    Phases
-                  </h3>
-                  {canCreatePhases && (
-                    <button
-                      type="button"
-                      className="btn btn-info text-white btn-sm"
-                      onClick={() => setShowCreatePhase((prev) => !prev)}
-                    >
-                      {showCreatePhase ? "Cancel" : "+ Add"}
-                    </button>
-                  )}
-                </div>
-
-                {canCreatePhases && showCreatePhase && (
-                  <div className="task-create-card mb-3">
-                    <form className="row g-2" onSubmit={handleCreatePhase}>
-                      <div className="col-12">
-                        <label className="form-label mb-1">Phase Name</label>
-                        <input
-                          className="form-control"
-                          name="name"
-                          value={newPhase.name}
-                          onChange={handleNewPhaseChange}
-                          placeholder="Phase name"
-                          maxLength={120}
-                          required
-                        />
-                      </div>
-                      <div className="col-6">
-                        <label className="form-label mb-1">Start Date</label>
-                        <input
-                          className="form-control"
-                          type="date"
-                          name="startDateUtc"
-                          value={newPhase.startDateUtc}
-                          onChange={handleNewPhaseChange}
-                        />
-                      </div>
-                      <div className="col-6">
-                        <label className="form-label mb-1">End Date</label>
-                        <input
-                          className="form-control"
-                          type="date"
-                          name="endDateUtc"
-                          value={newPhase.endDateUtc}
-                          onChange={handleNewPhaseChange}
-                        />
-                      </div>
-                      <div className="col-12">
-                        <label className="form-label mb-1">Deliverables</label>
-                        <textarea
-                          className="form-control"
-                          rows={2}
-                          name="deliverables"
-                          value={newPhase.deliverables}
-                          onChange={handleNewPhaseChange}
-                          maxLength={1000}
-                        />
-                      </div>
-                      <div className="col-12 d-flex justify-content-between align-items-center">
-                        <label className="form-check-label d-flex align-items-center gap-2">
-                          <input
-                            className="form-check-input"
-                            type="checkbox"
-                            name="isGatePassed"
-                            checked={newPhase.isGatePassed}
-                            onChange={handleNewPhaseChange}
-                          />
-                          Mark as Gate Passed
-                        </label>
-                        <button
-                          type="submit"
-                          className="btn btn-success btn-sm"
-                          disabled={creatingPhase}
-                        >
-                          {creatingPhase ? "Creating..." : "Create"}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                )}
-
-                {!canViewPhases ? (
-                  <AccessDeniedState
-                    title="Phases are restricted"
-                    description="You do not have permission to view project phases."
-                  />
-                ) : phasesLoading ? (
-                  <div className="text-center py-3">
-                    <div
-                      className="spinner-border spinner-border-sm text-info"
-                      role="status"
-                    />
-                  </div>
-                ) : phases.length === 0 ? (
-                  <div className="tasks-empty-message">
-                    <i className="bi bi-inbox" />
-                    No phases yet.
-                  </div>
-                ) : (
-                  <div className="hierarchy-list">
-                    {phases.map((p) => (
-                      <div
-                        key={p.id}
-                        className={`hierarchy-item ${selectedPhaseId === p.id ? "selected" : ""}`}
-                      >
-                        {editingPhaseId === p.id && canEditPhases ? (
-                          <div className="w-100 inline-edit-form">
-                            <div className="inline-edit-field">
-                              <label className="inline-edit-label">
-                                Phase Name
-                              </label>
-                              <input
-                                className="form-control form-control-sm"
-                                name="name"
-                                value={editPhaseForm.name}
-                                onChange={handleEditPhaseChange}
-                                maxLength={120}
-                                required
-                              />
-                            </div>
-                            <div className="d-flex gap-2 inline-edit-row">
-                              <div className="inline-edit-field flex-fill">
-                                <label className="inline-edit-label">
-                                  Start Date
-                                </label>
-                                <input
-                                  className="form-control form-control-sm"
-                                  type="date"
-                                  name="startDateUtc"
-                                  value={editPhaseForm.startDateUtc}
-                                  onChange={handleEditPhaseChange}
-                                />
-                              </div>
-                              <div className="inline-edit-field flex-fill">
-                                <label className="inline-edit-label">
-                                  End Date
-                                </label>
-                                <input
-                                  className="form-control form-control-sm"
-                                  type="date"
-                                  name="endDateUtc"
-                                  value={editPhaseForm.endDateUtc}
-                                  onChange={handleEditPhaseChange}
-                                />
-                              </div>
-                            </div>
-                            <div className="inline-edit-field">
-                              <label className="inline-edit-label">
-                                Deliverables
-                              </label>
-                              <textarea
-                                className="form-control form-control-sm"
-                                rows={2}
-                                name="deliverables"
-                                value={editPhaseForm.deliverables}
-                                onChange={handleEditPhaseChange}
-                                maxLength={1000}
-                              />
-                            </div>
-                            <div className="d-flex justify-content-between align-items-center">
-                              <label className="form-check-label d-flex align-items-center gap-2">
-                                <input
-                                  type="checkbox"
-                                  className="form-check-input"
-                                  name="isGatePassed"
-                                  checked={editPhaseForm.isGatePassed}
-                                  onChange={handleEditPhaseChange}
-                                />
-                                Gate passed
-                              </label>
-                              <div className="task-row-actions">
-                                <button
-                                  type="button"
-                                  className="btn btn-success btn-sm"
-                                  onClick={() => handleUpdatePhase(p)}
-                                >
-                                  <i className="bi bi-check-lg" />
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-secondary btn-sm"
-                                  onClick={() => setEditingPhaseId(null)}
-                                >
-                                  <i className="bi bi-x-lg" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              className="hierarchy-item-main"
-                              onClick={() => {
-                                setSelectedPhaseId(p.id);
-                                setSelectedMilestoneId(null);
-                                setTasks([]);
-                                setShowCreateTask(false);
-                                setShowCreateMilestone(false);
-                              }}
-                            >
-                              <strong>{p.name || "Unnamed"}</strong>
-                              <span>
-                                {p.startDateUtc
-                                  ? new Date(
-                                      p.startDateUtc,
-                                    ).toLocaleDateString()
-                                  : "No start date"}
-                              </span>
-                            </button>
-                            <div className="task-row-actions">
-                              {canDeletePhases &&
-                              confirmDeletePhaseId === p.id ? (
-                                <span className="confirm-inline confirm-inline-sm">
-                                  <button
-                                    type="button"
-                                    className="btn btn-danger btn-sm"
-                                    onClick={() => handleDeletePhase(p.id)}
-                                  >
-                                    Yes
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-secondary btn-sm"
-                                    onClick={() =>
-                                      setConfirmDeletePhaseId(null)
-                                    }
-                                  >
-                                    No
-                                  </button>
-                                </span>
-                              ) : (
-                                <>
-                                  {canEditPhases && (
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-primary btn-sm"
-                                      onClick={() => startEditPhase(p)}
-                                    >
-                                      <i className="bi bi-pencil" />
-                                    </button>
-                                  )}
-                                  {canDeletePhases && (
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-danger btn-sm"
-                                      onClick={() =>
-                                        setConfirmDeletePhaseId(p.id)
-                                      }
-                                    >
-                                      <i className="bi bi-trash" />
-                                    </button>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </article>
-
-              <article className="hierarchy-column">
-                <div className="hierarchy-column-head">
-                  <h3>
-                    <i className="bi bi-signpost-2 me-1" />
-                    Milestones
-                  </h3>
-                  {canCreateMilestones && (
-                    <button
-                      type="button"
-                      className="btn btn-info text-white btn-sm"
-                      disabled={!selectedPhaseId || !canViewMilestones}
-                      onClick={() => setShowCreateMilestone((prev) => !prev)}
-                    >
-                      {showCreateMilestone ? "Cancel" : "+ Add"}
-                    </button>
-                  )}
-                </div>
-
-                {!canViewMilestones ? (
-                  <AccessDeniedState
-                    title="Milestones are restricted"
-                    description="You do not have permission to view project milestones."
-                  />
-                ) : !selectedPhaseId ? (
-                  <div className="tasks-empty-message">
-                    <i className="bi bi-arrow-left-circle" />
-                    Select a phase to view milestones
-                  </div>
-                ) : (
-                  <>
-                    {canCreateMilestones && showCreateMilestone && (
-                      <div className="task-create-card mb-3">
-                        <form
-                          className="row g-2"
-                          onSubmit={handleCreateMilestone}
-                        >
-                          <div className="col-12">
-                            <label className="form-label mb-1">
-                              Milestone Name
-                            </label>
-                            <input
-                              className="form-control"
-                              name="name"
-                              value={newMilestone.name}
-                              onChange={handleNewMilestoneChange}
-                              placeholder="Milestone name"
-                              maxLength={150}
-                              required
-                            />
-                          </div>
-                          <div className="col-12">
-                            <label className="form-label mb-1">
-                              Target Date
-                            </label>
-                            <input
-                              className="form-control"
-                              type="date"
-                              name="targetDateUtc"
-                              value={newMilestone.targetDateUtc}
-                              onChange={handleNewMilestoneChange}
-                            />
-                          </div>
-                          <div className="col-12">
-                            <label className="form-label mb-1">
-                              Success Criteria
-                            </label>
-                            <textarea
-                              className="form-control"
-                              rows={2}
-                              name="successCriteria"
-                              value={newMilestone.successCriteria}
-                              onChange={handleNewMilestoneChange}
-                              placeholder="Success criteria"
-                              maxLength={1000}
-                            />
-                          </div>
-                          <div className="col-12 d-flex justify-content-between align-items-center">
-                            <label className="form-check-label d-flex align-items-center gap-2">
-                              <input
-                                className="form-check-input"
-                                type="checkbox"
-                                name="isCompleted"
-                                checked={newMilestone.isCompleted}
-                                onChange={handleNewMilestoneChange}
-                              />
-                              Mark as Completed
-                            </label>
-                            <button
-                              type="submit"
-                              className="btn btn-success btn-sm"
-                              disabled={creatingMilestone}
-                            >
-                              {creatingMilestone ? "Creating..." : "Create"}
-                            </button>
-                          </div>
-                        </form>
-                      </div>
-                    )}
-
-                    {milestonesLoading ? (
-                      <div className="text-center py-3">
-                        <div
-                          className="spinner-border spinner-border-sm text-info"
-                          role="status"
-                        />
-                      </div>
-                    ) : milestones.length === 0 ? (
-                      <div className="tasks-empty-message">
-                        <i className="bi bi-inbox" />
-                        No milestones for this phase.
-                      </div>
-                    ) : (
-                      <div className="hierarchy-list">
-                        {milestones.map((m) => (
-                          <div
-                            key={m.id}
-                            className={`hierarchy-item ${selectedMilestoneId === m.id ? "selected" : ""}`}
-                          >
-                            {editingMilestoneId === m.id &&
-                            canEditMilestones ? (
-                              <div className="w-100 inline-edit-form">
-                                <div className="inline-edit-field">
-                                  <label className="inline-edit-label">
-                                    Milestone Name
-                                  </label>
-                                  <input
-                                    className="form-control form-control-sm"
-                                    name="name"
-                                    value={editMilestoneForm.name}
-                                    onChange={handleEditMilestoneChange}
-                                    maxLength={150}
-                                    required
-                                  />
-                                </div>
-                                <div className="inline-edit-field">
-                                  <label className="inline-edit-label">
-                                    Target Date
-                                  </label>
-                                  <input
-                                    className="form-control form-control-sm"
-                                    type="date"
-                                    name="targetDateUtc"
-                                    value={editMilestoneForm.targetDateUtc}
-                                    onChange={handleEditMilestoneChange}
-                                  />
-                                </div>
-                                <div className="inline-edit-field">
-                                  <label className="inline-edit-label">
-                                    Actual Date
-                                  </label>
-                                  <input
-                                    className="form-control form-control-sm"
-                                    type="date"
-                                    name="actualDateUtc"
-                                    value={editMilestoneForm.actualDateUtc}
-                                    onChange={handleEditMilestoneChange}
-                                  />
-                                </div>
-                                <div className="inline-edit-field">
-                                  <label className="inline-edit-label">
-                                    Success Criteria
-                                  </label>
-                                  <textarea
-                                    className="form-control form-control-sm"
-                                    rows={2}
-                                    name="successCriteria"
-                                    value={editMilestoneForm.successCriteria}
-                                    onChange={handleEditMilestoneChange}
-                                    maxLength={1000}
-                                  />
-                                </div>
-                                <div className="d-flex justify-content-between align-items-center">
-                                  <label className="form-check-label d-flex align-items-center gap-2">
-                                    <input
-                                      className="form-check-input"
-                                      type="checkbox"
-                                      name="isCompleted"
-                                      checked={editMilestoneForm.isCompleted}
-                                      onChange={handleEditMilestoneChange}
-                                    />
-                                    Completed
-                                  </label>
-                                  <div className="task-row-actions">
-                                    <button
-                                      type="button"
-                                      className="btn btn-success btn-sm"
-                                      onClick={() => handleUpdateMilestone(m)}
-                                    >
-                                      <i className="bi bi-check-lg" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-secondary btn-sm"
-                                      onClick={() =>
-                                        setEditingMilestoneId(null)
-                                      }
-                                    >
-                                      <i className="bi bi-x-lg" />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <button
-                                  type="button"
-                                  className="hierarchy-item-main"
-                                  onClick={() => {
-                                    setSelectedMilestoneId(m.id);
-                                    setShowCreateTask(false);
-                                  }}
-                                >
-                                  <strong>{m.name || "Unnamed"}</strong>
-                                  <span>
-                                    {m.targetDateUtc
-                                      ? new Date(
-                                          m.targetDateUtc,
-                                        ).toLocaleDateString()
-                                      : "No target date"}
-                                  </span>
-                                </button>
-                                <div className="task-row-actions">
-                                  {canDeleteMilestones &&
-                                  confirmDeleteMilestoneId === m.id ? (
-                                    <span className="confirm-inline confirm-inline-sm">
-                                      <button
-                                        type="button"
-                                        className="btn btn-danger btn-sm"
-                                        onClick={() =>
-                                          handleDeleteMilestone(m.id)
-                                        }
-                                      >
-                                        Yes
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="btn btn-outline-secondary btn-sm"
-                                        onClick={() =>
-                                          setConfirmDeleteMilestoneId(null)
-                                        }
-                                      >
-                                        No
-                                      </button>
-                                    </span>
-                                  ) : (
-                                    <>
-                                      {canEditMilestones && (
-                                        <button
-                                          type="button"
-                                          className="btn btn-outline-primary btn-sm"
-                                          onClick={() => startEditMilestone(m)}
-                                        >
-                                          <i className="bi bi-pencil" />
-                                        </button>
-                                      )}
-                                      {canDeleteMilestones && (
-                                        <button
-                                          type="button"
-                                          className="btn btn-outline-danger btn-sm"
-                                          onClick={() =>
-                                            setConfirmDeleteMilestoneId(m.id)
-                                          }
-                                        >
-                                          <i className="bi bi-trash" />
-                                        </button>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
-              </article>
-
-              <article className="hierarchy-column">
-                <div className="hierarchy-column-head">
-                  <h3>
-                    <i className="bi bi-check2-square me-1" />
-                    Tasks
-                  </h3>
-                  {canCreateTasks && (
-                    <button
-                      type="button"
-                      className="btn btn-info text-white btn-sm"
-                      disabled={!selectedMilestoneId || !canViewTasks}
-                      onClick={() => setShowCreateTask((prev) => !prev)}
-                    >
-                      {showCreateTask ? "Cancel" : "+ Add"}
-                    </button>
-                  )}
-                </div>
-
-                {!canViewTasks ? (
-                  <AccessDeniedState
-                    title="Tasks are restricted"
-                    description="You do not have permission to view project tasks."
-                  />
-                ) : !selectedMilestoneId ? (
-                  <div className="tasks-empty-message">
-                    <i className="bi bi-arrow-left-circle" />
-                    Select a milestone to view tasks
-                  </div>
-                ) : (
-                  <>
-                    {canCreateTasks && showCreateTask && (
-                      <div className="task-create-card mb-3">
-                        <form className="row g-2" onSubmit={handleCreateTask}>
-                          <div className="col-12">
-                            <label className="form-label mb-1">
-                              Task Title
-                            </label>
-                            <input
-                              className="form-control"
-                              name="title"
-                              value={newTask.title}
-                              onChange={handleNewTaskChange}
-                              placeholder="Task title"
-                              maxLength={180}
-                              required
-                            />
-                          </div>
-                          <div className="col-6">
-                            <label className="form-label mb-1">Priority</label>
-                            <select
-                              className="form-select"
-                              name="priority"
-                              value={newTask.priority}
-                              onChange={handleNewTaskChange}
-                            >
-                              {Object.entries(PriorityLevel).map(([v, l]) => (
-                                <option key={v} value={v}>
-                                  {l}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="col-6">
-                            <label className="form-label mb-1">Status</label>
-                            <select
-                              className="form-select"
-                              name="status"
-                              value={newTask.status}
-                              onChange={handleNewTaskChange}
-                            >
-                              {Object.entries(TaskStatusEnum).map(([v, l]) => (
-                                <option key={v} value={v}>
-                                  {l}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className="col-6">
-                            <label className="form-label mb-1">
-                              Start Date
-                            </label>
-                            <input
-                              className="form-control"
-                              type="date"
-                              name="startDateUtc"
-                              value={newTask.startDateUtc}
-                              onChange={handleNewTaskChange}
-                            />
-                          </div>
-                          <div className="col-6">
-                            <label className="form-label mb-1">Due Date</label>
-                            <input
-                              className="form-control"
-                              type="date"
-                              name="dueDateUtc"
-                              value={newTask.dueDateUtc}
-                              onChange={handleNewTaskChange}
-                            />
-                          </div>
-                          <div className="col-6">
-                            <label className="form-label mb-1">
-                              Completion Percentage
-                            </label>
-                            <input
-                              className="form-control"
-                              type="number"
-                              min="0"
-                              max="100"
-                              name="completionPercentage"
-                              value={newTask.completionPercentage}
-                              onChange={handleNewTaskChange}
-                            />
-                          </div>
-                          <div className="col-6">
-                            <label className="form-label mb-1">
-                              Effort Estimate (Hours)
-                            </label>
-                            <input
-                              className="form-control"
-                              type="number"
-                              min="0"
-                              step="0.5"
-                              name="effortEstimateHours"
-                              value={newTask.effortEstimateHours}
-                              onChange={handleNewTaskChange}
-                            />
-                          </div>
-                          <div className="col-12">
-                            <label className="form-label mb-1">
-                              Description
-                            </label>
-                            <textarea
-                              className="form-control"
-                              rows={2}
-                              name="description"
-                              value={newTask.description}
-                              onChange={handleNewTaskChange}
-                              maxLength={2000}
-                            />
-                          </div>
-                          <div className="col-12">
-                            <label className="form-label mb-1">
-                              Assign To (Project Member)
-                            </label>
-                            <div
-                              className="employee-dropdown-wrap"
-                              ref={memberDropdownRef}
-                            >
-                              <div
-                                className="employee-selected-input"
-                                onClick={() =>
-                                  setShowMemberDropdown((prev) => !prev)
-                                }
-                              >
-                                {newTask.assignedToMemberId ? (
-                                  <span className="employee-selected-name">
-                                    <i className="bi bi-person-fill me-1" />
-                                    {getMemberDisplayName(
-                                      newTask.assignedToMemberId,
-                                    ) || newTask.assignedToMemberId}
-                                    <button
-                                      type="button"
-                                      className="employee-clear-btn"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setNewTask((prev) => ({
-                                          ...prev,
-                                          assignedToMemberId: "",
-                                        }));
-                                      }}
-                                    >
-                                      <i className="bi bi-x" />
-                                    </button>
-                                  </span>
-                                ) : (
-                                  <span className="employee-placeholder">
-                                    Select a project member...
-                                  </span>
-                                )}
-                                <i
-                                  className={`bi bi-chevron-${showMemberDropdown ? "up" : "down"} employee-chevron`}
-                                />
-                              </div>
-                              {showMemberDropdown && (
-                                <div className="employee-dropdown-list">
-                                  <input
-                                    className="form-control form-control-sm employee-search-input"
-                                    placeholder="Search by name or role..."
-                                    value={memberSearch}
-                                    onChange={(e) =>
-                                      setMemberSearch(e.target.value)
-                                    }
-                                    autoFocus
-                                  />
-                                  <div className="employee-options">
-                                    {filteredMembers.length === 0 ? (
-                                      <div className="employee-option-empty">
-                                        No project members found.
-                                      </div>
-                                    ) : (
-                                      filteredMembers.map((m) => (
-                                        <div
-                                          key={m.id}
-                                          className={`employee-option ${newTask.assignedToMemberId === m.id ? "selected" : ""}`}
-                                          onClick={() => {
-                                            setNewTask((prev) => ({
-                                              ...prev,
-                                              assignedToMemberId: m.id,
-                                            }));
-                                            setShowMemberDropdown(false);
-                                            setMemberSearch("");
-                                          }}
-                                        >
-                                          <div className="employee-option-avatar">
-                                            {m.fullName
-                                              .split(" ")
-                                              .map((n) => n.charAt(0))
-                                              .join("")
-                                              .slice(0, 2)}
-                                          </div>
-                                          <div className="employee-option-info">
-                                            <span className="employee-option-name">
-                                              {m.fullName}
-                                            </span>
-                                            <span className="employee-option-meta">
-                                              {m.role}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      ))
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="col-12 text-end">
-                            <button
-                              type="submit"
-                              className="btn btn-success btn-sm"
-                              disabled={creatingTask}
-                            >
-                              {creatingTask ? "Creating..." : "Create"}
-                            </button>
-                          </div>
-                        </form>
-                      </div>
-                    )}
-
-                    {tasksLoading ? (
-                      <div className="text-center py-3">
-                        <div
-                          className="spinner-border spinner-border-sm text-info"
-                          role="status"
-                        />
-                      </div>
-                    ) : tasks.length === 0 ? (
-                      <div className="tasks-empty-message">
-                        <i className="bi bi-inbox" />
-                        No tasks for this milestone.
-                      </div>
-                    ) : (
-                      <div className="hierarchy-list">
-                        {tasks.map((t) => {
-                          const assignee = getTaskAssigneeInfo(t);
-
-                          return (
-                            <div key={t.id} className="hierarchy-item">
-                              <button
-                                type="button"
-                                className="hierarchy-item-main"
-                                onClick={() =>
-                                  navigate(
-                                    `/dashboard/portfolios/${portfolioId}/projects/${projectId}/tasks/${t.id}`,
-                                  )
-                                }
-                              >
-                                <strong>{t.title || "Untitled"}</strong>
-                                <span>
-                                  {TaskStatusEnum[t.status ?? 0] || "Unknown"} ·{" "}
-                                  {t.completionPercentage ?? 0}%
-                                </span>
-                                <span className="task-assignee-line">
-                                  <span className="task-assignee-label">
-                                    Assignee:
-                                  </span>
-                                  <span className="task-assignee-name">
-                                    {assignee.label}
-                                  </span>
-                                  {assignee.type && (
-                                    <span
-                                      className={`task-assignee-badge ${
-                                        assignee.type === "hr" ? "hr" : "member"
-                                      }`}
-                                    >
-                                      {assignee.type === "hr"
-                                        ? "HR employee"
-                                        : "Project member"}
-                                    </span>
-                                  )}
-                                </span>
-                              </button>
-                              <div className="task-row-actions">
-                                {canDeleteTasks &&
-                                  (confirmDeleteTaskId === t.id ? (
-                                    <span className="confirm-inline confirm-inline-sm">
-                                      <button
-                                        type="button"
-                                        className="btn btn-danger btn-sm"
-                                        onClick={() => handleDeleteTask(t.id)}
-                                      >
-                                        Yes
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="btn btn-outline-secondary btn-sm"
-                                        onClick={() =>
-                                          setConfirmDeleteTaskId(null)
-                                        }
-                                      >
-                                        No
-                                      </button>
-                                    </span>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-danger btn-sm"
-                                      onClick={() =>
-                                        setConfirmDeleteTaskId(t.id)
-                                      }
-                                    >
-                                      <i className="bi bi-trash" />
-                                    </button>
-                                  ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </>
-                )}
-              </article>
-            </div>
-
-            <div className="details-row-grid">
-              <aside
-                className="hierarchy-sidebar"
-                aria-label="Selection details"
-              >
-                <div className="hierarchy-sidebar-head">
-                  <h3>
-                    <i className="bi bi-card-text me-2" />
-                    Details
-                  </h3>
-                  <span className="details-pill">Live Context</span>
-                </div>
-
-                {!selectedPhase && !selectedMilestone ? (
-                  <div className="hierarchy-sidebar-empty">
-                    <i className="bi bi-info-circle" />
-                    <p className="mb-0">
-                      Select a phase or milestone to view complete details.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    {selectedPhase && (
-                      <section className="detail-card">
-                        <div className="detail-card-head">
-                          <h4>Phase Details</h4>
-                          <span
-                            className={`detail-status ${selectedPhase.isGatePassed ? "ok" : "pending"}`}
-                          >
-                            {selectedPhase.isGatePassed
-                              ? "Gate Passed"
-                              : "Pending Gate"}
-                          </span>
-                        </div>
-                        <div className="detail-row">
-                          <span>Name</span>
-                          <strong>{selectedPhase.name || "Unnamed"}</strong>
-                        </div>
-                        <div className="detail-row">
-                          <span>Start Date</span>
-                          <strong>
-                            {selectedPhase.startDateUtc
-                              ? new Date(
-                                  selectedPhase.startDateUtc,
-                                ).toLocaleDateString()
-                              : "N/A"}
-                          </strong>
-                        </div>
-                        <div className="detail-row">
-                          <span>End Date</span>
-                          <strong>
-                            {selectedPhase.endDateUtc
-                              ? new Date(
-                                  selectedPhase.endDateUtc,
-                                ).toLocaleDateString()
-                              : "N/A"}
-                          </strong>
-                        </div>
-                        <div className="detail-row">
-                          <span>Milestones</span>
-                          <strong>{milestones.length}</strong>
-                        </div>
-                        <div className="detail-row detail-block">
-                          <span>Deliverables</span>
-                          <p className="mb-0">
-                            {selectedPhase.deliverables ||
-                              "No deliverables recorded."}
-                          </p>
-                        </div>
-                        {/* <div className="detail-row detail-id">
-                          <span>Phase ID</span>
-                          <strong>{selectedPhase.id}</strong>
-                        </div> */}
-                      </section>
-                    )}
-
-                    {selectedMilestone && (
-                      <section className="detail-card">
-                        <div className="detail-card-head">
-                          <h4>Milestone Details</h4>
-                          <span
-                            className={`detail-status ${selectedMilestone.isCompleted ? "ok" : "pending"}`}
-                          >
-                            {selectedMilestone.isCompleted
-                              ? "Completed"
-                              : "In Progress"}
-                          </span>
-                        </div>
-                        <div className="detail-row">
-                          <span>Name</span>
-                          <strong>{selectedMilestone.name || "Unnamed"}</strong>
-                        </div>
-                        <div className="detail-row">
-                          <span>Target Date</span>
-                          <strong>
-                            {selectedMilestone.targetDateUtc
-                              ? new Date(
-                                  selectedMilestone.targetDateUtc,
-                                ).toLocaleDateString()
-                              : "N/A"}
-                          </strong>
-                        </div>
-                        <div className="detail-row">
-                          <span>Actual Date</span>
-                          <strong>
-                            {selectedMilestone.actualDateUtc
-                              ? new Date(
-                                  selectedMilestone.actualDateUtc,
-                                ).toLocaleDateString()
-                              : "N/A"}
-                          </strong>
-                        </div>
-                        <div className="detail-row">
-                          <span>Tasks</span>
-                          <strong>{tasks.length}</strong>
-                        </div>
-                        <div className="detail-row detail-block">
-                          <span>Success Criteria</span>
-                          <p className="mb-0">
-                            {selectedMilestone.successCriteria ||
-                              "No success criteria recorded."}
-                          </p>
-                        </div>
-                        <div className="detail-approvals-section">
-                          <div className="detail-approvals-head">
-                            <h5>
-                              <i className="bi bi-check2-square me-1" />
-                              Approvals
-                            </h5>
-                            {canCreateMilestoneApprovals && (
-                              <button
-                                type="button"
-                                className="btn btn-outline-primary btn-sm"
-                                onClick={() =>
-                                  setShowCreateApproval((prev) => !prev)
-                                }
-                                disabled={!currentUserId}
-                              >
-                                {showCreateApproval ? "Cancel" : "Add Approval"}
-                              </button>
-                            )}
-                          </div>
-
-                          {!currentUserId && (
-                            <p className="detail-approvals-note mb-2">
-                              Unable to detect the logged-in user for
-                              approverId.
-                            </p>
-                          )}
-
-                          {canCreateMilestoneApprovals &&
-                            showCreateApproval && (
-                              <div className="detail-approval-form mb-2">
-                                <div className="row g-2">
-                                  <div className="col-12 col-md-4">
-                                    <label className="form-label mb-1">
-                                      Status
-                                    </label>
-                                    <select
-                                      className="form-select form-select-sm"
-                                      name="status"
-                                      value={newApprovalForm.status}
-                                      onChange={handleNewApprovalChange}
-                                    >
-                                      {Object.entries(ApprovalStatus).map(
-                                        ([value, label]) => (
-                                          <option key={value} value={value}>
-                                            {label}
-                                          </option>
-                                        ),
-                                      )}
-                                    </select>
-                                  </div>
-                                  <div className="col-12 col-md-8">
-                                    <label className="form-label mb-1">
-                                      Decided At
-                                    </label>
-                                    <input
-                                      className="form-control form-control-sm"
-                                      type="datetime-local"
-                                      name="decidedAtUtc"
-                                      value={newApprovalForm.decidedAtUtc}
-                                      onChange={handleNewApprovalChange}
-                                    />
-                                  </div>
-                                  <div className="col-12">
-                                    <label className="form-label mb-1">
-                                      Comments
-                                    </label>
-                                    <textarea
-                                      className="form-control form-control-sm"
-                                      rows={2}
-                                      name="comments"
-                                      value={newApprovalForm.comments}
-                                      onChange={handleNewApprovalChange}
-                                      maxLength={1000}
-                                    />
-                                  </div>
-                                  <div className="col-12 text-end">
-                                    <button
-                                      type="button"
-                                      className="btn btn-success btn-sm"
-                                      onClick={handleCreateApproval}
-                                      disabled={
-                                        creatingApproval || !currentUserId
-                                      }
-                                    >
-                                      {creatingApproval
-                                        ? "Adding..."
-                                        : "Save Approval"}
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-
-                          {!canViewMilestoneApprovals ? (
-                            <AccessDeniedState
-                              title="Approvals are restricted"
-                              description="You do not have permission to view milestone approvals."
-                            />
-                          ) : approvalsLoading ? (
-                            <div className="text-center py-2">
-                              <div
-                                className="spinner-border spinner-border-sm text-info"
-                                role="status"
-                              />
-                            </div>
-                          ) : milestoneApprovals.length === 0 ? (
-                            <p className="detail-approvals-note mb-0">
-                              No approvals for this milestone.
-                            </p>
-                          ) : (
-                            <div className="detail-approvals-list">
-                              {milestoneApprovals.map((approval) => (
-                                <div
-                                  key={approval.id}
-                                  className="detail-approval-item"
-                                >
-                                  {editingApprovalId === approval.id &&
-                                  canEditMilestoneApprovals ? (
-                                    <div className="detail-approval-form">
-                                      <div className="row g-2">
-                                        <div className="col-12 col-md-4">
-                                          <label className="form-label mb-1">
-                                            Status
-                                          </label>
-                                          <select
-                                            className="form-select form-select-sm"
-                                            name="status"
-                                            value={editApprovalForm.status}
-                                            onChange={handleEditApprovalChange}
-                                          >
-                                            {Object.entries(ApprovalStatus).map(
-                                              ([value, label]) => (
-                                                <option
-                                                  key={value}
-                                                  value={value}
-                                                >
-                                                  {label}
-                                                </option>
-                                              ),
-                                            )}
-                                          </select>
-                                        </div>
-                                        <div className="col-12 col-md-8">
-                                          <label className="form-label mb-1">
-                                            Decided At
-                                          </label>
-                                          <input
-                                            className="form-control form-control-sm"
-                                            type="datetime-local"
-                                            name="decidedAtUtc"
-                                            value={
-                                              editApprovalForm.decidedAtUtc
-                                            }
-                                            onChange={handleEditApprovalChange}
-                                          />
-                                        </div>
-                                        <div className="col-12">
-                                          <label className="form-label mb-1">
-                                            Comments
-                                          </label>
-                                          <textarea
-                                            className="form-control form-control-sm"
-                                            rows={2}
-                                            name="comments"
-                                            value={editApprovalForm.comments}
-                                            onChange={handleEditApprovalChange}
-                                            maxLength={1000}
-                                          />
-                                        </div>
-                                        <div className="col-12 d-flex justify-content-end gap-2">
-                                          <button
-                                            type="button"
-                                            className="btn btn-success btn-sm"
-                                            onClick={() =>
-                                              handleUpdateApproval(approval)
-                                            }
-                                          >
-                                            Save
-                                          </button>
-                                          <button
-                                            type="button"
-                                            className="btn btn-outline-secondary btn-sm"
-                                            onClick={() =>
-                                              setEditingApprovalId(null)
-                                            }
-                                          >
-                                            Cancel
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <div className="detail-approval-main">
-                                        <span
-                                          className={`approval-status-badge approval-status-${approval.status ?? 0}`}
-                                        >
-                                          {ApprovalStatus[
-                                            approval.status ?? 0
-                                          ] || "Unknown"}
-                                        </span>
-                                        <strong>
-                                          {getApproverDisplayName(
-                                            approval.approverId,
-                                          )}
-                                        </strong>
-                                        <small>
-                                          {formatDate(
-                                            approval.decidedAtUtc ||
-                                              approval.createdDateUtc,
-                                          )}
-                                        </small>
-                                        <p>
-                                          {approval.comments ||
-                                            "No comments provided."}
-                                        </p>
-                                      </div>
-                                      {(canEditMilestoneApprovals ||
-                                        canDeleteMilestoneApprovals) && (
-                                        <div className="task-row-actions">
-                                          {canDeleteMilestoneApprovals &&
-                                          confirmDeleteApprovalId ===
-                                            approval.id ? (
-                                            <span className="confirm-inline confirm-inline-sm">
-                                              <button
-                                                type="button"
-                                                className="btn btn-danger btn-sm"
-                                                onClick={() =>
-                                                  handleDeleteApproval(
-                                                    approval.id,
-                                                  )
-                                                }
-                                              >
-                                                Yes
-                                              </button>
-                                              <button
-                                                type="button"
-                                                className="btn btn-outline-secondary btn-sm"
-                                                onClick={() =>
-                                                  setConfirmDeleteApprovalId(
-                                                    null,
-                                                  )
-                                                }
-                                              >
-                                                No
-                                              </button>
-                                            </span>
-                                          ) : (
-                                            <>
-                                              {canEditMilestoneApprovals && (
-                                                <button
-                                                  type="button"
-                                                  className="btn btn-outline-primary btn-sm"
-                                                  onClick={() =>
-                                                    startEditApproval(approval)
-                                                  }
-                                                >
-                                                  <i className="bi bi-pencil" />
-                                                </button>
-                                              )}
-                                              {canDeleteMilestoneApprovals && (
-                                                <button
-                                                  type="button"
-                                                  className="btn btn-outline-danger btn-sm"
-                                                  onClick={() =>
-                                                    setConfirmDeleteApprovalId(
-                                                      approval.id,
-                                                    )
-                                                  }
-                                                >
-                                                  <i className="bi bi-trash" />
-                                                </button>
-                                              )}
-                                            </>
-                                          )}
-                                        </div>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                        {/* <div className="detail-row detail-id">
-                          <span>Milestone ID</span>
-                          <strong>{selectedMilestone.id}</strong>
-                        </div> */}
-                      </section>
-                    )}
-                  </>
-                )}
-              </aside>
-
-              <aside
-                className="hierarchy-sidebar hierarchy-visual"
-                aria-label="Phase visual analytics"
-              >
-                <div className="hierarchy-sidebar-head">
-                  <h3>
-                    <i className="bi bi-bar-chart-line me-2" />
-                    Visual Summary
-                  </h3>
-                  <span className="details-pill">Phase Analytics</span>
-                </div>
-
-                {!selectedPhase ? (
-                  <div className="hierarchy-sidebar-empty">
-                    <i className="bi bi-graph-up" />
-                    <p className="mb-0">
-                      Select a phase to view milestones and tasks visualization.
-                    </p>
-                  </div>
-                ) : phaseVisualLoading ? (
-                  <div className="text-center py-3">
-                    <div
-                      className="spinner-border spinner-border-sm text-info"
-                      role="status"
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <section className="detail-card visual-summary-card">
-                      <h4 className="visual-heading">Phase Progress</h4>
-                      <div className="visual-kpi-row">
-                        <div className="visual-kpi">
-                          <span>Milestones</span>
-                          <strong>
-                            {phaseVisualSummary.completedMilestones}/
-                            {phaseVisualSummary.totalMilestones}
-                          </strong>
-                        </div>
-                        <div className="visual-kpi">
-                          <span>Tasks</span>
-                          <strong>
-                            {phaseVisualSummary.taskTotals.completed}/
-                            {phaseVisualSummary.taskTotals.total}
-                          </strong>
-                        </div>
-                      </div>
-
-                      <div className="visual-progress-block">
-                        <div className="visual-progress-head">
-                          <span>Milestone Completion</span>
-                          <strong>
-                            {phaseVisualSummary.milestoneProgressPercent}%
-                          </strong>
-                        </div>
-                        <div className="visual-progress-track">
-                          <span
-                            className="visual-progress-fill ok"
-                            style={{
-                              width: `${phaseVisualSummary.milestoneProgressPercent}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="visual-progress-block">
-                        <div className="visual-progress-head">
-                          <span>Task Completion</span>
-                          <strong>
-                            {phaseVisualSummary.taskProgressPercent}%
-                          </strong>
-                        </div>
-                        <div className="visual-progress-track">
-                          <span
-                            className="visual-progress-fill progress"
-                            style={{
-                              width: `${phaseVisualSummary.taskProgressPercent}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <p className="visual-status-note mb-0">
-                        Task completion is calculated from tasks with status
-                        "Done" only.
-                      </p>
-                    </section>
-
-                    <section className="detail-card visual-list-card">
-                      <h4 className="visual-heading">Milestone Breakdown</h4>
-                      {phaseMilestoneVisualRows.length === 0 ? (
-                        <p className="mb-0 visual-empty-text">
-                          No milestones available for this phase.
-                        </p>
-                      ) : (
-                        <div className="visual-milestone-list">
-                          {phaseMilestoneVisualRows.map((row) => (
-                            <div key={row.id} className="visual-milestone-item">
-                              <div className="visual-milestone-head">
-                                <strong>{row.name}</strong>
-                                <span
-                                  className={`visual-badge ${
-                                    row.milestoneStatus === "Completed"
-                                      ? "ok"
-                                      : row.milestoneStatus === "Active"
-                                        ? "progress"
-                                        : "idle"
-                                  }`}
-                                >
-                                  {row.milestoneStatus}
-                                </span>
-                              </div>
-                              <div className="visual-progress-track small">
-                                <span
-                                  className="visual-progress-fill progress"
-                                  style={{ width: `${row.completionPercent}%` }}
-                                />
-                              </div>
-                              <div className="visual-task-stats">
-                                {Object.entries(TaskStatusEnum).map(
-                                  ([statusKey, label]) => {
-                                    const status = Number(statusKey);
-                                    const count = row.statusCounts[status] || 0;
-
-                                    return (
-                                      <span
-                                        key={`${row.id}-${status}`}
-                                        className="visual-task-chip"
-                                      >
-                                        <i
-                                          className="visual-task-chip-dot"
-                                          style={{
-                                            background:
-                                              getTaskStatusColor(status),
-                                          }}
-                                        />
-                                        {label}: {count}
-                                      </span>
-                                    );
-                                  },
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </section>
-                  </>
-                )}
-              </aside>
-            </div>
-          </div>
-        </section>
+        <ProjectPhasesTab
+          selectedPhaseId={selectedPhaseId}
+          setSelectedPhaseId={setSelectedPhaseId}
+          selectedMilestoneId={selectedMilestoneId}
+          setSelectedMilestoneId={setSelectedMilestoneId}
+          setTasks={setTasks}
+          canCreatePhases={canCreatePhases}
+          showCreatePhase={showCreatePhase}
+          setShowCreatePhase={setShowCreatePhase}
+          handleCreatePhase={handleCreatePhase}
+          newPhase={newPhase}
+          handleNewPhaseChange={handleNewPhaseChange}
+          creatingPhase={creatingPhase}
+          canViewPhases={canViewPhases}
+          phasesLoading={phasesLoading}
+          phases={phases}
+          editingPhaseId={editingPhaseId}
+          canEditPhases={canEditPhases}
+          editPhaseForm={editPhaseForm}
+          handleEditPhaseChange={handleEditPhaseChange}
+          handleUpdatePhase={handleUpdatePhase}
+          setEditingPhaseId={setEditingPhaseId}
+          canDeletePhases={canDeletePhases}
+          confirmDeletePhaseId={confirmDeletePhaseId}
+          handleDeletePhase={handleDeletePhase}
+          setConfirmDeletePhaseId={setConfirmDeletePhaseId}
+          startEditPhase={startEditPhase}
+          canCreateMilestones={canCreateMilestones}
+          showCreateMilestone={showCreateMilestone}
+          setShowCreateMilestone={setShowCreateMilestone}
+          canViewMilestones={canViewMilestones}
+          handleCreateMilestone={handleCreateMilestone}
+          newMilestone={newMilestone}
+          handleNewMilestoneChange={handleNewMilestoneChange}
+          creatingMilestone={creatingMilestone}
+          milestonesLoading={milestonesLoading}
+          milestones={milestones}
+          editingMilestoneId={editingMilestoneId}
+          canEditMilestones={canEditMilestones}
+          editMilestoneForm={editMilestoneForm}
+          handleEditMilestoneChange={handleEditMilestoneChange}
+          handleUpdateMilestone={handleUpdateMilestone}
+          setEditingMilestoneId={setEditingMilestoneId}
+          canDeleteMilestones={canDeleteMilestones}
+          confirmDeleteMilestoneId={confirmDeleteMilestoneId}
+          handleDeleteMilestone={handleDeleteMilestone}
+          setConfirmDeleteMilestoneId={setConfirmDeleteMilestoneId}
+          startEditMilestone={startEditMilestone}
+          canCreateTasks={canCreateTasks}
+          canViewTasks={canViewTasks}
+          showCreateTask={showCreateTask}
+          setShowCreateTask={setShowCreateTask}
+          handleCreateTask={handleCreateTask}
+          newTask={newTask}
+          handleNewTaskChange={handleNewTaskChange}
+          memberDropdownRef={memberDropdownRef}
+          setShowMemberDropdown={setShowMemberDropdown}
+          showMemberDropdown={showMemberDropdown}
+          getMemberDisplayName={getMemberDisplayName}
+          setNewTask={setNewTask}
+          memberSearch={memberSearch}
+          setMemberSearch={setMemberSearch}
+          filteredMembers={filteredMembers}
+          creatingTask={creatingTask}
+          tasksLoading={tasksLoading}
+          tasks={tasks}
+          getTaskAssigneeInfo={getTaskAssigneeInfo}
+          onOpenTask={(taskId) =>
+            navigate(
+              `/dashboard/portfolios/${portfolioId}/projects/${projectId}/tasks/${taskId}`,
+            )
+          }
+          canDeleteTasks={canDeleteTasks}
+          confirmDeleteTaskId={confirmDeleteTaskId}
+          handleDeleteTask={handleDeleteTask}
+          setConfirmDeleteTaskId={setConfirmDeleteTaskId}
+          selectedPhase={selectedPhase}
+          selectedMilestone={selectedMilestone}
+          canCreateMilestoneApprovals={canCreateMilestoneApprovals}
+          setShowCreateApproval={setShowCreateApproval}
+          showCreateApproval={showCreateApproval}
+          currentUserId={currentUserId}
+          newApprovalForm={newApprovalForm}
+          handleNewApprovalChange={handleNewApprovalChange}
+          handleCreateApproval={handleCreateApproval}
+          creatingApproval={creatingApproval}
+          canViewMilestoneApprovals={canViewMilestoneApprovals}
+          approvalsLoading={approvalsLoading}
+          milestoneApprovals={milestoneApprovals}
+          editingApprovalId={editingApprovalId}
+          canEditMilestoneApprovals={canEditMilestoneApprovals}
+          editApprovalForm={editApprovalForm}
+          handleEditApprovalChange={handleEditApprovalChange}
+          handleUpdateApproval={handleUpdateApproval}
+          setEditingApprovalId={setEditingApprovalId}
+          canDeleteMilestoneApprovals={canDeleteMilestoneApprovals}
+          confirmDeleteApprovalId={confirmDeleteApprovalId}
+          handleDeleteApproval={handleDeleteApproval}
+          setConfirmDeleteApprovalId={setConfirmDeleteApprovalId}
+          startEditApproval={startEditApproval}
+          getApproverDisplayName={getApproverDisplayName}
+          formatDate={formatDate}
+          phaseVisualLoading={phaseVisualLoading}
+          phaseVisualSummary={phaseVisualSummary}
+          phaseMilestoneVisualRows={phaseMilestoneVisualRows}
+          getTaskStatusColor={getTaskStatusColor}
+        />
       )}
 
-      {/* ── Risks Section ── */}
       {activeTab === "risks" && canAccessRisksTab && (
-        <section className="tasks-section">
-          <div className="tasks-section-header">
-            <h2>
-              <i className="bi bi-shield-exclamation me-2" />
-              Risk Management
-            </h2>
-            {canCreateRisks && (
-              <button
-                type="button"
-                className="btn btn-info text-white btn-sm"
-                onClick={() => setShowCreateRisk((prev) => !prev)}
-              >
-                <i
-                  className={`bi ${showCreateRisk ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-                />
-                {showCreateRisk ? "Cancel" : "New Risk"}
-              </button>
-            )}
-          </div>
-
-          {!canViewRisks ? (
-            <AccessDeniedState
-              title="Risks are restricted"
-              description="You can access this tab, but your role does not include Risks.View to display risk records."
-            />
-          ) : (
-            <>
-              <div className="risk-charts-grid mb-3">
-                <article className="details-card risk-chart-card">
-                  <div className="finance-chart-header">
-                    <h3 className="h6 mb-1">Project Risk Severity Summary</h3>
-                    <p className="mb-0">
-                      Distribution of risks by derived severity from impact and
-                      probability.
-                    </p>
-                  </div>
-                  <div className="finance-chart-body">
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={riskSummaryData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          outerRadius={100}
-                          innerRadius={60}
-                        >
-                          {riskSummaryData.map((entry) => (
-                            <Cell key={entry.key} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                </article>
-
-                <article className="details-card risk-chart-card">
-                  <div className="finance-chart-header">
-                    <h3 className="h6 mb-1">Events Per Risk</h3>
-                    <p className="mb-0">
-                      Number of events linked to each risk. Expanding risks
-                      updates this chart in real time.
-                    </p>
-                  </div>
-                  <div className="finance-chart-body">
-                    {canViewRiskEvents ? (
-                      <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={riskEventsChartData}>
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="#e6eef5"
-                          />
-                          <XAxis
-                            dataKey="name"
-                            interval={0}
-                            angle={-12}
-                            textAnchor="end"
-                            height={58}
-                            tick={{ fontSize: 11 }}
-                          />
-                          <YAxis
-                            allowDecimals={false}
-                            tick={{ fontSize: 12 }}
-                          />
-                          <Tooltip />
-                          <Bar
-                            dataKey="events"
-                            fill="#1b4965"
-                            radius={[6, 6, 0, 0]}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    ) : (
-                      <AccessDeniedState
-                        title="Risk events analytics are restricted"
-                        description="You do not have permission to view risk event data."
-                      />
-                    )}
-                  </div>
-                </article>
-              </div>
-
-              <div className="details-card mb-3">
-                <div className="risk-controls-row">
-                  <div className="risk-control-item">
-                    <label className="form-label mb-1">
-                      Filter by Severity
-                    </label>
-                    <select
-                      className="form-select"
-                      value={riskSeverityFilter}
-                      onChange={(event) =>
-                        setRiskSeverityFilter(
-                          event.target.value as
-                            | "all"
-                            | "high"
-                            | "medium"
-                            | "low",
-                        )
-                      }
-                    >
-                      <option value="all">All</option>
-                      <option value="high">High</option>
-                      <option value="medium">Medium</option>
-                      <option value="low">Low</option>
-                    </select>
-                  </div>
-                  <div className="risk-control-item">
-                    <label className="form-label mb-1">Sort By</label>
-                    <select
-                      className="form-select"
-                      value={riskSortBy}
-                      onChange={(event) =>
-                        setRiskSortBy(
-                          event.target.value as
-                            | "recent"
-                            | "impact"
-                            | "probability"
-                            | "severity",
-                        )
-                      }
-                    >
-                      <option value="severity">Severity (Highest First)</option>
-                      <option value="impact">Impact</option>
-                      <option value="probability">Probability</option>
-                      <option value="recent">Recently Created</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {canCreateRisks && showCreateRisk && (
-                <div className="task-create-card mb-3">
-                  <h3 className="h6 mb-3">Create Risk</h3>
-                  <form className="row g-3" onSubmit={handleCreateRisk}>
-                    <div className="col-12">
-                      <label className="form-label">Description *</label>
-                      <textarea
-                        className="form-control"
-                        rows={2}
-                        name="description"
-                        value={newRisk.description}
-                        onChange={handleNewRiskChange}
-                        maxLength={500}
-                        required
-                      />
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Probability</label>
-                      <select
-                        className="form-select"
-                        name="probability"
-                        value={newRisk.probability}
-                        onChange={handleNewRiskChange}
-                      >
-                        {Object.entries(RiskProbability).map(([key, label]) => (
-                          <option key={key} value={key}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Impact</label>
-                      <select
-                        className="form-select"
-                        name="impact"
-                        value={newRisk.impact}
-                        onChange={handleNewRiskChange}
-                      >
-                        {Object.entries(RiskImpact).map(([key, label]) => (
-                          <option key={key} value={key}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="col-12 col-md-6">
-                      <label className="form-label">Owner ID</label>
-                      <input
-                        className="form-control"
-                        name="ownerId"
-                        value={newRisk.ownerId}
-                        onChange={handleNewRiskChange}
-                        maxLength={100}
-                      />
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label">Mitigation Plan</label>
-                      <textarea
-                        className="form-control"
-                        rows={2}
-                        name="mitigationPlan"
-                        value={newRisk.mitigationPlan}
-                        onChange={handleNewRiskChange}
-                        maxLength={1000}
-                      />
-                    </div>
-                    <div className="col-12 text-end">
-                      <button
-                        type="submit"
-                        className="btn btn-success"
-                        disabled={creatingRisk}
-                      >
-                        {creatingRisk ? "Creating..." : "Create Risk"}
-                      </button>
-                    </div>
-                  </form>
-                </div>
-              )}
-
-              {risksLoading ? (
-                <div className="text-center py-4">
-                  <div
-                    className="spinner-border spinner-border-sm text-info"
-                    role="status"
-                  />
-                </div>
-              ) : displayedRisks.length === 0 ? (
-                <div className="tasks-table-wrap">
-                  <div className="tasks-empty-message">
-                    <i className="bi bi-inbox" />
-                    No risks found for this filter.
-                  </div>
-                </div>
-              ) : (
-                <div className="risk-list-wrap">
-                  {displayedRisks.map((risk) => {
-                    const isExpanded = expandedRiskId === risk.id;
-                    const events = riskEventsByRisk[risk.id] || [];
-                    const eventsLoading = riskEventsLoadingByRisk[risk.id];
-                    const severityBucket = getRiskSeverityBucket(risk);
-
-                    return (
-                      <article
-                        key={risk.id}
-                        className="details-card risk-item-card"
-                      >
-                        {editingRiskId === risk.id && canEditRisks ? (
-                          <div className="risk-edit-block">
-                            <div className="row g-2">
-                              <div className="col-12">
-                                <label className="form-label mb-1">
-                                  Description *
-                                </label>
-                                <textarea
-                                  className="form-control"
-                                  rows={2}
-                                  name="description"
-                                  value={editRiskForm.description}
-                                  onChange={handleEditRiskChange}
-                                  maxLength={500}
-                                  required
-                                />
-                              </div>
-                              <div className="col-12 col-md-4">
-                                <label className="form-label mb-1">
-                                  Probability
-                                </label>
-                                <select
-                                  className="form-select"
-                                  name="probability"
-                                  value={editRiskForm.probability}
-                                  onChange={handleEditRiskChange}
-                                >
-                                  {Object.entries(RiskProbability).map(
-                                    ([key, label]) => (
-                                      <option key={key} value={key}>
-                                        {label}
-                                      </option>
-                                    ),
-                                  )}
-                                </select>
-                              </div>
-                              <div className="col-12 col-md-4">
-                                <label className="form-label mb-1">
-                                  Impact
-                                </label>
-                                <select
-                                  className="form-select"
-                                  name="impact"
-                                  value={editRiskForm.impact}
-                                  onChange={handleEditRiskChange}
-                                >
-                                  {Object.entries(RiskImpact).map(
-                                    ([key, label]) => (
-                                      <option key={key} value={key}>
-                                        {label}
-                                      </option>
-                                    ),
-                                  )}
-                                </select>
-                              </div>
-                              <div className="col-12 col-md-4">
-                                <label className="form-label mb-1">
-                                  Owner ID
-                                </label>
-                                <input
-                                  className="form-control"
-                                  name="ownerId"
-                                  value={editRiskForm.ownerId}
-                                  onChange={handleEditRiskChange}
-                                  maxLength={100}
-                                />
-                              </div>
-                              <div className="col-12">
-                                <label className="form-label mb-1">
-                                  Mitigation Plan
-                                </label>
-                                <textarea
-                                  className="form-control"
-                                  rows={2}
-                                  name="mitigationPlan"
-                                  value={editRiskForm.mitigationPlan}
-                                  onChange={handleEditRiskChange}
-                                  maxLength={1000}
-                                />
-                              </div>
-                            </div>
-                            <div className="task-row-actions justify-content-end mt-2">
-                              <button
-                                type="button"
-                                className="btn btn-success btn-sm"
-                                onClick={() => handleUpdateRisk(risk)}
-                              >
-                                <i className="bi bi-check-lg" />
-                              </button>
-                              <button
-                                type="button"
-                                className="btn btn-outline-secondary btn-sm"
-                                onClick={() => setEditingRiskId(null)}
-                              >
-                                <i className="bi bi-x-lg" />
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="risk-item-head">
-                              <div className="risk-item-summary">
-                                <h3>{risk.description || "Unnamed risk"}</h3>
-                                <div className="risk-item-meta">
-                                  <span
-                                    className="task-row-badge"
-                                    style={{
-                                      background:
-                                        getRiskSeverityColor(severityBucket),
-                                    }}
-                                  >
-                                    {getRiskSeverityLabel(risk)}
-                                  </span>
-                                  <span>
-                                    Probability:{" "}
-                                    {RiskProbability[risk.probability ?? 0]}
-                                  </span>
-                                  <span>
-                                    Impact: {RiskImpact[risk.impact ?? 0]}
-                                  </span>
-                                  <span>Owner: {risk.ownerId || "N/A"}</span>
-                                </div>
-                              </div>
-                              <div className="task-row-actions">
-                                {canEditRisks && (
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-primary btn-sm"
-                                    onClick={() => startEditRisk(risk)}
-                                    title="Edit risk"
-                                  >
-                                    <i className="bi bi-pencil" />
-                                  </button>
-                                )}
-                                {canDeleteRisks &&
-                                  (confirmDeleteRiskId === risk.id ? (
-                                    <span className="confirm-inline confirm-inline-sm">
-                                      <button
-                                        type="button"
-                                        className="btn btn-danger btn-sm"
-                                        onClick={() =>
-                                          handleDeleteRisk(risk.id)
-                                        }
-                                      >
-                                        Yes
-                                      </button>
-                                      <button
-                                        type="button"
-                                        className="btn btn-outline-secondary btn-sm"
-                                        onClick={() =>
-                                          setConfirmDeleteRiskId(null)
-                                        }
-                                      >
-                                        No
-                                      </button>
-                                    </span>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      className="btn btn-outline-danger btn-sm"
-                                      onClick={() =>
-                                        setConfirmDeleteRiskId(risk.id)
-                                      }
-                                      title="Delete risk"
-                                    >
-                                      <i className="bi bi-trash" />
-                                    </button>
-                                  ))}
-                                {canAccessRiskEvents && (
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-info btn-sm"
-                                    onClick={() =>
-                                      handleToggleRiskExpansion(risk.id)
-                                    }
-                                    title="Show events"
-                                  >
-                                    <i
-                                      className={`bi ${isExpanded ? "bi-chevron-up" : "bi-chevron-down"}`}
-                                    />
-                                    <span className="ms-1">Events</span>
-                                  </button>
-                                )}
-                              </div>
-                            </div>
-                            <p className="risk-mitigation-text mb-0">
-                              {risk.mitigationPlan ||
-                                "No mitigation plan provided."}
-                            </p>
-                          </>
-                        )}
-
-                        {isExpanded && (
-                          <div className="risk-events-panel">
-                            <div className="risk-events-head">
-                              <h4 className="h6 mb-0">
-                                Linked Events ({events.length})
-                              </h4>
-                              {canCreateRiskEvents && (
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-info btn-sm"
-                                  onClick={() =>
-                                    setShowCreateEventForRiskId((prev) =>
-                                      prev === risk.id ? null : risk.id,
-                                    )
-                                  }
-                                >
-                                  {showCreateEventForRiskId === risk.id
-                                    ? "Cancel"
-                                    : "+ Add Event"}
-                                </button>
-                              )}
-                            </div>
-
-                            {canCreateRiskEvents &&
-                              showCreateEventForRiskId === risk.id && (
-                                <form
-                                  className="row g-2 risk-event-create"
-                                  onSubmit={(event) =>
-                                    handleCreateRiskEvent(event, risk.id)
-                                  }
-                                >
-                                  <div className="col-12">
-                                    <label className="form-label mb-1">
-                                      Incident Description *
-                                    </label>
-                                    <textarea
-                                      className="form-control"
-                                      rows={2}
-                                      name="incidentDescription"
-                                      value={newRiskEvent.incidentDescription}
-                                      onChange={handleNewRiskEventChange}
-                                      maxLength={1000}
-                                      required
-                                    />
-                                  </div>
-                                  <div className="col-12 col-md-4">
-                                    <label className="form-label mb-1">
-                                      Status
-                                    </label>
-                                    <select
-                                      className="form-select"
-                                      name="status"
-                                      value={newRiskEvent.status}
-                                      onChange={handleNewRiskEventChange}
-                                    >
-                                      {Object.entries(RiskEventStatus).map(
-                                        ([key, label]) => (
-                                          <option key={key} value={key}>
-                                            {label}
-                                          </option>
-                                        ),
-                                      )}
-                                    </select>
-                                  </div>
-                                  <div className="col-12 col-md-4">
-                                    <label className="form-label mb-1">
-                                      Occurred Date
-                                    </label>
-                                    <input
-                                      className="form-control"
-                                      type="date"
-                                      name="occurredAtUtc"
-                                      value={newRiskEvent.occurredAtUtc}
-                                      onChange={handleNewRiskEventChange}
-                                    />
-                                  </div>
-                                  <div className="col-12 col-md-4 d-flex align-items-end justify-content-end">
-                                    <button
-                                      type="submit"
-                                      className="btn btn-success btn-sm"
-                                      disabled={creatingRiskEvent}
-                                    >
-                                      {creatingRiskEvent
-                                        ? "Creating..."
-                                        : "Create Event"}
-                                    </button>
-                                  </div>
-                                </form>
-                              )}
-
-                            {!canViewRiskEvents ? (
-                              <AccessDeniedState
-                                title="Risk events are restricted"
-                                description="You do not have permission to view risk events for this risk."
-                              />
-                            ) : eventsLoading ? (
-                              <div className="text-center py-3">
-                                <div
-                                  className="spinner-border spinner-border-sm text-info"
-                                  role="status"
-                                />
-                              </div>
-                            ) : events.length === 0 ? (
-                              <div className="tasks-empty-message py-3">
-                                No events recorded for this risk.
-                              </div>
-                            ) : (
-                              <div className="risk-events-list">
-                                {events.map((eventItem) => (
-                                  <div
-                                    key={eventItem.id}
-                                    className="risk-event-item"
-                                  >
-                                    {editingRiskEventId === eventItem.id &&
-                                    canEditRiskEvents ? (
-                                      <div className="row g-2 w-100">
-                                        <div className="col-12">
-                                          <label className="form-label mb-1">
-                                            Incident Description *
-                                          </label>
-                                          <textarea
-                                            className="form-control"
-                                            rows={2}
-                                            name="incidentDescription"
-                                            value={
-                                              editRiskEventForm.incidentDescription
-                                            }
-                                            onChange={handleEditRiskEventChange}
-                                            maxLength={1000}
-                                            required
-                                          />
-                                        </div>
-                                        <div className="col-12 col-md-4">
-                                          <label className="form-label mb-1">
-                                            Status
-                                          </label>
-                                          <select
-                                            className="form-select"
-                                            name="status"
-                                            value={editRiskEventForm.status}
-                                            onChange={handleEditRiskEventChange}
-                                          >
-                                            {Object.entries(
-                                              RiskEventStatus,
-                                            ).map(([key, label]) => (
-                                              <option key={key} value={key}>
-                                                {label}
-                                              </option>
-                                            ))}
-                                          </select>
-                                        </div>
-                                        <div className="col-12 col-md-4">
-                                          <label className="form-label mb-1">
-                                            Occurred Date
-                                          </label>
-                                          <input
-                                            className="form-control"
-                                            type="date"
-                                            name="occurredAtUtc"
-                                            value={
-                                              editRiskEventForm.occurredAtUtc
-                                            }
-                                            onChange={handleEditRiskEventChange}
-                                          />
-                                        </div>
-                                        <div className="col-12 col-md-4 d-flex align-items-end justify-content-end">
-                                          <div className="task-row-actions">
-                                            <button
-                                              type="button"
-                                              className="btn btn-success btn-sm"
-                                              onClick={() =>
-                                                handleUpdateRiskEvent(eventItem)
-                                              }
-                                            >
-                                              <i className="bi bi-check-lg" />
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="btn btn-outline-secondary btn-sm"
-                                              onClick={() =>
-                                                setEditingRiskEventId(null)
-                                              }
-                                            >
-                                              <i className="bi bi-x-lg" />
-                                            </button>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <>
-                                        <div className="risk-event-main">
-                                          <strong>
-                                            {eventItem.incidentDescription ||
-                                              "Incident"}
-                                          </strong>
-                                          <div className="risk-event-meta">
-                                            <span className="task-row-badge risk-event-status-badge">
-                                              {RiskEventStatus[
-                                                eventItem.status ?? 0
-                                              ] || "Unknown"}
-                                            </span>
-                                            <span>
-                                              Occurred:{" "}
-                                              {formatDate(
-                                                eventItem.occurredAtUtc,
-                                              )}
-                                            </span>
-                                          </div>
-                                        </div>
-                                        {(canEditRiskEvents ||
-                                          canDeleteRiskEvents) && (
-                                          <div className="task-row-actions">
-                                            {canEditRiskEvents && (
-                                              <button
-                                                type="button"
-                                                className="btn btn-outline-primary btn-sm"
-                                                onClick={() =>
-                                                  startEditRiskEvent(eventItem)
-                                                }
-                                              >
-                                                <i className="bi bi-pencil" />
-                                              </button>
-                                            )}
-                                            {canDeleteRiskEvents &&
-                                              (confirmDeleteRiskEventId ===
-                                              eventItem.id ? (
-                                                <span className="confirm-inline confirm-inline-sm">
-                                                  <button
-                                                    type="button"
-                                                    className="btn btn-danger btn-sm"
-                                                    onClick={() =>
-                                                      handleDeleteRiskEvent(
-                                                        eventItem.id,
-                                                        risk.id,
-                                                      )
-                                                    }
-                                                  >
-                                                    Yes
-                                                  </button>
-                                                  <button
-                                                    type="button"
-                                                    className="btn btn-outline-secondary btn-sm"
-                                                    onClick={() =>
-                                                      setConfirmDeleteRiskEventId(
-                                                        null,
-                                                      )
-                                                    }
-                                                  >
-                                                    No
-                                                  </button>
-                                                </span>
-                                              ) : (
-                                                <button
-                                                  type="button"
-                                                  className="btn btn-outline-danger btn-sm"
-                                                  onClick={() =>
-                                                    setConfirmDeleteRiskEventId(
-                                                      eventItem.id,
-                                                    )
-                                                  }
-                                                >
-                                                  <i className="bi bi-trash" />
-                                                </button>
-                                              ))}
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </article>
-                    );
-                  })}
-                </div>
-              )}
-            </>
-          )}
-        </section>
+        <ProjectRisksTab
+          canCreateRisks={canCreateRisks}
+          showCreateRisk={showCreateRisk}
+          setShowCreateRisk={setShowCreateRisk}
+          canViewRisks={canViewRisks}
+          riskSummaryData={riskSummaryData}
+          canViewRiskEvents={canViewRiskEvents}
+          riskEventsChartData={riskEventsChartData}
+          riskSeverityFilter={riskSeverityFilter}
+          setRiskSeverityFilter={setRiskSeverityFilter}
+          riskSortBy={riskSortBy}
+          setRiskSortBy={setRiskSortBy}
+          handleCreateRisk={handleCreateRisk}
+          newRisk={newRisk}
+          handleNewRiskChange={handleNewRiskChange}
+          creatingRisk={creatingRisk}
+          risksLoading={risksLoading}
+          displayedRisks={displayedRisks}
+          expandedRiskId={expandedRiskId}
+          riskEventsByRisk={riskEventsByRisk}
+          riskEventsLoadingByRisk={riskEventsLoadingByRisk}
+          getRiskSeverityBucket={getRiskSeverityBucket}
+          getRiskSeverityColor={getRiskSeverityColor}
+          getRiskSeverityLabel={getRiskSeverityLabel}
+          editingRiskId={editingRiskId}
+          canEditRisks={canEditRisks}
+          startEditRisk={startEditRisk}
+          editRiskForm={editRiskForm}
+          handleEditRiskChange={handleEditRiskChange}
+          handleUpdateRisk={handleUpdateRisk}
+          setEditingRiskId={setEditingRiskId}
+          canDeleteRisks={canDeleteRisks}
+          confirmDeleteRiskId={confirmDeleteRiskId}
+          handleDeleteRisk={handleDeleteRisk}
+          setConfirmDeleteRiskId={setConfirmDeleteRiskId}
+          canAccessRiskEvents={canAccessRiskEvents}
+          handleToggleRiskExpansion={handleToggleRiskExpansion}
+          canCreateRiskEvents={canCreateRiskEvents}
+          setShowCreateEventForRiskId={setShowCreateEventForRiskId}
+          showCreateEventForRiskId={showCreateEventForRiskId}
+          newRiskEvent={newRiskEvent}
+          handleNewRiskEventChange={handleNewRiskEventChange}
+          handleCreateRiskEvent={handleCreateRiskEvent}
+          creatingRiskEvent={creatingRiskEvent}
+          editingRiskEventId={editingRiskEventId}
+          canEditRiskEvents={canEditRiskEvents}
+          editRiskEventForm={editRiskEventForm}
+          handleEditRiskEventChange={handleEditRiskEventChange}
+          handleUpdateRiskEvent={handleUpdateRiskEvent}
+          setEditingRiskEventId={setEditingRiskEventId}
+          canDeleteRiskEvents={canDeleteRiskEvents}
+          confirmDeleteRiskEventId={confirmDeleteRiskEventId}
+          handleDeleteRiskEvent={handleDeleteRiskEvent}
+          setConfirmDeleteRiskEventId={setConfirmDeleteRiskEventId}
+          startEditRiskEvent={startEditRiskEvent}
+          formatDate={formatDate}
+        />
       )}
 
-      {/* ── Resources Section ── */}
       {activeTab === "resources" && canAccessResourcesTab && (
-        <section className="tasks-section">
-          <div className="tasks-section-header">
-            <h2>
-              <i className="bi bi-box-seam me-2" />
-              Resources
-            </h2>
-            {canCreateResourceRequests && (
-              <button
-                type="button"
-                className="btn btn-info text-white btn-sm"
-                onClick={() => setShowCreateResourceReq((prev) => !prev)}
-              >
-                <i
-                  className={`bi ${showCreateResourceReq ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-                />
-                {showCreateResourceReq ? "Cancel" : "Request Resource"}
-              </button>
-            )}
-          </div>
-
-          {!canViewResourceRequests ? (
-            <AccessDeniedState
-              title="Resource requests are restricted"
-              description="You can access this tab, but your role does not include Resources.Requests.View to display requests."
-            />
-          ) : null}
-
-          {canCreateResourceRequests && showCreateResourceReq && (
-            <div className="task-create-card">
-              <h3 className="h6 mb-3">Request a Resource</h3>
-              <form className="row g-3" onSubmit={handleCreateResourceReq}>
-                <div className="col-12 col-md-4">
-                  <label className="form-label">Resource</label>
-                  {canViewResources ? (
-                    <select
-                      className="form-select"
-                      name="resourceId"
-                      value={newResourceReq.resourceId}
-                      onChange={handleNewResourceReqChange}
-                    >
-                      <option value="">— None —</option>
-                      {allResources.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name || r.id}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div
-                      className="alert alert-light border mb-0 py-2 px-3"
-                      role="status"
-                    >
-                      <i className="bi bi-shield-lock me-2" />
-                      Resource list is hidden because Resources.View is not
-                      granted.
-                    </div>
-                  )}
-                </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label">Resource Type</label>
-                  <select
-                    className="form-select"
-                    name="resourceType"
-                    value={newResourceReq.resourceType}
-                    onChange={handleNewResourceReqChange}
-                    disabled={canViewResources && !!newResourceReq.resourceId}
-                  >
-                    {Object.entries(ResourceType).map(([k, v]) => (
-                      <option key={k} value={k}>
-                        {v}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-12 col-md-4">
-                  <label className="form-label">Allocation %</label>
-                  <input
-                    className="form-control"
-                    type="number"
-                    name="requestedAllocationPercentage"
-                    value={newResourceReq.requestedAllocationPercentage}
-                    onChange={handleNewResourceReqChange}
-                    min={0}
-                    max={100}
-                  />
-                </div>
-                <div className="col-12">
-                  <label className="form-label">Comments</label>
-                  <textarea
-                    className="form-control"
-                    rows={2}
-                    name="comments"
-                    value={newResourceReq.comments}
-                    onChange={handleNewResourceReqChange}
-                    maxLength={500}
-                  />
-                </div>
-                <div className="col-12 text-end">
-                  <button
-                    type="submit"
-                    className="btn btn-success"
-                    disabled={creatingResourceReq}
-                  >
-                    {creatingResourceReq ? "Submitting..." : "Submit Request"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-
-          {canViewResourceRequests && resourceRequestsLoading ? (
-            <div className="text-center py-4">
-              <div
-                className="spinner-border spinner-border-sm text-info"
-                role="status"
-              />
-            </div>
-          ) : canViewResourceRequests && resourceRequests.length === 0 ? (
-            <div className="tasks-table-wrap">
-              <div className="tasks-empty-message">
-                <i className="bi bi-inbox" />
-                No resource requests yet. Click "Request Resource" to add one.
-              </div>
-            </div>
-          ) : canViewResourceRequests ? (
-            <div className="tasks-table-wrap">
-              <table className="tasks-table">
-                <thead>
-                  <tr>
-                    <th>Resource</th>
-                    <th>Type</th>
-                    <th>Allocation</th>
-                    <th>Status</th>
-                    <th>Comments</th>
-                    <th style={{ width: 120 }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {resourceRequests.map((req) => (
-                    <tr key={req.id}>
-                      <td>
-                        {canViewResources ? (
-                          getResourceName(req.resourceId)
-                        ) : (
-                          <span className="text-muted">
-                            <i className="bi bi-shield-lock me-1" />
-                            Restricted
-                          </span>
-                        )}
-                      </td>
-                      <td>
-                        <span
-                          className="task-row-badge"
-                          style={{
-                            background:
-                              resourceTypeColor[req.resourceType ?? 0],
-                          }}
-                        >
-                          {ResourceType[req.resourceType ?? 0] || "Unknown"}
-                        </span>
-                      </td>
-                      <td>{req.requestedAllocationPercentage ?? 0}%</td>
-                      <td>
-                        <span
-                          className="task-row-badge"
-                          style={{
-                            background: requestStatusColor[req.status ?? 0],
-                          }}
-                        >
-                          {RequestStatus[req.status ?? 0] || "Unknown"}
-                        </span>
-                      </td>
-                      <td className="phase-deliverables-cell">
-                        {req.comments || "—"}
-                      </td>
-                      <td>
-                        <div className="task-row-actions">
-                          {canDeleteResourceRequests &&
-                            (confirmDeleteReqId === req.id ? (
-                              <span className="confirm-inline confirm-inline-sm">
-                                <span className="confirm-inline-text">
-                                  Delete?
-                                </span>
-                                <button
-                                  type="button"
-                                  className="btn btn-danger btn-sm"
-                                  onClick={() =>
-                                    handleDeleteResourceReq(req.id)
-                                  }
-                                >
-                                  Yes
-                                </button>
-                                <button
-                                  type="button"
-                                  className="btn btn-outline-secondary btn-sm"
-                                  onClick={() => setConfirmDeleteReqId(null)}
-                                >
-                                  No
-                                </button>
-                              </span>
-                            ) : (
-                              <button
-                                type="button"
-                                className="btn btn-outline-danger btn-sm"
-                                onClick={() => setConfirmDeleteReqId(req.id)}
-                                title="Delete"
-                              >
-                                <i className="bi bi-trash" />
-                              </button>
-                            ))}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : null}
-        </section>
+        <ProjectResourcesTab
+          canCreateResourceRequests={canCreateResourceRequests}
+          showCreateResourceReq={showCreateResourceReq}
+          setShowCreateResourceReq={setShowCreateResourceReq}
+          canViewResourceRequests={canViewResourceRequests}
+          handleCreateResourceReq={handleCreateResourceReq}
+          newResourceReq={newResourceReq}
+          handleNewResourceReqChange={handleNewResourceReqChange}
+          creatingResourceReq={creatingResourceReq}
+          canViewResources={canViewResources}
+          allResources={allResources}
+          resourceRequestsLoading={resourceRequestsLoading}
+          resourceRequests={resourceRequests}
+          getResourceName={getResourceName}
+          resourceTypeColor={resourceTypeColor}
+          requestStatusColor={requestStatusColor}
+          canDeleteResourceRequests={canDeleteResourceRequests}
+          confirmDeleteReqId={confirmDeleteReqId}
+          handleDeleteResourceReq={handleDeleteResourceReq}
+          setConfirmDeleteReqId={setConfirmDeleteReqId}
+        />
       )}
 
-      {/* ── Finance Section ── */}
       {activeTab === "finance" && canAccessFinanceTab && (
-        <section className="tasks-section">
-          <div className="tasks-section-header">
-            <h2>
-              <i className="bi bi-cash-coin me-2" />
-              Finance
-            </h2>
-            {canCreateBudgets && (
-              <button
-                type="button"
-                className="btn btn-info text-white btn-sm"
-                onClick={() => setShowCreateBudget((prev) => !prev)}
-                disabled={availableBudgetCategoryEntries.length === 0}
-              >
-                <i
-                  className={`bi ${showCreateBudget ? "bi-x-circle" : "bi-plus-lg"} me-1`}
-                />
-                {showCreateBudget ? "Cancel" : "New Budget"}
-              </button>
-            )}
-          </div>
-
-          {!canViewBudgets ? (
-            <AccessDeniedState
-              title="Finance budgets are restricted"
-              description="You can access this tab, but your role does not include Finance.Budgets.View to display budget data."
-            />
-          ) : (
-            <>
-              {canCreateBudgets && showCreateBudget && (
-                <div className="task-create-card">
-                  <h3 className="h6 mb-3">Create Budget</h3>
-                  {availableBudgetCategoryEntries.length === 0 ? (
-                    <div className="tasks-empty-message py-3">
-                      All budget categories are already used in this project.
-                    </div>
-                  ) : (
-                    <form className="row g-3" onSubmit={handleCreateBudget}>
-                      <div className="col-12 col-md-3">
-                        <label className="form-label">Category *</label>
-                        <select
-                          className="form-select"
-                          name="category"
-                          value={newBudget.category}
-                          onChange={handleNewBudgetChange}
-                          required
-                        >
-                          {availableBudgetCategoryEntries.map(
-                            ([value, label]) => (
-                              <option key={value} value={value}>
-                                {label}
-                              </option>
-                            ),
-                          )}
-                        </select>
-                      </div>
-                      <div className="col-12 col-md-3">
-                        <label className="form-label">Planned Amount</label>
-                        <input
-                          className="form-control"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          name="plannedAmount"
-                          value={newBudget.plannedAmount}
-                          onChange={handleNewBudgetChange}
-                        />
-                      </div>
-                      <div className="col-12 col-md-3">
-                        <label className="form-label">Actual Amount</label>
-                        <input
-                          className="form-control"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          name="actualAmount"
-                          value={newBudget.actualAmount}
-                          onChange={handleNewBudgetChange}
-                        />
-                      </div>
-                      <div className="col-12 col-md-3">
-                        <label className="form-label">Forecast Amount</label>
-                        <input
-                          className="form-control"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          name="forecastAmount"
-                          value={newBudget.forecastAmount}
-                          onChange={handleNewBudgetChange}
-                        />
-                      </div>
-                      <div className="col-12 d-flex justify-content-end">
-                        <button
-                          type="submit"
-                          className="btn btn-success"
-                          disabled={creatingBudget}
-                        >
-                          {creatingBudget ? "Creating..." : "Create Budget"}
-                        </button>
-                      </div>
-                    </form>
-                  )}
-                </div>
-              )}
-
-              {budgetsLoading ? (
-                <div className="text-center py-4">
-                  <div
-                    className="spinner-border spinner-border-sm text-info"
-                    role="status"
-                  />
-                </div>
-              ) : budgets.length === 0 ? (
-                <div className="tasks-table-wrap">
-                  <div className="tasks-empty-message">
-                    <i className="bi bi-inbox" />
-                    No budgets yet. Click "New Budget" to add one.
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="finance-charts-grid mb-3">
-                    <article className="details-card finance-chart-card">
-                      <div className="finance-chart-header">
-                        <h3 className="h6 mb-1">
-                          Budget vs Actual vs Forecast
-                        </h3>
-                        <p className="mb-0">
-                          Compare planned budget, current spending, and
-                          projected final cost.
-                        </p>
-                      </div>
-                      <div className="finance-chart-body">
-                        <ResponsiveContainer width="100%" height={320}>
-                          <BarChart
-                            data={budgetChartData}
-                            margin={{ top: 12, right: 12, left: 4, bottom: 0 }}
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke="#e6eef5"
-                            />
-                            <XAxis dataKey="category" tick={{ fontSize: 12 }} />
-                            <YAxis tick={{ fontSize: 12 }} />
-                            <Tooltip
-                              formatter={(value) =>
-                                currencyFormatter.format(Number(value ?? 0))
-                              }
-                            />
-                            <Legend />
-                            <Bar
-                              dataKey="planned"
-                              name="Planned"
-                              fill="#1b4965"
-                              radius={[6, 6, 0, 0]}
-                            />
-                            <Bar
-                              dataKey="actual"
-                              name="Actual"
-                              fill="#ef8354"
-                              radius={[6, 6, 0, 0]}
-                            />
-                            <Bar
-                              dataKey="forecast"
-                              name="Forecast"
-                              fill="#189ab4"
-                              radius={[6, 6, 0, 0]}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </article>
-
-                    <article className="details-card finance-chart-card">
-                      <div className="finance-chart-header">
-                        <h3 className="h6 mb-1">Planned Budget Distribution</h3>
-                        <p className="mb-0">
-                          Allocation of planned budget across categories.
-                        </p>
-                      </div>
-                      <div className="finance-chart-body">
-                        <ResponsiveContainer width="100%" height={320}>
-                          <PieChart>
-                            <Pie
-                              data={budgetDistributionData}
-                              dataKey="value"
-                              nameKey="name"
-                              cx="50%"
-                              cy="50%"
-                              outerRadius={105}
-                            >
-                              {budgetDistributionData.map((entry, index) => (
-                                <Cell
-                                  key={`${entry.name}-${index}`}
-                                  fill={
-                                    chartPalette[index % chartPalette.length]
-                                  }
-                                />
-                              ))}
-                            </Pie>
-                            <Tooltip
-                              formatter={(value) =>
-                                currencyFormatter.format(Number(value ?? 0))
-                              }
-                            />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </article>
-                  </div>
-
-                  <article className="details-card finance-consumption-card mb-3">
-                    <h3 className="h6 mb-3">Budget Consumption by Category</h3>
-                    <div className="finance-consumption-list">
-                      {budgetConsumptionData.map((item) => {
-                        const boundedPercent = Math.max(
-                          0,
-                          Math.min(item.percent, 100),
-                        );
-                        const overBudget = item.percent > 100;
-
-                        return (
-                          <div
-                            key={item.id}
-                            className="finance-consumption-item"
-                          >
-                            <div className="finance-consumption-top">
-                              <span className="finance-consumption-name">
-                                {item.category}
-                              </span>
-                              <span
-                                className={`finance-consumption-percent ${overBudget ? "over" : ""}`}
-                              >
-                                {item.percent.toFixed(1)}%
-                              </span>
-                            </div>
-                            <div
-                              className="finance-consumption-track"
-                              role="progressbar"
-                            >
-                              <span
-                                className={`finance-consumption-fill ${overBudget ? "over" : ""}`}
-                                style={{ width: `${boundedPercent}%` }}
-                              />
-                            </div>
-                            <p className="finance-consumption-meta mb-0">
-                              {currencyFormatter.format(item.actual)} of{" "}
-                              {currencyFormatter.format(item.planned)} consumed
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </article>
-
-                  <div className="tasks-table-wrap">
-                    <table className="tasks-table budget-table">
-                      <thead>
-                        <tr>
-                          <th>Category</th>
-                          <th>Planned</th>
-                          <th>Actual</th>
-                          <th>Forecast</th>
-                          <th style={{ width: 140 }}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {budgets.map((b) =>
-                          editingBudgetId === b.id && canEditBudgets ? (
-                            <tr key={b.id} className="phase-edit-row">
-                              <td>
-                                <select
-                                  className="form-select form-select-sm"
-                                  name="category"
-                                  value={editBudgetForm.category}
-                                  onChange={handleEditBudgetChange}
-                                >
-                                  {Object.entries(BudgetCategory).map(
-                                    ([value, label]) => (
-                                      <option key={value} value={value}>
-                                        {label}
-                                      </option>
-                                    ),
-                                  )}
-                                </select>
-                              </td>
-                              <td>
-                                <input
-                                  className="form-control form-control-sm"
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  name="plannedAmount"
-                                  value={editBudgetForm.plannedAmount}
-                                  onChange={handleEditBudgetChange}
-                                />
-                              </td>
-                              <td>
-                                <input
-                                  className="form-control form-control-sm"
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  name="actualAmount"
-                                  value={editBudgetForm.actualAmount}
-                                  onChange={handleEditBudgetChange}
-                                />
-                              </td>
-                              <td>
-                                <input
-                                  className="form-control form-control-sm"
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  name="forecastAmount"
-                                  value={editBudgetForm.forecastAmount}
-                                  onChange={handleEditBudgetChange}
-                                />
-                              </td>
-                              <td>
-                                <div className="task-row-actions">
-                                  <button
-                                    type="button"
-                                    className="btn btn-success btn-sm"
-                                    onClick={() => handleUpdateBudget(b)}
-                                    title="Save"
-                                  >
-                                    <i className="bi bi-check-lg" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    className="btn btn-outline-secondary btn-sm"
-                                    onClick={() => setEditingBudgetId(null)}
-                                    title="Cancel"
-                                  >
-                                    <i className="bi bi-x-lg" />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ) : (
-                            <tr key={b.id}>
-                              <td>
-                                {BudgetCategory[b.category ?? 0] || "Unknown"}
-                              </td>
-                              <td>
-                                ${(b.plannedAmount ?? 0).toLocaleString()}
-                              </td>
-                              <td>${(b.actualAmount ?? 0).toLocaleString()}</td>
-                              <td>
-                                ${(b.forecastAmount ?? 0).toLocaleString()}
-                              </td>
-                              <td>
-                                <div className="task-row-actions">
-                                  {canDeleteBudgets &&
-                                    (confirmDeleteBudgetId === b.id ? (
-                                      <span className="confirm-inline confirm-inline-sm">
-                                        <span className="confirm-inline-text">
-                                          Delete?
-                                        </span>
-                                        <button
-                                          type="button"
-                                          className="btn btn-danger btn-sm"
-                                          onClick={() =>
-                                            handleDeleteBudget(b.id)
-                                          }
-                                        >
-                                          Yes
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="btn btn-outline-secondary btn-sm"
-                                          onClick={() =>
-                                            setConfirmDeleteBudgetId(null)
-                                          }
-                                        >
-                                          No
-                                        </button>
-                                      </span>
-                                    ) : null)}
-
-                                  {confirmDeleteBudgetId !== b.id && (
-                                    <>
-                                      {canEditBudgets && (
-                                        <button
-                                          type="button"
-                                          className="btn btn-outline-primary btn-sm"
-                                          onClick={() => startEditBudget(b)}
-                                          title="Edit"
-                                        >
-                                          <i className="bi bi-pencil" />
-                                        </button>
-                                      )}
-                                      {canDeleteBudgets && (
-                                        <button
-                                          type="button"
-                                          className="btn btn-outline-danger btn-sm"
-                                          onClick={() =>
-                                            setConfirmDeleteBudgetId(b.id)
-                                          }
-                                          title="Delete"
-                                        >
-                                          <i className="bi bi-trash" />
-                                        </button>
-                                      )}
-                                    </>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          ),
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
-            </>
-          )}
-        </section>
+        <ProjectFinanceTab
+          canCreateBudgets={canCreateBudgets}
+          showCreateBudget={showCreateBudget}
+          setShowCreateBudget={setShowCreateBudget}
+          availableBudgetCategoryEntries={availableBudgetCategoryEntries}
+          canViewBudgets={canViewBudgets}
+          handleCreateBudget={handleCreateBudget}
+          newBudget={newBudget}
+          handleNewBudgetChange={handleNewBudgetChange}
+          creatingBudget={creatingBudget}
+          budgetsLoading={budgetsLoading}
+          budgets={budgets}
+          budgetChartData={budgetChartData}
+          budgetDistributionData={budgetDistributionData}
+          chartPalette={chartPalette}
+          currencyFormatter={currencyFormatter}
+          budgetConsumptionData={budgetConsumptionData}
+          editingBudgetId={editingBudgetId}
+          canEditBudgets={canEditBudgets}
+          editBudgetForm={editBudgetForm}
+          handleEditBudgetChange={handleEditBudgetChange}
+          handleUpdateBudget={handleUpdateBudget}
+          setEditingBudgetId={setEditingBudgetId}
+          canDeleteBudgets={canDeleteBudgets}
+          confirmDeleteBudgetId={confirmDeleteBudgetId}
+          handleDeleteBudget={handleDeleteBudget}
+          setConfirmDeleteBudgetId={setConfirmDeleteBudgetId}
+          startEditBudget={startEditBudget}
+        />
       )}
     </div>
   );
