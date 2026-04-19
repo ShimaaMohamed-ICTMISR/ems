@@ -118,6 +118,18 @@ export const getRoleById = async (id: string): Promise<Role> => {
   return response.data;
 };
 
+// Get role permissions by role ID
+export const getRolePermissions = async (id: string): Promise<Permission[]> => {
+  const response = await apiClient.get(`/Role/${id}/permissions`);
+  const data = response.data;
+
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.items)) return data.items;
+  if (Array.isArray(data?.permissions)) return data.permissions;
+
+  return [];
+};
+
 // Create a new role
 export const createRole = async (data: CreateRoleDto): Promise<Role> => {
   const response = await apiClient.post('/Role', data);
@@ -141,7 +153,7 @@ export const assignPermissionsToRole = async (
   data: AssignPermissionsDto
 ): Promise<Role> => {
   try {
-    const response = await apiClient.post(`/Role/${roleId}/permissions`, data);
+    const response = await apiClient.put(`/Role/${roleId}/permissions`, data);
     return response.data;
   } catch (error: any) {
     const message = extractApiErrorMessage(

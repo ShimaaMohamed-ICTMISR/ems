@@ -1,12 +1,43 @@
 import { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import type { Role, Permission } from "../services/roleService";
 import * as roleService from "../services/roleService";
 import { permissionService } from "../services/permissionService";
+import { extractPermissionCodes, normalizePermission } from "../utils/permissionUtils";
 import "./Roles.css";
+
+const getNormalizedPermissionCodeSet = (permissionCodes: string[]): Set<string> =>
+  new Set(permissionCodes.map((permissionCode) => normalizePermission(permissionCode)));
+
+const toKnownPermissionCodes = (
+  permissionValues: unknown,
+  permissionCatalog: Permission[],
+): string[] => {
+  const catalogCodeByNormalized = new Map(
+    permissionCatalog
+      .filter((permission) => typeof permission.code === "string")
+      .map((permission) => [normalizePermission(permission.code), permission.code]),
+  );
+
+  return Array.from(
+    new Set(
+      extractPermissionCodes(permissionValues)
+        .map((permissionCode) => permissionCode.trim())
+        .filter(Boolean)
+        .map((permissionCode) => normalizePermission(permissionCode))
+        .map(
+          (normalizedCode) =>
+            catalogCodeByNormalized.get(normalizedCode) || normalizedCode,
+        ),
+    ),
+  );
+};
 
 const Roles = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
+  const [rolePermissionCountOverrides, setRolePermissionCountOverrides] =
+    useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +62,9 @@ const Roles = () => {
     string[]
   >([]);
   const [permissionsSearchInput, setPermissionsSearchInput] = useState("");
+  const [isPermissionsModalLoading, setIsPermissionsModalLoading] =
+    useState(false);
+  const [isSavingPermissions, setIsSavingPermissions] = useState(false);
   const latestRolesRequestRef = useRef(0);
   const permissionsSelectAllRef = useRef<HTMLInputElement | null>(null);
 
@@ -126,10 +160,11 @@ const Roles = () => {
     }
   };
 
-  const fetchPermissions = async () => {
+  const fetchPermissions = async (): Promise<Permission[]> => {
     try {
       const data = await permissionService.getAllPermissions();
       setAllPermissions(data);
+      return data;
     } catch (err) {
       console.error("Failed to fetch permissions:", err);
       let errorMessage = "Failed to fetch permissions";
@@ -141,7 +176,17 @@ const Roles = () => {
         }
       }
       setError(errorMessage);
+      return [];
     }
+  };
+
+  const closePermissionsModal = () => {
+    setShowPermissionsModal(false);
+    setSelectedRole(null);
+    setSelectedRolePermissions([]);
+    setPermissionsSearchInput("");
+    setIsPermissionsModalLoading(false);
+    setIsSavingPermissions(false);
   };
 
   const handleViewRole = (role: Role) => {
@@ -167,16 +212,34 @@ const Roles = () => {
   const handleManagePermissions = async (role: Role) => {
     setSelectedRole(role);
     setPermissionsSearchInput("");
-    // Fetch the role with its permissions
+    setError(null);
+    setShowPermissionsModal(true);
+    setIsPermissionsModalLoading(true);
+
     try {
-      const roleData = await roleService.getRoleById(role.id);
-      const permCodes = roleData.permissions?.map((p) => p.code) || [];
-      setSelectedRolePermissions(permCodes);
+      const permissionCatalog =
+        allPermissions.length > 0 ? allPermissions : await fetchPermissions();
+      const rolePermissions = await roleService.getRolePermissions(role.id);
+      const mappedPermissionCodes = toKnownPermissionCodes(
+        rolePermissions,
+        permissionCatalog,
+      );
+      setSelectedRolePermissions(mappedPermissionCodes);
+      setRolePermissionCountOverrides((prev) => ({
+        ...prev,
+        [role.id]: mappedPermissionCodes.length,
+      }));
     } catch (err) {
       console.error("Failed to fetch role permissions:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load role permissions",
+      );
       setSelectedRolePermissions([]);
+    } finally {
+      setIsPermissionsModalLoading(false);
     }
-    setShowPermissionsModal(true);
   };
 
   const handleSaveEdit = async () => {
@@ -206,69 +269,60 @@ const Roles = () => {
   const handleSavePermissions = async () => {
     if (!selectedRole) return;
 
-    const assignablePermissions = allPermissions.filter(
-      (permission) => permission.isActive !== false,
-    );
-    const assignablePermissionMap = new Map(
-      assignablePermissions.map((permission) => [permission.code, permission]),
-    );
-    const normalizedPermissionCodes = Array.from(
-      new Set(
-        selectedRolePermissions.filter(
-          (permissionCode) =>
-            typeof permissionCode === "string" &&
-            permissionCode.trim().length > 0 &&
-            assignablePermissionMap.has(permissionCode),
-        ),
-      ),
-    );
+    setError(null);
+    setIsSavingPermissions(true);
 
     try {
+      const permissionCatalog =
+        allPermissions.length > 0 ? allPermissions : await fetchPermissions();
+      const activePermissionCodes = permissionCatalog
+        .filter((permission) => permission.isActive !== false)
+        .map((permission) => permission.code);
+      const activePermissionCodeSet = getNormalizedPermissionCodeSet(
+        activePermissionCodes,
+      );
+      const permissionCodes = toKnownPermissionCodes(
+        selectedRolePermissions,
+        permissionCatalog,
+      ).filter((permissionCode) =>
+        activePermissionCodeSet.has(normalizePermission(permissionCode)),
+      );
+
       await roleService.assignPermissionsToRole(selectedRole.id, {
-        permissionCodes: normalizedPermissionCodes,
+        permissionCodes,
         replaceExisting: true,
       });
 
-      const refreshedRole = await roleService.getRoleById(selectedRole.id);
-      const persistedPermissionCodes = Array.from(
-        new Set(
-          (refreshedRole.permissions || [])
-            .map((permission) => permission.code)
-            .filter(Boolean),
-        ),
+      const refreshedPermissions = await roleService.getRolePermissions(selectedRole.id);
+      const refreshedPermissionCodes = toKnownPermissionCodes(
+        refreshedPermissions,
+        permissionCatalog,
       );
+      setSelectedRolePermissions(refreshedPermissionCodes);
+      setRolePermissionCountOverrides((prev) => ({
+        ...prev,
+        [selectedRole.id]: refreshedPermissionCodes.length,
+      }));
 
-      const missingPermissionCodes = normalizedPermissionCodes.filter(
-        (permissionCode) => !persistedPermissionCodes.includes(permissionCode),
-      );
-
-      if (missingPermissionCodes.length > 0) {
-        const missingLabels = missingPermissionCodes
-          .slice(0, 5)
-          .map((permissionCode) => {
-            const permission = assignablePermissionMap.get(permissionCode);
-            return permission?.code || permission?.name || permissionCode;
-          })
-          .join(", ");
-
-        setSelectedRole(refreshedRole);
-        setSelectedRolePermissions(persistedPermissionCodes);
-        setError(
-          `Some permissions were not persisted by the server: ${missingLabels}${
-            missingPermissionCodes.length > 5 ? " ..." : ""
-          }`,
-        );
-        return;
+      try {
+        await fetchRoles();
+      } catch (refreshRolesError) {
+        console.warn("Unable to refresh roles after permission save:", refreshRolesError);
       }
 
-      await fetchRoles();
       setShowPermissionsModal(false);
+      setSelectedRolePermissions([]);
       setSelectedRole(null);
       setError(null);
+      toast.success("Permissions assigned successfully.");
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to update permissions",
+        err instanceof Error
+          ? err.message
+          : "Failed to assign permissions to role",
       );
+    } finally {
+      setIsSavingPermissions(false);
     }
   };
 
@@ -308,9 +362,13 @@ const Roles = () => {
     const permission = allPermissions.find((item) => item.code === permissionCode);
     if (permission?.isActive === false) return;
 
+    const normalizedTargetPermission = normalizePermission(permissionCode);
+
     setSelectedRolePermissions((prev) =>
-      prev.includes(permissionCode)
-        ? prev.filter((code) => code !== permissionCode)
+      prev.some((code) => normalizePermission(code) === normalizedTargetPermission)
+        ? prev.filter(
+            (code) => normalizePermission(code) !== normalizedTargetPermission,
+          )
         : [...prev, permissionCode],
     );
   };
@@ -330,10 +388,15 @@ const Roles = () => {
   const allPermissionCodes = allPermissions
     .filter((permission) => permission.isActive !== false)
     .map((permission) => permission.code);
+  const selectedRolePermissionCodeSet = new Set(
+    selectedRolePermissions.map((permissionCode) =>
+      normalizePermission(permissionCode),
+    ),
+  );
   const areAllPermissionsSelected =
     allPermissionCodes.length > 0 &&
     allPermissionCodes.every((permissionCode) =>
-      selectedRolePermissions.includes(permissionCode),
+      selectedRolePermissionCodeSet.has(normalizePermission(permissionCode)),
     );
   const hasSomePermissionsSelected =
     !areAllPermissionsSelected && selectedRolePermissions.length > 0;
@@ -518,7 +581,10 @@ const Roles = () => {
               )}
               <div className="role-stats">
                 <span className="stat">
-                  {role.permissionCount || role.permissions?.length || 0}{" "}
+                  {rolePermissionCountOverrides[role.id] ??
+                    role.permissionCount ??
+                    role.permissions?.length ??
+                    0}{" "}
                   Permissions
                 </span>
               </div>
@@ -779,7 +845,7 @@ const Roles = () => {
       {showPermissionsModal && selectedRole && (
         <div
           className="modal-overlay"
-          onClick={() => setShowPermissionsModal(false)}
+          onClick={closePermissionsModal}
         >
           <div
             className="modal-content modal-lg"
@@ -789,7 +855,7 @@ const Roles = () => {
               <h2>Manage Permissions - {selectedRole.name}</h2>
               <button
                 className="modal-close"
-                onClick={() => setShowPermissionsModal(false)}
+                onClick={closePermissionsModal}
               >
                 ✕
               </button>
@@ -827,14 +893,16 @@ const Roles = () => {
                 />
               </div>
 
-              {filteredModalPermissions.length > 0 ? (
+              {isPermissionsModalLoading ? (
+                <p className="permissions-search-empty">Loading role permissions...</p>
+              ) : filteredModalPermissions.length > 0 ? (
                 <div className="permissions-grid">
                   {filteredModalPermissions.map((permission) => (
                     <label key={permission.id} className="permission-checkbox">
                       <input
                         type="checkbox"
-                        checked={selectedRolePermissions.includes(
-                          permission.code,
+                        checked={selectedRolePermissionCodeSet.has(
+                          normalizePermission(permission.code),
                         )}
                         onChange={() => handlePermissionToggle(permission.code)}
                       />
@@ -854,15 +922,17 @@ const Roles = () => {
             <div className="modal-footer">
               <button
                 className="btn btn-secondary"
-                onClick={() => setShowPermissionsModal(false)}
+                onClick={closePermissionsModal}
+                disabled={isSavingPermissions}
               >
                 Cancel
               </button>
               <button
                 className="btn btn-primary"
                 onClick={handleSavePermissions}
+                disabled={isPermissionsModalLoading || isSavingPermissions}
               >
-                Save Permissions
+                {isSavingPermissions ? "Saving..." : "Save Permissions"}
               </button>
             </div>
           </div>
